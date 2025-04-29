@@ -18,8 +18,8 @@
  */
 
 /**
- * \file
- * \ingroup mtp
+ * @file
+ * @ingroup mtp
  *  Declaration of classes ns3::MultithreadedSimulatorImpl
  */
 

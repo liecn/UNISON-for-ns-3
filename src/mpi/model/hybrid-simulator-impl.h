@@ -18,9 +18,9 @@
  */
 
 /**
- * \file
- * \ingroup mtp
- * \ingroup mpi
+ * @file
+ * @ingroup mtp
+ * @ingroup mpi
  *  Declaration of classes ns3::HybridSimulatorImpl
  */
 
