@@ -12,6 +12,7 @@
 #include "wifi-phy.h"
 #include "wifi-psdu.h"
 #include "wifi-tx-vector.h"
+#include "wifi-utils.h"
 
 #include "ns3/log.h"
 #include "ns3/packet.h"
@@ -540,8 +541,11 @@ WifiPhyStateHelper::SwitchToSleep()
     case WifiPhyState::CCA_BUSY:
         LogPreviousIdleAndCcaBusyStates();
         break;
+    case WifiPhyState::RX:
+        DoSwitchFromRx();
+        break;
     default:
-        NS_FATAL_ERROR("Invalid WifiPhy state.");
+        NS_FATAL_ERROR("Invalid WifiPhy state: " << GetState());
         break;
     }
     m_previousStateChangeTime = now;
@@ -574,9 +578,11 @@ WifiPhyStateHelper::SwitchFromRxAbort(MHz_u operatingWidth)
     DoSwitchFromRx();
     m_endCcaBusy = Simulator::Now();
     std::vector<Time> per20MhzDurations;
-    if (operatingWidth >= 40)
+    if (operatingWidth >= MHz_u{40})
     {
-        std::fill_n(std::back_inserter(per20MhzDurations), (operatingWidth / 20), Seconds(0));
+        std::fill_n(std::back_inserter(per20MhzDurations),
+                    Count20MHzSubchannels(operatingWidth),
+                    Seconds(0));
     }
     NotifyListeners(&WifiPhyListener::NotifyCcaBusyStart,
                     Seconds(0),

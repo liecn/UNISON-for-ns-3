@@ -9,25 +9,25 @@
 
 #include "lte-test-primary-cell-change.h"
 
-#include <ns3/boolean.h>
-#include <ns3/double.h>
-#include <ns3/friis-spectrum-propagation-loss.h>
-#include <ns3/integer.h>
-#include <ns3/internet-stack-helper.h>
-#include <ns3/ipv4-address-helper.h>
-#include <ns3/ipv4-interface-container.h>
-#include <ns3/ipv4-static-routing-helper.h>
-#include <ns3/log.h>
-#include <ns3/lte-enb-net-device.h>
-#include <ns3/lte-helper.h>
-#include <ns3/lte-ue-net-device.h>
-#include <ns3/lte-ue-rrc.h>
-#include <ns3/mobility-helper.h>
-#include <ns3/net-device-container.h>
-#include <ns3/node-container.h>
-#include <ns3/point-to-point-epc-helper.h>
-#include <ns3/point-to-point-helper.h>
-#include <ns3/simulator.h>
+#include "ns3/boolean.h"
+#include "ns3/double.h"
+#include "ns3/friis-spectrum-propagation-loss.h"
+#include "ns3/integer.h"
+#include "ns3/internet-stack-helper.h"
+#include "ns3/ipv4-address-helper.h"
+#include "ns3/ipv4-interface-container.h"
+#include "ns3/ipv4-static-routing-helper.h"
+#include "ns3/log.h"
+#include "ns3/lte-enb-net-device.h"
+#include "ns3/lte-helper.h"
+#include "ns3/lte-ue-net-device.h"
+#include "ns3/lte-ue-rrc.h"
+#include "ns3/mobility-helper.h"
+#include "ns3/net-device-container.h"
+#include "ns3/node-container.h"
+#include "ns3/point-to-point-epc-helper.h"
+#include "ns3/point-to-point-helper.h"
+#include "ns3/simulator.h"
 
 using namespace ns3;
 
@@ -86,7 +86,7 @@ LtePrimaryCellChangeTestSuite::LtePrimaryCellChangeTestSuite()
 } // end of LtePrimaryCellChangeTestSuite::LtePrimaryCellChangeTestSuite ()
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  * Static variable for test initialization
  */
 static LtePrimaryCellChangeTestSuite g_ltePrimaryCellChangeTestSuite;
@@ -182,10 +182,10 @@ LtePrimaryCellChangeTestCase::DoRun()
                                 ->GetCellId();
 
     lteHelper->AddX2Interface(enbNodes);
-    lteHelper->HandoverRequest(Seconds(1.0), ueDev, sourceEnbDev, targetCellId);
+    lteHelper->HandoverRequest(Seconds(1), ueDev, sourceEnbDev, targetCellId);
 
     // Run simulation.
-    Simulator::Stop(Seconds(2.0));
+    Simulator::Stop(Seconds(2));
     Simulator::Run();
 
     uint16_t expectedCellId = targetCellId;

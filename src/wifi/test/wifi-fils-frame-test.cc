@@ -39,9 +39,9 @@
 
 using namespace ns3;
 
-/// \ingroup wifi-test
-/// \ingroup tests
-/// \brief Fast Initial Link Setup (FILS) frame Test Suite
+/// @ingroup wifi-test
+/// @ingroup tests
+/// @brief Fast Initial Link Setup (FILS) frame Test Suite
 /// Test suite intended to test (de)serialization and timing
 /// of frames associated with FILS procedure.
 /// The test creates a BSS consisting of an AP and client and
@@ -383,14 +383,14 @@ WifiFilsFrameTestBuildCase(const WifiFilsFrameTestCase& tc)
     switch (tc)
     {
     case WifiFilsFrameTestCase::BW20MHZ_NSS1_DISC:
-        params.bw = 20;
+        params.bw = MHz_u{20};
         params.ssid = DEFAULT_SSID;
         params.nss = 1;
         params.expChWidFld = 0;
         params.expNssFld = 0;
         break;
     case WifiFilsFrameTestCase::BW20MHZ_NSS3_DISC:
-        params.bw = 20;
+        params.bw = MHz_u{20};
         params.ssid = "BW20MHZ_NSS3";
         params.nss = 3;
         params.filsIntrvl = 15 * WIFI_TU;
@@ -398,7 +398,7 @@ WifiFilsFrameTestBuildCase(const WifiFilsFrameTestCase& tc)
         params.expNssFld = 2;
         break;
     case WifiFilsFrameTestCase::BW40MHZ_NSS2_DISC:
-        params.bw = 40;
+        params.bw = MHz_u{40};
         params.ssid = "BW40MHZ_NSS2";
         params.nss = 2;
         params.filsIntrvl = 10 * WIFI_TU;
@@ -406,7 +406,7 @@ WifiFilsFrameTestBuildCase(const WifiFilsFrameTestCase& tc)
         params.expNssFld = 1;
         break;
     case WifiFilsFrameTestCase::BW80MHZ_NSS2_DISC:
-        params.bw = 80;
+        params.bw = MHz_u{80};
         params.ssid = "BW80MHZ_NSS2";
         params.nss = 2;
         params.filsIntrvl = 7 * WIFI_TU;
@@ -414,7 +414,7 @@ WifiFilsFrameTestBuildCase(const WifiFilsFrameTestCase& tc)
         params.expNssFld = 1;
         break;
     case WifiFilsFrameTestCase::BW160MHZ_NSS2_DISC:
-        params.bw = 160;
+        params.bw = MHz_u{160};
         params.ssid = "BW160MHZ_NSS2";
         params.nss = 2;
         params.filsIntrvl = 5 * WIFI_TU;
@@ -422,7 +422,7 @@ WifiFilsFrameTestBuildCase(const WifiFilsFrameTestCase& tc)
         params.expNssFld = 1;
         break;
     case WifiFilsFrameTestCase::BW160MHZ_NSS2_PROBE:
-        params.bw = 160;
+        params.bw = MHz_u{160};
         params.ssid = "BW160MHZ_NSS2";
         params.nss = 2;
         params.unsolProbeRespEn = true;
@@ -436,9 +436,9 @@ WifiFilsFrameTestBuildCase(const WifiFilsFrameTestCase& tc)
     return params;
 }
 
-/// \ingroup wifi-test
-/// \ingroup tests
-/// \brief WiFi FILS frame Test Suite
+/// @ingroup wifi-test
+/// @ingroup tests
+/// @brief WiFi FILS frame Test Suite
 class WifiFilsFrameTestSuite : public TestSuite
 {
   public:

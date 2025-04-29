@@ -15,7 +15,7 @@ namespace ns3
 {
 
 /**
- * \ingroup wifi
+ * @ingroup wifi
  *
  * VhtFrameExchangeManager handles the frame exchange sequences
  * for VHT stations.
@@ -24,15 +24,16 @@ class VhtFrameExchangeManager : public HtFrameExchangeManager
 {
   public:
     /**
-     * \brief Get the type ID.
-     * \return the object TypeId
+     * @brief Get the type ID.
+     * @return the object TypeId
      */
     static TypeId GetTypeId();
     VhtFrameExchangeManager();
     ~VhtFrameExchangeManager() override;
 
-  protected:
     Ptr<WifiPsdu> GetWifiPsdu(Ptr<WifiMpdu> mpdu, const WifiTxVector& txVector) const override;
+
+  protected:
     uint32_t GetPsduSize(Ptr<const WifiMpdu> mpdu, const WifiTxVector& txVector) const override;
 };
 

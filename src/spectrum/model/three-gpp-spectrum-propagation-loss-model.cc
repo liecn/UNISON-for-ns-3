@@ -44,7 +44,6 @@ void
 ThreeGppSpectrumPropagationLossModel::DoDispose()
 {
     m_longTermMap.clear();
-    m_channelModel->Dispose();
     m_channelModel = nullptr;
 }
 
@@ -281,46 +280,52 @@ ThreeGppSpectrumPropagationLossModel::CalcBeamformingGain(
                                                                numRxPorts,
                                                                isReverse);
 
-    // The precoding matrix is not set
+    NS_ASSERT_MSG(rxParams->psd->GetValuesN() == rxParams->spectrumChannelMatrix->GetNumPages(),
+                  "RX PSD and the spectrum channel matrix should have the same number of RBs ");
+
+    // Calculate RX PSD from the spectrum channel matrix H and
+    // the precoding matrix P as: PSD = (H*P)^h * (H*P)
+    Ptr<const ComplexMatrixArray> p;
     if (!rxParams->precodingMatrix)
     {
-        // Update rxParams->Psd.
-        // Compute RX PSD from the channel matrix
-        auto vit = rxParams->psd->ValuesBegin(); // psd iterator
-        size_t rbIdx = 0;
-        while (vit != rxParams->psd->ValuesEnd())
+        // When the precoding matrix P is not set, we create one with a single column
+        ComplexMatrixArray page =
+            ComplexMatrixArray(rxParams->spectrumChannelMatrix->GetNumCols(), 1, 1);
+        // Initialize it to the inverse square of the number of txPorts
+        page.Elem(0, 0, 0) = 1.0 / sqrt(rxParams->spectrumChannelMatrix->GetNumCols());
+        for (size_t rowI = 0; rowI < rxParams->spectrumChannelMatrix->GetNumCols(); rowI++)
         {
-            // Calculate PSD for the first antenna port (correct for SISO)
-            *vit = std::norm(rxParams->spectrumChannelMatrix->Elem(0, 0, rbIdx));
-            vit++;
-            rbIdx++;
+            page.Elem(rowI, 0, 0) = page.Elem(0, 0, 0);
         }
+        // Replicate vector to match the number of RBGs
+        p = Create<const ComplexMatrixArray>(
+            page.MakeNCopies(rxParams->spectrumChannelMatrix->GetNumPages()));
     }
     else
     {
-        NS_ASSERT_MSG(rxParams->psd->GetValuesN() == rxParams->spectrumChannelMatrix->GetNumPages(),
-                      "RX PSD and the spectrum channel matrix should have the same number of RBs ");
-        // Calculate RX PSD from the spectrum channel matrix, H and
-        // the precoding matrix, P as:
-        // PSD = (H*P)^h * (H*P),
-        // where the dimensions are:
-        // H (rxPorts,txPorts,numRbs) x P (txPorts,txStreams, numRbs) =
-        // HxP (rxPorts,txStreams, numRbs)
-        MatrixBasedChannelModel::Complex3DVector hP =
-            *rxParams->spectrumChannelMatrix * (*rxParams->precodingMatrix);
-        // (HxP)^h dimensions are (txStreams, rxPorts, numRbs)
-        MatrixBasedChannelModel::Complex3DVector hPHerm = hP.HermitianTranspose();
+        p = rxParams->precodingMatrix;
+    }
+    // When we have the precoding matrix P, we first do
+    // H(rxPorts,txPorts,numRbs) x P(txPorts,txStreams,numRbs) = HxP(rxPorts,txStreams,numRbs)
+    MatrixBasedChannelModel::Complex3DVector hP = *rxParams->spectrumChannelMatrix * *p;
 
-        // Finally, (HxP)^h x (HxP) = PSD (txStreams, txStreams, numRbs)
-        MatrixBasedChannelModel::Complex3DVector psd = hPHerm * hP;
-        // Update rxParams->Psd
-        for (uint32_t rbIdx = 0; rbIdx < rxParams->psd->GetValuesN(); ++rbIdx)
+    // Then (HxP)^h dimensions are (txStreams, rxPorts, numRbs)
+    // MatrixBasedChannelModel::Complex3DVector hPHerm = hP.HermitianTranspose();
+
+    // Finally, (HxP)^h x (HxP) = PSD(txStreams, txStreams, numRbs)
+    // MatrixBasedChannelModel::Complex3DVector psd = hPHerm * hP;
+
+    // And the received psd is the Trace(PSD).
+    // To avoid wasting computations, we only compute the main diagonal of hPHerm*hP
+    for (uint32_t rbIdx = 0; rbIdx < rxParams->psd->GetValuesN(); ++rbIdx)
+    {
+        (*rxParams->psd)[rbIdx] = 0.0;
+        for (size_t rxPort = 0; rxPort < hP.GetNumRows(); ++rxPort)
         {
-            (*rxParams->psd)[rbIdx] = 0.0;
-
-            for (size_t txStream = 0; txStream < psd.GetNumRows(); ++txStream)
+            for (size_t txStream = 0; txStream < hP.GetNumCols(); ++txStream)
             {
-                (*rxParams->psd)[rbIdx] += std::real(psd(txStream, txStream, rbIdx));
+                (*rxParams->psd)[rbIdx] +=
+                    std::real(std::conj(hP(rxPort, txStream, rbIdx)) * hP(rxPort, txStream, rbIdx));
             }
         }
     }

@@ -6,12 +6,12 @@
  * Author: Manuel Requena <manuel.requena@cttc.es>
  */
 
+#include "ns3/buildings-helper.h"
 #include "ns3/config-store.h"
 #include "ns3/core-module.h"
 #include "ns3/lte-module.h"
 #include "ns3/mobility-module.h"
 #include "ns3/network-module.h"
-#include <ns3/buildings-helper.h>
 // #include "ns3/gtk-config-store.h"
 
 using namespace ns3;
@@ -22,7 +22,7 @@ using namespace ns3;
  * This function will move a node with a x coordinate greater than 10 m
  * to a x equal to 5 m, and less than or equal to 10 m to 10 Km
  *
- * \param node The node to move.
+ * @param node The node to move.
  */
 static void
 ChangePosition(Ptr<Node> node)

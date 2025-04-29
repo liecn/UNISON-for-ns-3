@@ -107,7 +107,7 @@ WifiPsdu::GetAddr1() const
     {
         if (m_mpduList.at(i)->GetHeader().GetAddr1() != ra)
         {
-            NS_ABORT_MSG("MPDUs in an A-AMPDU must have the same receiver address");
+            NS_ABORT_MSG("MPDUs in an A-MPDU must have the same receiver address");
         }
     }
     return ra;
@@ -122,7 +122,7 @@ WifiPsdu::GetAddr2() const
     {
         if (m_mpduList.at(i)->GetHeader().GetAddr2() != ta)
         {
-            NS_ABORT_MSG("MPDUs in an A-AMPDU must have the same transmitter address");
+            NS_ABORT_MSG("MPDUs in an A-MPDU must have the same transmitter address");
         }
     }
     return ta;
@@ -160,6 +160,16 @@ WifiPsdu::SetDuration(Time duration)
     for (auto& mpdu : m_mpduList)
     {
         mpdu->GetHeader().SetDuration(duration);
+    }
+}
+
+void
+WifiPsdu::IncrementRetryCount()
+{
+    NS_LOG_FUNCTION(this);
+    for (auto& mpdu : m_mpduList)
+    {
+        mpdu->IncrementRetryCount();
     }
 }
 
@@ -365,6 +375,42 @@ std::ostream&
 operator<<(std::ostream& os, const WifiPsdu& psdu)
 {
     psdu.Print(os);
+    return os;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const WifiPsduMap& psduMap)
+{
+    for (const auto& [staId, psdu] : psduMap)
+    {
+        if (staId != SU_STA_ID)
+        {
+            os << "[PSDU for STA_ID=" << staId << ", ";
+        }
+        psdu->Print(os);
+        if (staId != SU_STA_ID)
+        {
+            os << "]";
+        }
+    }
+    return os;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const WifiConstPsduMap& psduMap)
+{
+    for (const auto& [staId, psdu] : psduMap)
+    {
+        if (staId != SU_STA_ID)
+        {
+            os << "[PSDU for STA_ID=" << staId << ", ";
+        }
+        psdu->Print(os);
+        if (staId != SU_STA_ID)
+        {
+            os << "]";
+        }
+    }
     return os;
 }
 

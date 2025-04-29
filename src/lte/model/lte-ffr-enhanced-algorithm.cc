@@ -13,8 +13,8 @@
 #include "lte-common.h"
 
 #include "ns3/boolean.h"
-#include <ns3/double.h>
-#include <ns3/log.h>
+#include "ns3/double.h"
+#include "ns3/log.h"
 
 #include <cfloat>
 
@@ -97,10 +97,10 @@ static const FfrEnhancedUplinkDefaultConfiguration g_ffrEnhancedUplinkDefaultCon
     {3, 100, 64, 16, 16},
 };
 
-/** \returns number of downlink configurations */
+/** @returns number of downlink configurations */
 const uint16_t NUM_DOWNLINK_CONFS(sizeof(g_ffrEnhancedDownlinkDefaultConfiguration) /
                                   sizeof(FfrEnhancedDownlinkDefaultConfiguration));
-/** \returns number of uplink configurations */
+/** @returns number of uplink configurations */
 const uint16_t NUM_UPLINK_CONFS(sizeof(g_ffrEnhancedUplinkDefaultConfiguration) /
                                 sizeof(FfrEnhancedUplinkDefaultConfiguration));
 
@@ -736,10 +736,10 @@ LteFfrEnhancedAlgorithm::DoReportDlCqiInfo(
         for (uint32_t j = 0; j < dlRbgAvailableMap.size(); j++)
         {
             uint32_t index = rbgSize * j;
-            for (uint32_t i = 0; i < rbgSize; i++)
+            for (uint32_t i = 0; i < rbgSize && index < m_ulBandwidth; i++)
             {
-                index = index + i;
                 ulRbAvailableMap[index] = dlRbgAvailableMap[j];
+                index++;
             }
         }
 

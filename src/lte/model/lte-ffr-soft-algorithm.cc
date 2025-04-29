@@ -10,7 +10,7 @@
 #include "lte-ffr-soft-algorithm.h"
 
 #include "ns3/boolean.h"
-#include <ns3/log.h>
+#include "ns3/log.h"
 
 namespace ns3
 {
@@ -77,10 +77,10 @@ static const FfrSoftUplinkDefaultConfiguration g_ffrSoftUplinkDefaultConfigurati
     {3, 100, 28, 48, 24},
 };
 
-/** \returns number of downlink configurations */
+/** @returns number of downlink configurations */
 const uint16_t NUM_DOWNLINK_CONFS(sizeof(g_ffrSoftDownlinkDefaultConfiguration) /
                                   sizeof(FfrSoftDownlinkDefaultConfiguration));
-/** \returns number of uplink configurations */
+/** @returns number of uplink configurations */
 const uint16_t NUM_UPLINK_CONFS(sizeof(g_ffrSoftUplinkDefaultConfiguration) /
                                 sizeof(FfrSoftUplinkDefaultConfiguration));
 

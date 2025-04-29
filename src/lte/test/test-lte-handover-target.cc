@@ -7,39 +7,39 @@
  *
  */
 
-#include <ns3/boolean.h>
-#include <ns3/callback.h>
-#include <ns3/config.h>
-#include <ns3/data-rate.h>
-#include <ns3/double.h>
-#include <ns3/internet-stack-helper.h>
-#include <ns3/ipv4-address-helper.h>
-#include <ns3/ipv4-interface-container.h>
-#include <ns3/ipv4-static-routing-helper.h>
-#include <ns3/ipv4-static-routing.h>
-#include <ns3/log.h>
-#include <ns3/lte-enb-net-device.h>
-#include <ns3/lte-enb-phy.h>
-#include <ns3/lte-helper.h>
-#include <ns3/mobility-helper.h>
-#include <ns3/net-device-container.h>
-#include <ns3/node-container.h>
-#include <ns3/nstime.h>
-#include <ns3/point-to-point-epc-helper.h>
-#include <ns3/point-to-point-helper.h>
-#include <ns3/position-allocator.h>
-#include <ns3/simulator.h>
-#include <ns3/test.h>
-#include <ns3/uinteger.h>
+#include "ns3/boolean.h"
+#include "ns3/callback.h"
+#include "ns3/config.h"
+#include "ns3/data-rate.h"
+#include "ns3/double.h"
+#include "ns3/internet-stack-helper.h"
+#include "ns3/ipv4-address-helper.h"
+#include "ns3/ipv4-interface-container.h"
+#include "ns3/ipv4-static-routing-helper.h"
+#include "ns3/ipv4-static-routing.h"
+#include "ns3/log.h"
+#include "ns3/lte-enb-net-device.h"
+#include "ns3/lte-enb-phy.h"
+#include "ns3/lte-helper.h"
+#include "ns3/mobility-helper.h"
+#include "ns3/net-device-container.h"
+#include "ns3/node-container.h"
+#include "ns3/nstime.h"
+#include "ns3/point-to-point-epc-helper.h"
+#include "ns3/point-to-point-helper.h"
+#include "ns3/position-allocator.h"
+#include "ns3/simulator.h"
+#include "ns3/test.h"
+#include "ns3/uinteger.h"
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("LteHandoverTargetTest");
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  *
- * \brief Testing a handover algorithm, verifying that it selects the right
+ * @brief Testing a handover algorithm, verifying that it selects the right
  *        target cell when more than one options available.
  *
  * Part of the `lte-handover-target` test suite.
@@ -53,21 +53,21 @@ class LteHandoverTargetTestCase : public TestCase
 {
   public:
     /**
-     * \brief Construct a new test case and providing input parameters for the
+     * @brief Construct a new test case and providing input parameters for the
      *        simulation.
-     * \param name the name of the test case, to be displayed in the test result
-     * \param uePosition the point in (x, y, z) coordinate where the UE will be
+     * @param name the name of the test case, to be displayed in the test result
+     * @param uePosition the point in (x, y, z) coordinate where the UE will be
      *                   placed in the simulation
-     * \param gridSizeX number of eNodeBs in a row
-     * \param gridSizeY number of eNodeBs in a column
-     * \param sourceCellId the cell ID of the eNodeB which the UE will be
+     * @param gridSizeX number of eNodeBs in a row
+     * @param gridSizeY number of eNodeBs in a column
+     * @param sourceCellId the cell ID of the eNodeB which the UE will be
      *                     initially attached to in the beginning of simulation,
      *                     and also the eNodeB which will "shutdown" in the
      *                     middle of simulation
-     * \param targetCellId the cell ID of the expected eNodeB where the UE will
+     * @param targetCellId the cell ID of the expected eNodeB where the UE will
      *                     perform handover to after the "shutdown" of the source
      *                     cell
-     * \param handoverAlgorithmType the type of handover algorithm to be used in
+     * @param handoverAlgorithmType the type of handover algorithm to be used in
      *                              all eNodeBs
      */
     LteHandoverTargetTestCase(std::string name,
@@ -81,17 +81,17 @@ class LteHandoverTargetTestCase : public TestCase
     ~LteHandoverTargetTestCase() override;
 
     /**
-     * \brief Triggers when an eNodeB starts a handover and then verifies that
+     * @brief Triggers when an eNodeB starts a handover and then verifies that
      *        the handover has the right source and target cells.
      *
      * The trigger is set up beforehand by connecting to the
      * `LteEnbRrc::HandoverStart` trace source.
      *
-     * \param context the context string
-     * \param imsi the IMSI
-     * \param sourceCellId the source cell ID
-     * \param rnti the RNTI
-     * \param targetCellId the target cell ID
+     * @param context the context string
+     * @param imsi the IMSI
+     * @param sourceCellId the source cell ID
+     * @param rnti the RNTI
+     * @param targetCellId the target cell ID
      */
     void HandoverStartCallback(std::string context,
                                uint64_t imsi,
@@ -100,20 +100,20 @@ class LteHandoverTargetTestCase : public TestCase
                                uint16_t targetCellId);
 
     /**
-     * \brief A trigger that can be scheduled to "shutdown" the cell pointed by
+     * @brief A trigger that can be scheduled to "shutdown" the cell pointed by
      *        `m_sourceCellId` by reducing its power to 1 dB.
      */
     void CellShutdownCallback();
 
   private:
     /**
-     * \brief Run a simulation of a micro-cell network using the parameters
+     * @brief Run a simulation of a micro-cell network using the parameters
      *        provided to the constructor function.
      */
     void DoRun() override;
 
     /**
-     * \brief Called at the end of simulation and verifies that a handover has
+     * @brief Called at the end of simulation and verifies that a handover has
      *        occurred in the simulation.
      */
     void DoTeardown() override;
@@ -366,7 +366,7 @@ LteHandoverTargetTestCase::DoTeardown()
 }
 
 /**
- * \brief Test suite ``lte-handover-target``, verifying that handover
+ * @brief Test suite ``lte-handover-target``, verifying that handover
  *        algorithms are able to select the right target cell.
  *
  * Handover algorithm tested in this test suite:
@@ -438,7 +438,7 @@ LteHandoverTargetTestSuite::LteHandoverTargetTestSuite()
 } // end of LteHandoverTargetTestSuite ()
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  * Static variable for test initialization
  */
 static LteHandoverTargetTestSuite g_lteHandoverTargetTestSuiteInstance;

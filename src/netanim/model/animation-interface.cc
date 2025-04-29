@@ -71,11 +71,11 @@ AnimationInterface::AnimationInterface(const std::string fn)
       m_writeCallback(nullptr),
       m_started(false),
       m_enablePacketMetadata(false),
-      m_startTime(Seconds(0)),
+      m_startTime(),
       m_stopTime(Seconds(3600 * 1000)),
       m_maxPktsPerFile(MAX_PKTS_PER_TRACE_FILE),
       m_originalFileName(fn),
-      m_routingStopTime(Seconds(0)),
+      m_routingStopTime(),
       m_routingFileName(""),
       m_routingPollInterval(Seconds(5)),
       m_trackPackets(true)
@@ -984,7 +984,7 @@ AnimationInterface::WifiPhyRxBeginTrace(std::string context,
         AddPendingPacket(AnimationInterface::WIFI, animUid, pktInfo);
         NS_LOG_WARN("WifiPhyRxBegin: unknown Uid, but we are adding a wifi packet");
     }
-    /// \todo NS_ASSERT (WifiPacketIsPending (animUid) == true);
+    /// @todo NS_ASSERT (WifiPacketIsPending (animUid) == true);
     m_pendingWifiPackets[animUid].ProcessRxBegin(ndev, Simulator::Now().GetSeconds());
     OutputWirelessPacketRxInfo(p, m_pendingWifiPackets[animUid], animUid);
 }
@@ -1190,7 +1190,7 @@ AnimationInterface::CsmaPhyTxEndTrace(std::string context, Ptr<const Packet> p)
         AddPendingPacket(AnimationInterface::CSMA, animUid, pktInfo);
         NS_LOG_WARN("Unknown Uid, but adding Csma Packet anyway");
     }
-    /// \todo NS_ASSERT (IsPacketPending (AnimUid) == true);
+    /// @todo NS_ASSERT (IsPacketPending (AnimUid) == true);
     AnimPacketInfo& pktInfo = m_pendingCsmaPackets[animUid];
     pktInfo.m_lbTx = Simulator::Now().GetSeconds();
 }
@@ -1209,7 +1209,7 @@ AnimationInterface::CsmaPhyRxEndTrace(std::string context, Ptr<const Packet> p)
         NS_LOG_WARN("CsmaPhyRxEndTrace: unknown Uid");
         return;
     }
-    /// \todo NS_ASSERT (CsmaPacketIsPending (AnimUid) == true);
+    /// @todo NS_ASSERT (CsmaPacketIsPending (AnimUid) == true);
     AnimPacketInfo& pktInfo = m_pendingCsmaPackets[animUid];
     pktInfo.ProcessRxBegin(ndev, Simulator::Now().GetSeconds());
     NS_LOG_INFO("CsmaPhyRxEndTrace for packet:" << animUid);
@@ -1230,7 +1230,7 @@ AnimationInterface::CsmaMacRxTrace(std::string context, Ptr<const Packet> p)
         NS_LOG_WARN("CsmaMacRxTrace: unknown Uid");
         return;
     }
-    /// \todo NS_ASSERT (CsmaPacketIsPending (AnimUid) == true);
+    /// @todo NS_ASSERT (CsmaPacketIsPending (AnimUid) == true);
     AnimPacketInfo& pktInfo = m_pendingCsmaPackets[animUid];
     NS_LOG_INFO("MacRxTrace for packet:" << animUid << " complete");
     OutputCsmaPacket(p, pktInfo);
@@ -1634,7 +1634,7 @@ AnimationInterface::ConnectCallbacks()
                             MakeCallback(&AnimationInterface::UanPhyGenTxTrace, this));
     Config::ConnectFailSafe("/NodeList/*/DeviceList/*/$ns3::UanNetDevice/Phy/PhyRxBegin",
                             MakeCallback(&AnimationInterface::UanPhyGenRxTrace, this));
-    Config::ConnectFailSafe("/NodeList/*/$ns3::BasicEnergySource/RemainingEnergy",
+    Config::ConnectFailSafe("/NodeList/*/$ns3::energy::BasicEnergySource/RemainingEnergy",
                             MakeCallback(&AnimationInterface::RemainingEnergyTrace, this));
 
     ConnectLte();
@@ -1690,17 +1690,17 @@ AnimationInterface::ConnectCallbacks()
                             MakeCallback(&AnimationInterface::WifiPhyRxDropTrace, this));
 
     // LrWpan
-    Config::ConnectFailSafe("NodeList/*/DeviceList/*/$ns3::LrWpanNetDevice/Phy/PhyTxBegin",
+    Config::ConnectFailSafe("NodeList/*/DeviceList/*/$ns3::lrwpan::LrWpanNetDevice/Phy/PhyTxBegin",
                             MakeCallback(&AnimationInterface::LrWpanPhyTxBeginTrace, this));
-    Config::ConnectFailSafe("NodeList/*/DeviceList/*/$ns3::LrWpanNetDevice/Phy/PhyRxBegin",
+    Config::ConnectFailSafe("NodeList/*/DeviceList/*/$ns3::lrwpan::LrWpanNetDevice/Phy/PhyRxBegin",
                             MakeCallback(&AnimationInterface::LrWpanPhyRxBeginTrace, this));
-    Config::ConnectFailSafe("/NodeList/*/DeviceList/*/$ns3::LrWpanNetDevice/Mac/MacTx",
+    Config::ConnectFailSafe("/NodeList/*/DeviceList/*/$ns3::lrwpan::LrWpanNetDevice/Mac/MacTx",
                             MakeCallback(&AnimationInterface::LrWpanMacTxTrace, this));
-    Config::ConnectFailSafe("/NodeList/*/DeviceList/*/$ns3::LrWpanNetDevice/Mac/MacTxDrop",
+    Config::ConnectFailSafe("/NodeList/*/DeviceList/*/$ns3::lrwpan::LrWpanNetDevice/Mac/MacTxDrop",
                             MakeCallback(&AnimationInterface::LrWpanMacTxDropTrace, this));
-    Config::ConnectFailSafe("/NodeList/*/DeviceList/*/$ns3::LrWpanNetDevice/Mac/MacRx",
+    Config::ConnectFailSafe("/NodeList/*/DeviceList/*/$ns3::lrwpan::LrWpanNetDevice/Mac/MacRx",
                             MakeCallback(&AnimationInterface::LrWpanMacRxTrace, this));
-    Config::ConnectFailSafe("/NodeList/*/DeviceList/*/$ns3::LrWpanNetDevice/Mac/MacRxDrop",
+    Config::ConnectFailSafe("/NodeList/*/DeviceList/*/$ns3::lrwpan::LrWpanNetDevice/Mac/MacRxDrop",
                             MakeCallback(&AnimationInterface::LrWpanMacRxDropTrace, this));
 }
 
@@ -2518,9 +2518,8 @@ AnimationInterface::WriteXmlRp(uint32_t nodeId,
     element.AddAttribute("id", nodeId);
     element.AddAttribute("d", destination.c_str());
     element.AddAttribute("c", rpElements.size());
-    for (auto i = rpElements.begin(); i != rpElements.end(); ++i)
+    for (const auto& rpElement : rpElements)
     {
-        Ipv4RoutePathElement rpElement = *i;
         AnimXmlElement rpeElement("rpe");
         rpeElement.AddAttribute("n", rpElement.nodeId);
         rpeElement.AddAttribute("nH", rpElement.nextHop.c_str());

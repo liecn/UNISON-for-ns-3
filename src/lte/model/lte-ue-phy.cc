@@ -21,13 +21,13 @@
 #include "lte-ue-net-device.h"
 #include "lte-ue-power-control.h"
 
-#include <ns3/boolean.h>
-#include <ns3/double.h>
-#include <ns3/log.h>
-#include <ns3/node.h>
-#include <ns3/object-factory.h>
-#include <ns3/pointer.h>
-#include <ns3/simulator.h>
+#include "ns3/boolean.h"
+#include "ns3/double.h"
+#include "ns3/log.h"
+#include "ns3/node.h"
+#include "ns3/object-factory.h"
+#include "ns3/pointer.h"
+#include "ns3/simulator.h"
 
 #include <cfloat>
 #include <cmath>
@@ -64,7 +64,7 @@ class UeMemberLteUePhySapProvider : public LteUePhySapProvider
     /**
      * Constructor
      *
-     * \param phy the LTE UE Phy
+     * @param phy the LTE UE Phy
      */
     UeMemberLteUePhySapProvider(LteUePhy* phy);
 
@@ -111,22 +111,6 @@ UeMemberLteUePhySapProvider::NotifyConnectionSuccessful()
 // LteUePhy methods
 ////////////////////////////////////////
 
-/// Map each of UE PHY states to its string representation.
-static const std::string g_uePhyStateName[LteUePhy::NUM_STATES] = {
-    "CELL_SEARCH",
-    "SYNCHRONIZED",
-};
-
-/**
- * \param s The UE PHY state.
- * \return The string representation of the given state.
- */
-static inline const std::string&
-ToString(LteUePhy::State s)
-{
-    return g_uePhyStateName[s];
-}
-
 NS_OBJECT_ENSURE_REGISTERED(LteUePhy);
 
 LteUePhy::LteUePhy()
@@ -146,7 +130,7 @@ LteUePhy::LteUePhy(Ptr<LteSpectrumPhy> dlPhy, Ptr<LteSpectrumPhy> ulPhy)
       m_dataInterferencePowerUpdated(false),
       m_pssReceived(false),
       m_ueMeasurementsFilterPeriod(MilliSeconds(200)),
-      m_ueMeasurementsFilterLast(MilliSeconds(0)),
+      m_ueMeasurementsFilterLast(),
       m_rsrpSinrSampleCounter(0),
       m_imsi(0)
 {
@@ -630,58 +614,59 @@ LteUePhy::GenerateCqiRsrpRsrq(const SpectrumValue& sinr)
         m_rsrpSinrSampleCounter = 0;
     }
 
-    if (m_pssReceived)
+    if (!m_pssReceived)
     {
-        // measure instantaneous RSRQ now
-        NS_ASSERT_MSG(m_rsInterferencePowerUpdated, " RS interference power info obsolete");
+        return;
+    }
 
-        auto itPss = m_pssList.begin();
-        while (itPss != m_pssList.end())
+    // measure instantaneous RSRQ now
+    NS_ASSERT_MSG(m_rsInterferencePowerUpdated, " RS interference power info obsolete");
+
+    auto itPss = m_pssList.begin();
+    while (itPss != m_pssList.end())
+    {
+        uint16_t rbNum = 0;
+        double rssiSum = 0.0;
+
+        auto itIntN = m_rsInterferencePower.ConstValuesBegin();
+        auto itPj = m_rsReceivedPower.ConstValuesBegin();
+        for (itPj = m_rsReceivedPower.ConstValuesBegin();
+             itPj != m_rsReceivedPower.ConstValuesEnd();
+             itIntN++, itPj++)
         {
-            uint16_t rbNum = 0;
-            double rssiSum = 0.0;
+            rbNum++;
+            // convert PSD [W/Hz] to linear power [W] for the single RE
+            double interfPlusNoisePowerTxW = (*itIntN);
+            double signalPowerTxW = (*itPj);
+            rssiSum += (2 * (interfPlusNoisePowerTxW + signalPowerTxW));
+        }
+        rssiSum *= (180000.0 / 12.0);
 
-            auto itIntN = m_rsInterferencePower.ConstValuesBegin();
-            auto itPj = m_rsReceivedPower.ConstValuesBegin();
-            for (itPj = m_rsReceivedPower.ConstValuesBegin();
-                 itPj != m_rsReceivedPower.ConstValuesEnd();
-                 itIntN++, itPj++)
+        NS_ASSERT(rbNum == (*itPss).nRB);
+        double rsrq_dB = 10 * log10((*itPss).pssPsdSum / rssiSum);
+
+        if (rsrq_dB > m_pssReceptionThreshold)
+        {
+            NS_LOG_INFO(this << " PSS RNTI " << m_rnti << " cellId " << m_cellId << " has RSRQ "
+                             << rsrq_dB << " and RBnum " << rbNum);
+            // store measurements
+            auto itMeasMap = m_ueMeasurementsMap.find((*itPss).cellId);
+            if (itMeasMap != m_ueMeasurementsMap.end())
             {
-                rbNum++;
-                // convert PSD [W/Hz] to linear power [W] for the single RE
-                double interfPlusNoisePowerTxW = (*itIntN);
-                double signalPowerTxW = (*itPj);
-                rssiSum += (2 * (interfPlusNoisePowerTxW + signalPowerTxW));
+                (*itMeasMap).second.rsrqSum += rsrq_dB;
+                (*itMeasMap).second.rsrqNum++;
             }
-            rssiSum *= (180000.0 / 12.0);
-
-            NS_ASSERT(rbNum == (*itPss).nRB);
-            double rsrq_dB = 10 * log10((*itPss).pssPsdSum / rssiSum);
-
-            if (rsrq_dB > m_pssReceptionThreshold)
+            else
             {
-                NS_LOG_INFO(this << " PSS RNTI " << m_rnti << " cellId " << m_cellId << " has RSRQ "
-                                 << rsrq_dB << " and RBnum " << rbNum);
-                // store measurements
-                auto itMeasMap = m_ueMeasurementsMap.find((*itPss).cellId);
-                if (itMeasMap != m_ueMeasurementsMap.end())
-                {
-                    (*itMeasMap).second.rsrqSum += rsrq_dB;
-                    (*itMeasMap).second.rsrqNum++;
-                }
-                else
-                {
-                    NS_LOG_WARN("race condition of bug 2091 occurred");
-                }
+                NS_LOG_WARN("race condition of bug 2091 occurred");
             }
+        }
 
-            itPss++;
+        itPss++;
 
-        } // end of while (itPss != m_pssList.end ())
+    } // end of while (itPss != m_pssList.end ())
 
-        m_pssList.clear();
-
-    } // end of if (m_pssReceived)
+    m_pssList.clear();
 
 } // end of void LteUePhy::GenerateCtrlCqiReport (const SpectrumValue& sinr)
 
@@ -1322,6 +1307,7 @@ LteUePhy::SendSrs()
     NS_ASSERT(m_cellId > 0);
     // set the current tx power spectral density (full bandwidth)
     std::vector<int> dlRb;
+    dlRb.reserve(m_ulBandwidth);
     for (uint16_t i = 0; i < m_ulBandwidth; i++)
     {
         dlRb.push_back(i);
@@ -1754,9 +1740,24 @@ LteUePhy::SwitchToState(State newState)
     NS_LOG_FUNCTION(this << newState);
     State oldState = m_state;
     m_state = newState;
-    NS_LOG_INFO(this << " cellId=" << m_cellId << " rnti=" << m_rnti << " UePhy "
-                     << ToString(oldState) << " --> " << ToString(newState));
+    NS_LOG_INFO(this << " cellId=" << m_cellId << " rnti=" << m_rnti << " UePhy " << oldState
+                     << " --> " << newState);
     m_stateTransitionTrace(m_cellId, m_rnti, oldState, newState);
+}
+
+std::ostream&
+operator<<(std::ostream& os, LteUePhy::State state)
+{
+    switch (state)
+    {
+    case LteUePhy::State::CELL_SEARCH:
+        return os << "CELL_SEARCH";
+    case LteUePhy::State::SYNCHRONIZED:
+        return os << "SYNCHRONIZED";
+    case LteUePhy::State::NUM_STATES:
+        return os << "NUM_STATES";
+    };
+    return os << "UNKNOWN(" << static_cast<uint32_t>(state) << ")";
 }
 
 } // namespace ns3

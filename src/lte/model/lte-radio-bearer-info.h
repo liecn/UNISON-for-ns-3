@@ -12,9 +12,9 @@
 #include "eps-bearer.h"
 #include "lte-rrc-sap.h"
 
-#include <ns3/ipv4-address.h>
-#include <ns3/object.h>
-#include <ns3/pointer.h>
+#include "ns3/ipv4-address.h"
+#include "ns3/object.h"
+#include "ns3/pointer.h"
 
 namespace ns3
 {
@@ -32,8 +32,8 @@ class LteRadioBearerInfo : public Object
     LteRadioBearerInfo();
     ~LteRadioBearerInfo() override;
     /**
-     * \brief Get the type ID.
-     * \return the object TypeId
+     * @brief Get the type ID.
+     * @return the object TypeId
      */
     static TypeId GetTypeId();
 
@@ -49,8 +49,8 @@ class LteSignalingRadioBearerInfo : public LteRadioBearerInfo
 {
   public:
     /**
-     * \brief Get the type ID.
-     * \return the object TypeId
+     * @brief Get the type ID.
+     * @return the object TypeId
      */
     static TypeId GetTypeId();
 
@@ -66,8 +66,8 @@ class LteDataRadioBearerInfo : public LteRadioBearerInfo
 {
   public:
     /**
-     * \brief Get the type ID.
-     * \return the object TypeId
+     * @brief Get the type ID.
+     * @return the object TypeId
      */
     static TypeId GetTypeId();
 

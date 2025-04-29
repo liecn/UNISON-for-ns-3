@@ -39,9 +39,12 @@
 #include "ns3/wifi-mac-header.h"
 #include "ns3/wifi-mac.h"
 #include "ns3/wifi-net-device.h"
+#include "ns3/wifi-phy-rx-trace-helper.h"
+#include "ns3/wifi-tx-stats-helper.h"
 #include "ns3/yans-wifi-helper.h"
 
 #include <fstream>
+#include <iomanip>
 #include <vector>
 
 /// Avoid std::numbers::pi because it's C++20
@@ -104,6 +107,8 @@ std::set<uint32_t> associated; ///< Contains the IDs of the STAs that successful
 bool tracing = false;    ///< Flag to enable/disable generation of tracing files
 uint32_t pktSize = 1500; ///< packet size used for the simulation (in bytes)
 uint8_t maxMpdus = 0;    ///< The maximum number of MPDUs in A-MPDUs (0 to disable MPDU aggregation)
+bool useTxHelper = false; ///< Flag to get MPDU statistics with WifiTxStatsHelper
+bool useRxHelper = false; ///< Flag to get PPDU statistics with WifiPhyRxTraceHelper
 
 /// Table of the expected values for EIFS
 std::map<std::string /* mode */,
@@ -1896,8 +1901,8 @@ std::map<std::string /* mode */,
 /**
  * Parse context strings of the form "/NodeList/x/DeviceList/x/..." to extract the NodeId integer
  *
- * \param context The context to parse.
- * \return the NodeId
+ * @param context The context to parse.
+ * @return the NodeId
  */
 uint32_t
 ContextToNodeId(std::string context)
@@ -1910,8 +1915,8 @@ ContextToNodeId(std::string context)
 /**
  * Parse context strings of the form "/NodeList/x/DeviceList/x/..." and fetch the Mac address
  *
- * \param context The context to parse.
- * \return the device MAC address
+ * @param context The context to parse.
+ * @return the device MAC address
  */
 Mac48Address
 ContextToMac(std::string context)
@@ -1935,11 +1940,11 @@ ContextToMac(std::string context)
 // Functions for tracing.
 
 /**
- * Incremement the counter for a given address.
+ * Increment the counter for a given address.
  *
- * \param [out] counter The counter to increment.
- * \param addr The address to incremement the counter for.
- * \param increment The incremement (1 if omitted).
+ * @param [out] counter The counter to increment.
+ * @param addr The address to increment the counter for.
+ * @param increment The increment (1 if omitted).
  */
 void
 IncrementCounter(std::map<Mac48Address, uint64_t>& counter,
@@ -1960,13 +1965,13 @@ IncrementCounter(std::map<Mac48Address, uint64_t>& counter,
 /**
  * Trace a packet reception.
  *
- * \param context The context.
- * \param p The packet.
- * \param channelFreqMhz The channel frequqncy.
- * \param txVector The TX vector.
- * \param aMpdu The AMPDU.
- * \param signalNoise The signal and noise dBm.
- * \param staId The STA ID.
+ * @param context The context.
+ * @param p The packet.
+ * @param channelFreqMhz The channel frequqncy.
+ * @param txVector The TX vector.
+ * @param aMpdu The AMPDU.
+ * @param signalNoise The signal and noise dBm.
+ * @param staId The STA ID.
  */
 void
 TracePacketReception(std::string context,
@@ -2018,8 +2023,8 @@ TracePacketReception(std::string context,
 /**
  * Contention window trace.
  *
- * \param context The context.
- * \param cw The contention window.
+ * @param context The context.
+ * @param cw The contention window.
  */
 void
 CwTrace(std::string context, uint32_t cw, uint8_t /* linkId */)
@@ -2036,8 +2041,8 @@ CwTrace(std::string context, uint32_t cw, uint8_t /* linkId */)
 /**
  * Backoff trace.
  *
- * \param context The context.
- * \param newVal The backoff value.
+ * @param context The context.
+ * @param newVal The backoff value.
  */
 void
 BackoffTrace(std::string context, uint32_t newVal, uint8_t /* linkId */)
@@ -2054,9 +2059,9 @@ BackoffTrace(std::string context, uint32_t newVal, uint8_t /* linkId */)
 /**
  * PHY Rx trace.
  *
- * \param context The context.
- * \param p The packet.
- * \param power The Rx power.
+ * @param context The context.
+ * @param p The packet.
+ * @param power The Rx power.
  */
 void
 PhyRxTrace(std::string context, Ptr<const Packet> p, RxPowerWattPerChannelBand power)
@@ -2068,9 +2073,9 @@ PhyRxTrace(std::string context, Ptr<const Packet> p, RxPowerWattPerChannelBand p
 /**
  * PHY Rx trace.
  *
- * \param context The context.
- * \param txVector The TX vector.
- * \param psduDuration The PDSU diration.
+ * @param context The context.
+ * @param txVector The TX vector.
+ * @param psduDuration The PDSU diration.
  */
 void
 PhyRxPayloadTrace(std::string context, WifiTxVector txVector, Time psduDuration)
@@ -2083,9 +2088,9 @@ PhyRxPayloadTrace(std::string context, WifiTxVector txVector, Time psduDuration)
 /**
  * PHY Drop trace.
  *
- * \param context The context.
- * \param p The packet.
- * \param reason The drop reason.
+ * @param context The context.
+ * @param p The packet.
+ * @param reason The drop reason.
  */
 void
 PhyRxDropTrace(std::string context, Ptr<const Packet> p, WifiPhyRxfailureReason reason)
@@ -2168,8 +2173,8 @@ PhyRxDropTrace(std::string context, Ptr<const Packet> p, WifiPhyRxfailureReason 
 /**
  * PHY RX end trace
  *
- * \param context The context.
- * \param p The packet.
+ * @param context The context.
+ * @param p The packet.
  */
 void
 PhyRxDoneTrace(std::string context, Ptr<const Packet> p)
@@ -2181,11 +2186,11 @@ PhyRxDoneTrace(std::string context, Ptr<const Packet> p)
 /**
  * PHY successful RX trace
  *
- * \param context The context.
- * \param p The packet.
- * \param snr The SNR.
- * \param mode The WiFi mode.
- * \param preamble The preamble.
+ * @param context The context.
+ * @param p The packet.
+ * @param snr The SNR.
+ * @param mode The WiFi mode.
+ * @param preamble The preamble.
  */
 void
 PhyRxOkTrace(std::string context,
@@ -2220,9 +2225,9 @@ PhyRxOkTrace(std::string context,
 /**
  * PHY RX error trace
  *
- * \param context The context.
- * \param p The packet.
- * \param snr The SNR.
+ * @param context The context.
+ * @param p The packet.
+ * @param snr The SNR.
  */
 void
 PhyRxErrorTrace(std::string context, Ptr<const Packet> p, double snr)
@@ -2239,9 +2244,9 @@ PhyRxErrorTrace(std::string context, Ptr<const Packet> p, double snr)
 /**
  * PHY TX trace
  *
- * \param context The context.
- * \param p The packet.
- * \param txPowerW The TX power.
+ * @param context The context.
+ * @param p The packet.
+ * @param txPowerW The TX power.
  */
 void
 PhyTxTrace(std::string context, Ptr<const Packet> p, double txPowerW)
@@ -2263,8 +2268,8 @@ PhyTxTrace(std::string context, Ptr<const Packet> p, double txPowerW)
 /**
  * PHY TX end trace.
  *
- * \param context The context.
- * \param p The packet.
+ * @param context The context.
+ * @param p The packet.
  */
 void
 PhyTxDoneTrace(std::string context, Ptr<const Packet> p)
@@ -2276,8 +2281,8 @@ PhyTxDoneTrace(std::string context, Ptr<const Packet> p)
 /**
  * MAC TX trace.
  *
- * \param context The context.
- * \param p The packet.
+ * @param context The context.
+ * @param p The packet.
  */
 void
 MacTxTrace(std::string context, Ptr<const Packet> p)
@@ -2292,8 +2297,8 @@ MacTxTrace(std::string context, Ptr<const Packet> p)
 /**
  * MAC RX trace.
  *
- * \param context The context.
- * \param p The packet.
+ * @param context The context.
+ * @param p The packet.
  */
 void
 MacRxTrace(std::string context, Ptr<const Packet> p)
@@ -2308,9 +2313,9 @@ MacRxTrace(std::string context, Ptr<const Packet> p)
 /**
  * Socket send trace.
  *
- * \param context The context.
- * \param p The packet.
- * \param addr destination address.
+ * @param context The context.
+ * @param p The packet.
+ * @param addr destination address.
  */
 void
 SocketSendTrace(std::string context, Ptr<const Packet> p, const Address& addr)
@@ -2325,8 +2330,8 @@ SocketSendTrace(std::string context, Ptr<const Packet> p, const Address& addr)
 /**
  * Association log trace.
  *
- * \param context The context.
- * \param address The MAC address.
+ * @param context The context.
+ * @param address The MAC address.
  */
 void
 AssociationLog(std::string context, Mac48Address address)
@@ -2347,8 +2352,8 @@ AssociationLog(std::string context, Mac48Address address)
 /**
  * Deassociation log trace.
  *
- * \param context The context.
- * \param address The MAC address.
+ * @param context The context.
+ * @param address The MAC address.
  */
 void
 DisassociationLog(std::string context, Mac48Address address)
@@ -2389,21 +2394,21 @@ class Experiment
     /**
      * Configure and run the experiment.
      *
-     * \param wifi the pre-configured WifiHelper
-     * \param wifiPhy the pre-configured YansWifiPhyHelper
-     * \param wifiMac the pre-configured WifiMacHelper
-     * \param wifiChannel the pre-configured YansWifiChannelHelper
-     * \param trialNumber the trial index
-     * \param networkSize the number of stations
-     * \param duration the duration of each simulation run
-     * \param pcap flag to enable/disable PCAP files generation
-     * \param infra flag to enable infrastructure model, ring adhoc network if not set
-     * \param guardIntervalNs the guard interval in ns
-     * \param distance the distance
-     * \param apTxPower the AP transmit power
-     * \param staTxPower the STA transmit power
-     * \param pktInterval the packet interval
-     * \return 0 if all went well
+     * @param wifi the pre-configured WifiHelper
+     * @param wifiPhy the pre-configured YansWifiPhyHelper
+     * @param wifiMac the pre-configured WifiMacHelper
+     * @param wifiChannel the pre-configured YansWifiChannelHelper
+     * @param trialNumber the trial index
+     * @param networkSize the number of stations
+     * @param duration the duration of each simulation run
+     * @param pcap flag to enable/disable PCAP files generation
+     * @param infra flag to enable infrastructure model, ring adhoc network if not set
+     * @param guardIntervalNs the guard interval in ns
+     * @param distance the distance
+     * @param apTxPower the AP transmit power
+     * @param staTxPower the STA transmit power
+     * @param pktInterval the packet interval
+     * @return 0 if all went well
      */
     int Run(const WifiHelper& wifi,
             const YansWifiPhyHelper& wifiPhy,
@@ -2632,6 +2637,24 @@ Experiment::Run(const WifiHelper& helper,
     Config::Connect("/NodeList/*/$ns3::Node/ApplicationList/*/$ns3::PacketSocketClient/Tx",
                     MakeCallback(&SocketSendTrace));
 
+    WifiTxStatsHelper wifiTxStats;
+    if (useTxHelper)
+    {
+        // Setup Wi-Fi Transmission Statistics Helper (WifiTxStatsHelper) for all devices
+        wifiTxStats.Enable(devices);
+        wifiTxStats.Start(Seconds(10));
+        wifiTxStats.Stop(Seconds(10) + duration);
+    }
+
+    WifiPhyRxTraceHelper rxTraceHelper;
+    if (useRxHelper)
+    {
+        // Setup Wi-Fi PHY Reception Trace Helper (WifiPhyRxTraceHelper) for all devices
+        rxTraceHelper.Enable(devices);
+        rxTraceHelper.Start(Seconds(10));
+        rxTraceHelper.Stop(Seconds(10) + duration);
+    }
+
     Simulator::Schedule(Seconds(10), &RestartCalc);
     Simulator::Stop(Seconds(10) + duration);
 
@@ -2642,6 +2665,151 @@ Experiment::Run(const WifiHelper& helper,
 
     Simulator::Run();
     Simulator::Destroy();
+
+    if (useTxHelper)
+    {
+        // Get results from WifiTxStatsHelper
+        const auto numSuccessPerNodeDevice = wifiTxStats.GetSuccessesByNodeDevice();
+        const auto numFailurePerNodeDevice = wifiTxStats.GetFailuresByNodeDevice();
+        const auto numFailureDueToFailedEnqueuePerNodeDevice =
+            wifiTxStats.GetFailuresByNodeDevice(WIFI_MAC_DROP_FAILED_ENQUEUE);
+        const auto numFailureDueToExpiredLifetimePerNodeDevice =
+            wifiTxStats.GetFailuresByNodeDevice(WIFI_MAC_DROP_EXPIRED_LIFETIME);
+        const auto numFailureDueToRetryLimitReachedPerNodeDevice =
+            wifiTxStats.GetFailuresByNodeDevice(WIFI_MAC_DROP_REACHED_RETRY_LIMIT);
+        const auto numFailureDueToQosOldPacketPerNodeDevice =
+            wifiTxStats.GetFailuresByNodeDevice(WIFI_MAC_DROP_QOS_OLD_PACKET);
+        const auto numRetransPerNodeDevice = wifiTxStats.GetRetransmissionsByNodeDevice();
+        std::cout << "WifiTxStatsHelper: node to number of MPDUs acked during (10, "
+                  << 10 + duration.ToInteger(Time::S) << "] s:" << std::endl;
+        if (numSuccessPerNodeDevice.empty())
+        {
+            std::cout << "none\n";
+        }
+        else
+        {
+            std::cout << std::setw(5) << "node" << std::setw(10) << "nSuccess" << std::endl;
+            for (const auto& [nodeDevTuple, nSuccess] : numSuccessPerNodeDevice)
+            {
+                std::cout << std::setw(5) << std::get<0>(nodeDevTuple) << std::setw(10) << nSuccess
+                          << std::endl;
+            }
+        }
+        std::cout
+            << "WifiTxStatsHelper: node to number of MPDUs failed (due to any reason) during (10, "
+            << 10 + duration.ToInteger(Time::S) << "] s:" << std::endl;
+        if (numFailurePerNodeDevice.empty())
+        {
+            std::cout << "none\n";
+        }
+        else
+        {
+            std::cout << std::setw(5) << "node" << std::setw(10) << "nFailed" << std::endl;
+            for (const auto& [nodeDevTuple, nFailure] : numFailurePerNodeDevice)
+            {
+                std::cout << std::setw(5) << std::get<0>(nodeDevTuple) << std::setw(10) << nFailure
+                          << std::endl;
+            }
+            std::cout << "WifiTxStatsHelper: node to number of MPDUs failed (due to "
+                         "WIFI_MAC_DROP_FAILED_ENQUEUE) during (10, "
+                      << 10 + duration.ToInteger(Time::S) << "] s:" << std::endl;
+            if (numFailureDueToFailedEnqueuePerNodeDevice.empty())
+            {
+                std::cout << "none\n";
+            }
+            else
+            {
+                std::cout << std::setw(5) << "node" << std::setw(10) << "nFailed" << std::endl;
+                for (const auto& [nodeDevTuple, nFailure] :
+                     numFailureDueToFailedEnqueuePerNodeDevice)
+                {
+                    std::cout << std::setw(5) << std::get<0>(nodeDevTuple) << std::setw(10)
+                              << nFailure << std::endl;
+                }
+            }
+            std::cout << "WifiTxStatsHelper: node to number of MPDUs failed (due to "
+                         "WIFI_MAC_DROP_EXPIRED_LIFETIME) during (10, "
+                      << 10 + duration.ToInteger(Time::S) << "] s:" << std::endl;
+            if (numFailureDueToExpiredLifetimePerNodeDevice.empty())
+            {
+                std::cout << "none\n";
+            }
+            else
+            {
+                std::cout << std::setw(5) << "node" << std::setw(10) << "nFailed" << std::endl;
+                for (const auto& [nodeDevTuple, nFailure] :
+                     numFailureDueToExpiredLifetimePerNodeDevice)
+                {
+                    std::cout << std::setw(5) << std::get<0>(nodeDevTuple) << std::setw(10)
+                              << nFailure << std::endl;
+                }
+            }
+            std::cout << "WifiTxStatsHelper: node to number of MPDUs failed (due to "
+                         "WIFI_MAC_DROP_REACHED_RETRY_LIMIT) during (10, "
+                      << 10 + duration.ToInteger(Time::S) << "] s:" << std::endl;
+            if (numFailureDueToRetryLimitReachedPerNodeDevice.empty())
+            {
+                std::cout << "none\n";
+            }
+            else
+            {
+                std::cout << std::setw(5) << "node" << std::setw(10) << "nFailed" << std::endl;
+                for (const auto& [nodeDevTuple, nFailure] :
+                     numFailureDueToRetryLimitReachedPerNodeDevice)
+                {
+                    std::cout << std::setw(5) << std::get<0>(nodeDevTuple) << std::setw(10)
+                              << nFailure << std::endl;
+                }
+            }
+            std::cout << "WifiTxStatsHelper: node to number of MPDUs failed (due to "
+                         "WIFI_MAC_DROP_QOS_OLD_PACKET) during (10, "
+                      << 10 + duration.ToInteger(Time::S) << "] s:" << std::endl;
+            if (numFailureDueToQosOldPacketPerNodeDevice.empty())
+            {
+                std::cout << "none\n";
+            }
+            else
+            {
+                std::cout << std::setw(5) << "node" << std::setw(10) << "nFailed" << std::endl;
+                for (const auto& [nodeDevTuple, nFailure] :
+                     numFailureDueToQosOldPacketPerNodeDevice)
+                {
+                    std::cout << std::setw(5) << std::get<0>(nodeDevTuple) << std::setw(10)
+                              << nFailure << std::endl;
+                }
+            }
+        }
+        std::cout << "WifiTxStatsHelper: node to number of retransmissions of MPDUs "
+                     "Acked during (10, "
+                  << 10 + duration.ToInteger(Time::S) << "] s:" << std::endl;
+        if (numRetransPerNodeDevice.empty())
+        {
+            std::cout << "none\n";
+        }
+        else
+        {
+            std::cout << std::setw(5) << "node" << std::setw(10) << "nRetrans" << std::endl;
+            for (const auto& [nodeDevTuple, nRetrans] : numRetransPerNodeDevice)
+            {
+                std::cout << std::setw(5) << std::get<0>(nodeDevTuple) << std::setw(10) << nRetrans
+                          << std::endl;
+            }
+        }
+    }
+
+    if (useRxHelper)
+    {
+        // Get results from WifiPhyRxTraceHelper
+        std::cout << "\nWifiPhyRxTraceHelper: overall statistics" << std::endl;
+        rxTraceHelper.PrintStatistics();
+        for (uint32_t nodeIndex = 0; nodeIndex < nNodes; ++nodeIndex)
+        {
+            std::cout << "\nWifiPhyRxTraceHelper: per-node statistics for node " << nodeIndex
+                      << std::endl;
+            rxTraceHelper.PrintStatistics(nodeIndex);
+        }
+        std::cout << std::endl;
+    }
 
     if (tracing)
     {
@@ -2659,9 +2827,9 @@ Experiment::Run(const WifiHelper& helper,
 /**
  * Get the Counter associated with a MAC address.
  *
- * \param counter The map of counters to inspect.
- * \param addr The MAC address.
- * \return the value of the counter,
+ * @param counter The map of counters to inspect.
+ * @param addr The MAC address.
+ * @return the value of the counter,
  */
 uint64_t
 GetCount(const std::map<Mac48Address, uint64_t>& counter, Mac48Address addr)
@@ -2706,18 +2874,15 @@ main(int argc, char* argv[])
         1000; ///< The socket packet interval in microseconds (a higher value is needed to reach
               ///< saturation conditions as the channel bandwidth or the MCS increases)
     meter_u distance = 0.001; ///< The distance in meters between the AP and the STAs
-    dBm_u apTxPower = 16;     ///< The transmit power of the AP (if infrastructure only)
-    dBm_u staTxPower = 16;    ///< The transmit power of each STA (or all STAs if adhoc)
+    dBm_u apTxPower{16};      ///< The transmit power of the AP (if infrastructure only)
+    dBm_u staTxPower{16};     ///< The transmit power of each STA (or all STAs if adhoc)
 
     // Disable fragmentation and RTS/CTS
     Config::SetDefault("ns3::WifiRemoteStationManager::FragmentationThreshold",
                        StringValue("22000"));
     Config::SetDefault("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue("22000"));
-    // Disable short retransmission failure (make retransmissions persistent)
-    Config::SetDefault("ns3::WifiRemoteStationManager::MaxSlrc",
-                       UintegerValue(std::numeric_limits<uint32_t>::max()));
-    Config::SetDefault("ns3::WifiRemoteStationManager::MaxSsrc",
-                       UintegerValue(std::numeric_limits<uint32_t>::max()));
+    // Make CW stay equal to CWmax until a packet is acknowledged
+    Config::SetDefault("ns3::WifiMac::FrameRetryLimit", UintegerValue(65535));
     // Set maximum queue size to the largest value and set maximum queue delay to be larger than the
     // simulation time
     Config::SetDefault(
@@ -2730,6 +2895,8 @@ main(int argc, char* argv[])
                  "Logging level (0: no log - 1: simulation script logs - 2: all logs)",
                  verbose);
     cmd.AddValue("tracing", "Generate trace files", tracing);
+    cmd.AddValue("useTxHelper", "Enable WifiTxStatsHelper on all devices", useTxHelper);
+    cmd.AddValue("useRxHelper", "Enable WifiPhyRxTraceHelper on all devices", useRxHelper);
     cmd.AddValue("pktSize", "The packet size in bytes", pktSize);
     cmd.AddValue("trials", "The maximal number of runs per network size", trials);
     cmd.AddValue("duration", "Time duration for each trial in seconds", duration);

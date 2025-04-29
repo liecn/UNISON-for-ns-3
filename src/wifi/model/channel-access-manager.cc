@@ -42,7 +42,7 @@ class PhyListener : public ns3::WifiPhyListener
     /**
      * Create a PhyListener for the given ChannelAccessManager.
      *
-     * \param cam the ChannelAccessManager
+     * @param cam the ChannelAccessManager
      */
     PhyListener(ns3::ChannelAccessManager* cam)
         : m_cam(cam),
@@ -57,7 +57,7 @@ class PhyListener : public ns3::WifiPhyListener
     /**
      * Set this listener to be active or not.
      *
-     * \param active whether this listener is active or not
+     * @param active whether this listener is active or not
      */
     void SetActive(bool active)
     {
@@ -65,7 +65,7 @@ class PhyListener : public ns3::WifiPhyListener
     }
 
     /**
-     * \return whether this listener is active or not
+     * @return whether this listener is active or not
      */
     bool IsActive() const
     {
@@ -185,7 +185,20 @@ ChannelAccessManager::GetTypeId()
                           "and subsequently the medium becomes busy.",
                           BooleanValue(false),
                           MakeBooleanAccessor(&ChannelAccessManager::m_proactiveBackoff),
-                          MakeBooleanChecker());
+                          MakeBooleanChecker())
+            .AddAttribute("NSlotsLeft",
+                          "Fire the NSlotsLeftAlert trace source when the backoff counter with "
+                          "the minimum value among all ACs reaches this value or it is started "
+                          "with a value less than this attribute. If this value is zero, the "
+                          "trace source is never fired.",
+                          UintegerValue(0),
+                          MakeUintegerAccessor(&ChannelAccessManager::m_nSlotsLeft),
+                          MakeUintegerChecker<uint8_t>())
+            .AddTraceSource("NSlotsLeftAlert",
+                            "The backoff counter of the AC with the given index reached the "
+                            "threshold set through the NSlotsLeft attribute.",
+                            MakeTraceSourceAccessor(&ChannelAccessManager::m_nSlotsLeftCallback),
+                            "ns3::ChannelAccessManager::NSlotsLeftCallback");
     return tid;
 }
 
@@ -264,6 +277,11 @@ ChannelAccessManager::SetupPhyListener(Ptr<WifiPhy> phy)
     {
         phyListener = std::make_shared<PhyListener>(this);
         m_phyListeners.emplace(phy, phyListener);
+        if (!m_phy)
+        {
+            // no PHY operating on this link and no previous PHY listener to reactivate
+            m_lastSwitchingEnd = Simulator::Now();
+        }
     }
     if (m_phy)
     {
@@ -272,12 +290,6 @@ ChannelAccessManager::SetupPhyListener(Ptr<WifiPhy> phy)
     m_phy = phy; // this is the new active PHY
     ResizeLastBusyStructs();
     phy->RegisterListener(phyListener);
-    if (phy->IsStateSwitching())
-    {
-        auto duration = phy->GetDelayUntilIdle();
-        NS_LOG_DEBUG("switching start for " << duration);
-        m_lastSwitchingEnd = Simulator::Now() + duration;
-    }
 }
 
 void
@@ -370,9 +382,10 @@ ChannelAccessManager::ResizeLastBusyStructs()
     m_lastBusyEnd.emplace(WIFI_CHANLIST_PRIMARY, now);
     m_lastIdle.emplace(WIFI_CHANLIST_PRIMARY, Timespan{now, now});
 
-    const auto width = m_phy ? m_phy->GetChannelWidth() : 0;
-    std::size_t size =
-        (width > 20 && m_phy->GetStandard() >= WIFI_STANDARD_80211ax) ? width / 20 : 0;
+    const auto width = m_phy ? m_phy->GetChannelWidth() : MHz_u{0};
+    std::size_t size = (width > MHz_u{20} && m_phy->GetStandard() >= WIFI_STANDARD_80211ax)
+                           ? Count20MHzSubchannels(width)
+                           : 0;
     m_lastPer20MHzBusyEnd.resize(size, now);
 
     if (!m_phy || !m_phy->GetOperatingChannel().IsOfdm())
@@ -380,7 +393,7 @@ ChannelAccessManager::ResizeLastBusyStructs()
         return;
     }
 
-    if (width >= 40)
+    if (width >= MHz_u{40})
     {
         m_lastBusyEnd.emplace(WIFI_CHANLIST_SECONDARY, now);
         m_lastIdle.emplace(WIFI_CHANLIST_SECONDARY, Timespan{now, now});
@@ -391,7 +404,7 @@ ChannelAccessManager::ResizeLastBusyStructs()
         m_lastIdle.erase(WIFI_CHANLIST_SECONDARY);
     }
 
-    if (width >= 80)
+    if (width >= MHz_u{80})
     {
         m_lastBusyEnd.emplace(WIFI_CHANLIST_SECONDARY40, now);
         m_lastIdle.emplace(WIFI_CHANLIST_SECONDARY40, Timespan{now, now});
@@ -402,7 +415,7 @@ ChannelAccessManager::ResizeLastBusyStructs()
         m_lastIdle.erase(WIFI_CHANLIST_SECONDARY40);
     }
 
-    if (width >= 160)
+    if (width >= MHz_u{160})
     {
         m_lastBusyEnd.emplace(WIFI_CHANLIST_SECONDARY80, now);
         m_lastIdle.emplace(WIFI_CHANLIST_SECONDARY80, Timespan{now, now});
@@ -607,9 +620,10 @@ ChannelAccessManager::DoGrantDcfAccess()
             auto interval = (m_phy->GetPhyBand() == WIFI_PHY_BAND_2_4GHZ)
                                 ? GetSifs() + 2 * GetSlot()
                                 : m_phy->GetPifs();
-            auto width = (m_phy->GetOperatingChannel().IsOfdm() && m_phy->GetChannelWidth() > 20)
-                             ? GetLargestIdlePrimaryChannel(interval, now)
-                             : m_phy->GetChannelWidth();
+            auto width =
+                (m_phy->GetOperatingChannel().IsOfdm() && m_phy->GetChannelWidth() > MHz_u{20})
+                    ? GetLargestIdlePrimaryChannel(interval, now)
+                    : m_phy->GetChannelWidth();
             if (m_feManager->StartTransmission(txop, width))
             {
                 for (auto& collidingTxop : internalCollisionTxops)
@@ -710,6 +724,12 @@ ChannelAccessManager::GetBackoffEndFor(Ptr<Txop> txop, Time accessGrantStart) co
     return backoffEnd;
 }
 
+Time
+ChannelAccessManager::GetNavEnd() const
+{
+    return m_lastNavEnd;
+}
+
 void
 ChannelAccessManager::UpdateBackoff()
 {
@@ -754,26 +774,43 @@ ChannelAccessManager::DoRestartAccessTimeoutIfNeeded()
      * Is there a Txop which needs to access the medium, and,
      * if there is one, how many slots for AIFS+backoff does it require ?
      */
-    bool accessTimeoutNeeded = false;
+    Ptr<Txop> nextTxop;
     auto expectedBackoffEnd = Simulator::GetMaximumSimulationTime();
     const auto accessGrantStart = GetAccessGrantStart();
+    const auto now = Simulator::Now();
     for (auto txop : m_txops)
     {
         if (txop->GetAccessStatus(m_linkId) == Txop::REQUESTED)
         {
-            Time tmp = GetBackoffEndFor(txop, accessGrantStart);
-            if (tmp > Simulator::Now())
+            if (auto backoffEnd = GetBackoffEndFor(txop, accessGrantStart);
+                backoffEnd > now && backoffEnd < expectedBackoffEnd)
             {
-                accessTimeoutNeeded = true;
-                expectedBackoffEnd = std::min(expectedBackoffEnd, tmp);
+                expectedBackoffEnd = backoffEnd;
+                nextTxop = txop;
             }
         }
     }
-    NS_LOG_DEBUG("Access timeout needed: " << accessTimeoutNeeded);
-    if (accessTimeoutNeeded)
+    NS_LOG_DEBUG("Access timeout needed: " << (nextTxop != nullptr));
+    if (nextTxop)
     {
-        NS_LOG_DEBUG("expected backoff end=" << expectedBackoffEnd);
-        Time expectedBackoffDelay = expectedBackoffEnd - Simulator::Now();
+        const auto aci = nextTxop->GetWifiMacQueue()->GetAc();
+        NS_LOG_DEBUG("expected backoff end=" << expectedBackoffEnd << " by " << aci);
+        auto expectedBackoffDelay = expectedBackoffEnd - now;
+
+        if (m_nSlotsLeft > 0)
+        {
+            if (const auto slots = m_nSlotsLeft * GetSlot(); expectedBackoffDelay > slots)
+            {
+                // make the timer expire when the specified number of slots are left
+                expectedBackoffDelay -= slots;
+            }
+            else
+            {
+                // notify that a number of slots less than or equal to the specified value are left
+                m_nSlotsLeftCallback(m_linkId, aci, expectedBackoffDelay);
+            }
+        }
+
         if (m_accessTimeout.IsPending() &&
             Simulator::GetDelayLeft(m_accessTimeout) > expectedBackoffDelay)
         {
@@ -803,7 +840,7 @@ ChannelAccessManager::GetLargestIdlePrimaryChannel(Time interval, Time end)
     // also be called before starting a TXOP gained through EDCA.
     UpdateLastIdlePeriod();
 
-    MHz_u width = 0;
+    MHz_u width{0};
 
     // we iterate over the different types of channels in the same order as they
     // are listed in WifiChannelListType
@@ -812,7 +849,7 @@ ChannelAccessManager::GetLargestIdlePrimaryChannel(Time interval, Time end)
         if (lastIdle.second.start <= end - interval && lastIdle.second.end >= end)
         {
             // channel idle, update width
-            width = (width == 0) ? 20 : (2 * width);
+            width = (width == MHz_u{0}) ? MHz_u{20} : (2 * width);
         }
         else
         {
@@ -827,7 +864,7 @@ ChannelAccessManager::GetPer20MHzBusy(const std::set<uint8_t>& indices) const
 {
     const auto now = Simulator::Now();
 
-    if (m_phy->GetChannelWidth() < 40)
+    if (m_phy->GetChannelWidth() < MHz_u{40})
     {
         NS_ASSERT_MSG(indices.size() == 1 && *indices.cbegin() == 0,
                       "Index 0 only can be specified if the channel width is less than 40 MHz");

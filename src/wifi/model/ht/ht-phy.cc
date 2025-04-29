@@ -712,7 +712,7 @@ HtPhy::CalculateDataRate(Time symbolDuration,
 uint16_t
 HtPhy::GetUsableSubcarriers(MHz_u channelWidth)
 {
-    return (channelWidth == 40) ? 108 : 52;
+    return (channelWidth == MHz_u{40}) ? 108 : 52;
 }
 
 Time
@@ -816,12 +816,12 @@ HtPhy::GetMaxPsduSize() const
 PhyEntity::CcaIndication
 HtPhy::GetCcaIndication(const Ptr<const WifiPpdu> ppdu)
 {
-    if (m_wifiPhy->GetChannelWidth() < 40)
+    if (m_wifiPhy->GetChannelWidth() < MHz_u{40})
     {
         return OfdmPhy::GetCcaIndication(ppdu);
     }
     auto ccaThreshold = GetCcaThreshold(ppdu, WIFI_CHANLIST_PRIMARY);
-    auto delayUntilCcaEnd = GetDelayUntilCcaEnd(ccaThreshold, GetPrimaryBand(20));
+    auto delayUntilCcaEnd = GetDelayUntilCcaEnd(ccaThreshold, GetPrimaryBand(MHz_u{20}));
     if (delayUntilCcaEnd.IsStrictlyPositive())
     {
         return std::make_pair(
@@ -830,7 +830,7 @@ HtPhy::GetCcaIndication(const Ptr<const WifiPpdu> ppdu)
     }
     if (ppdu)
     {
-        const MHz_u primaryWidth = 20;
+        const MHz_u primaryWidth{20};
         const MHz_u p20MinFreq =
             m_wifiPhy->GetOperatingChannel().GetPrimaryChannelCenterFrequency(primaryWidth) -
             (primaryWidth / 2);
@@ -847,7 +847,7 @@ HtPhy::GetCcaIndication(const Ptr<const WifiPpdu> ppdu)
         }
     }
 
-    const MHz_u secondaryWidth = 20;
+    const MHz_u secondaryWidth{20};
     const MHz_u s20MinFreq =
         m_wifiPhy->GetOperatingChannel().GetSecondaryChannelCenterFrequency(secondaryWidth) -
         (secondaryWidth / 2);
@@ -857,7 +857,7 @@ HtPhy::GetCcaIndication(const Ptr<const WifiPpdu> ppdu)
     if (!ppdu || ppdu->DoesOverlapChannel(s20MinFreq, s20MaxFreq))
     {
         ccaThreshold = GetCcaThreshold(ppdu, WIFI_CHANLIST_SECONDARY);
-        delayUntilCcaEnd = GetDelayUntilCcaEnd(ccaThreshold, GetSecondaryBand(20));
+        delayUntilCcaEnd = GetDelayUntilCcaEnd(ccaThreshold, GetSecondaryBand(MHz_u{20}));
         if (delayUntilCcaEnd.IsStrictlyPositive())
         {
             return std::make_pair(delayUntilCcaEnd, WIFI_CHANLIST_SECONDARY);

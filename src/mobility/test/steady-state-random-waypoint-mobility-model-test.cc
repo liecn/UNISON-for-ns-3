@@ -18,9 +18,9 @@
 using namespace ns3;
 
 /**
- * \ingroup mobility-test
+ * @ingroup mobility-test
  *
- * \brief Steady State Random Waypoint Test
+ * @brief Steady State Random Waypoint Test
  */
 class SteadyStateRandomWaypointTest : public TestCase
 {
@@ -78,7 +78,7 @@ SteadyStateRandomWaypointTest::DoRun()
         model->AssignStreams(100 * (i + 1));
         // Add this mobility model to the stack.
         mobilityStack.push_back(model);
-        Simulator::Schedule(Seconds(0.0), &Object::Initialize, model);
+        Simulator::Schedule(Seconds(0), &Object::Initialize, model);
     }
 
     Simulator::Schedule(Seconds(0.001), &SteadyStateRandomWaypointTest::DistribCompare, this);
@@ -138,9 +138,9 @@ SteadyStateRandomWaypointTest::DistribCompare()
 }
 
 /**
- * \ingroup mobility-test
+ * @ingroup mobility-test
  *
- * \brief Steady State Random Waypoint Test Suite
+ * @brief Steady State Random Waypoint Test Suite
  */
 struct SteadyStateRandomWaypointTestSuite : public TestSuite
 {

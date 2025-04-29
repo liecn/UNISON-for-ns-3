@@ -15,7 +15,7 @@ namespace ns3
 {
 
 UlJob::UlJob()
-    : m_deadline(Seconds(0)),
+    : m_deadline(),
       m_size(0)
 {
 }
@@ -121,10 +121,10 @@ UlJob::SetSize(uint32_t size)
 }
 
 /**
- * \brief equality operator
- * \param a first ULJob
- * \param b second ULJob
- * \returns true if equal
+ * @brief equality operator
+ * @param a first ULJob
+ * @param b second ULJob
+ * @returns true if equal
  */
 bool
 operator==(const UlJob& a, const UlJob& b)

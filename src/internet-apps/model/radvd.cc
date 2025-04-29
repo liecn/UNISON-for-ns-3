@@ -172,8 +172,10 @@ int64_t
 Radvd::AssignStreams(int64_t stream)
 {
     NS_LOG_FUNCTION(this << stream);
-    m_jitter->SetStream(stream);
-    return 1;
+    auto currentStream = stream;
+    m_jitter->SetStream(currentStream++);
+    currentStream += Application::AssignStreams(currentStream);
+    return (currentStream - stream);
 }
 
 void

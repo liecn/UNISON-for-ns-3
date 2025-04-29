@@ -77,8 +77,8 @@ class InterferenceExperiment
         meter_u xB;            ///< x B
         std::string txModeA;   ///< transmit mode A
         std::string txModeB;   ///< transmit mode B
-        double txPowerLevelA;  ///< transmit power level A
-        double txPowerLevelB;  ///< transmit power level B
+        dBm_u txPowerLevelA;   ///< transmit power level A
+        dBm_u txPowerLevelB;   ///< transmit power level B
         uint32_t packetSizeA;  ///< packet size A
         uint32_t packetSizeB;  ///< packet size B
         uint16_t channelA;     ///< channel number A
@@ -89,21 +89,21 @@ class InterferenceExperiment
         WifiPhyBand band;      ///< band
         WifiPreamble preamble; ///< preamble
         bool captureEnabled;   ///< whether physical layer capture is enabled
-        double captureMargin;  ///< margin used for physical layer capture
+        dB_u captureMargin;    ///< margin used for physical layer capture
     };
 
     InterferenceExperiment();
     /**
      * Run function
-     * \param input the interference experiment data
+     * @param input the interference experiment data
      */
     void Run(InterferenceExperiment::Input input);
 
   private:
     /**
      * Function triggered when a packet is dropped
-     * \param packet the packet that was dropped
-     * \param reason the reason why it was dropped
+     * @param packet the packet that was dropped
+     * @param reason the reason why it was dropped
      */
     void PacketDropped(Ptr<const Packet> packet, WifiPhyRxfailureReason reason);
     /// Send A function
@@ -180,24 +180,24 @@ InterferenceExperiment::InterferenceExperiment()
 }
 
 InterferenceExperiment::Input::Input()
-    : interval(MicroSeconds(0)),
+    : interval(),
       xA(-5),
       xB(5),
       txModeA("OfdmRate54Mbps"),
       txModeB("OfdmRate54Mbps"),
-      txPowerLevelA(16.0206),
-      txPowerLevelB(16.0206),
+      txPowerLevelA(dBm_u{16.0206}),
+      txPowerLevelB(dBm_u{16.0206}),
       packetSizeA(1500),
       packetSizeB(1500),
       channelA(36),
       channelB(36),
-      widthA(20),
-      widthB(20),
+      widthA(MHz_u{20}),
+      widthB(MHz_u{20}),
       standard(WIFI_STANDARD_80211a),
       band(WIFI_PHY_BAND_5GHZ),
       preamble(WIFI_PREAMBLE_LONG),
       captureEnabled(false),
-      captureMargin(0)
+      captureMargin(dB_u{0})
 {
 }
 

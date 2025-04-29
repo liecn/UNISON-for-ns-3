@@ -10,11 +10,13 @@
 #ifndef UDP_TRACE_CLIENT_H
 #define UDP_TRACE_CLIENT_H
 
-#include "ns3/application.h"
+#include "source-application.h"
+
 #include "ns3/event-id.h"
 #include "ns3/ipv4-address.h"
 #include "ns3/ptr.h"
 
+#include <optional>
 #include <vector>
 
 namespace ns3
@@ -24,9 +26,9 @@ class Socket;
 class Packet;
 
 /**
- * \ingroup udpclientserver
+ * @ingroup udpclientserver
  *
- * \brief A trace based streamer
+ * @brief A trace based streamer
  *
  * Sends UDP packets based on a trace file of a MPEG4 stream.
  * Trace files can be downloaded from:
@@ -49,67 +51,53 @@ class Packet;
  *
  * The latter behavior can be changed through the "TraceLoop" attribute.
  */
-class UdpTraceClient : public Application
+class UdpTraceClient : public SourceApplication
 {
   public:
     /**
-     * \brief Get the type ID.
-     * \return the object TypeId
+     * @brief Get the type ID.
+     * @return the object TypeId
      */
     static TypeId GetTypeId();
 
     UdpTraceClient();
-
-    /**
-     * \brief Creates a traceBasedStreamer application
-     * \param ip the destination ip address to which the stream will be sent
-     * \param port the destination udp port to which the stream will be sent
-     * \param traceFile a path to an MPEG4 trace file formatted as follows:
-     *  FrameNo Frametype   Time[ms]    Length [byte]
-     *  FrameNo Frametype   Time[ms]    Length [byte]
-     *  ...
-     *
-     *
-     */
-    UdpTraceClient(Ipv4Address ip, uint16_t port, char* traceFile);
     ~UdpTraceClient() override;
 
-    /**
-     * \brief set the remote address and port
-     * \param ip remote IP address
-     * \param port remote port
-     */
-    void SetRemote(Address ip, uint16_t port);
-    /**
-     * \brief set the remote address
-     * \param addr remote address
-     */
-    void SetRemote(Address addr);
+    static constexpr uint16_t DEFAULT_PORT{100}; //!< default port
 
     /**
-     * \brief Set the trace file to be used by the application
-     * \param filename a path to an MPEG4 trace file formatted as follows:
+     * @brief set the remote address and port
+     * @param ip remote IP address
+     * @param port remote port
+     */
+    NS_DEPRECATED_3_44("Use SetRemote without port parameter instead")
+    void SetRemote(const Address& ip, uint16_t port);
+    void SetRemote(const Address& addr) override;
+
+    /**
+     * @brief Set the trace file to be used by the application
+     * @param filename a path to an MPEG4 trace file formatted as follows:
      *  Frame No Frametype   Time[ms]    Length [byte]
      *  Frame No Frametype   Time[ms]    Length [byte]
      *  ...
      */
-    void SetTraceFile(std::string filename);
+    void SetTraceFile(const std::string& filename);
 
     /**
-     * \brief Return the maximum packet size
-     * \return the maximum packet size
+     * @brief Return the maximum packet size
+     * @return the maximum packet size
      */
     uint16_t GetMaxPacketSize();
 
     /**
-     * \brief Set the maximum packet size
-     * \param maxPacketSize The maximum packet size
+     * @brief Set the maximum packet size
+     * @param maxPacketSize The maximum packet size
      */
     void SetMaxPacketSize(uint16_t maxPacketSize);
 
     /**
-     * \brief Set the trace loop flag
-     * \param traceLoop true if the trace should be re-used
+     * @brief Set the trace loop flag
+     * @param traceLoop true if the trace should be re-used
      */
     void SetTraceLoop(bool traceLoop);
 
@@ -118,27 +106,46 @@ class UdpTraceClient : public Application
     void StopApplication() override;
 
     /**
-     * \brief Load a trace file
-     * \param filename the trace file path
+     * @brief Set the remote port (temporary function until deprecated attributes are removed)
+     * @param port remote port
      */
-    void LoadTrace(std::string filename);
+    void SetPort(uint16_t port);
+
     /**
-     * \brief Load the default trace
+     * @brief Get the remote port (temporary function until deprecated attributes are removed)
+     * @return the remote port
+     */
+    uint16_t GetPort() const;
+
+    /**
+     * @brief Get the remote address (temporary function until deprecated attributes are removed)
+     * @return the remote address
+     */
+    Address GetRemote() const;
+
+    /**
+     * @brief Load current trace file
+     */
+    void LoadTrace();
+
+    /**
+     * @brief Load the default trace
      */
     void LoadDefaultTrace();
 
     /**
-     * \brief Send a packet
+     * @brief Send a packet
      */
     void Send();
+
     /**
-     * \brief Send a packet of a given size
-     * \param size the packet size
+     * @brief Send a packet of a given size
+     * @param size the packet size
      */
     void SendPacket(uint32_t size);
 
     /**
-     * \brief Entry to send.
+     * @brief Entry to send.
      *
      * Each entry represents an MPEG frame
      */
@@ -149,18 +156,17 @@ class UdpTraceClient : public Application
         char frameType;      //!< Frame type (I, P or B)
     };
 
-    uint32_t m_sent;       //!< Counter for sent packets
-    Ptr<Socket> m_socket;  //!< Socket
-    Address m_peerAddress; //!< Remote peer address
-    uint16_t m_peerPort;   //!< Remote peer port
-    uint8_t m_tos;         //!< The packets Type of Service
-    EventId m_sendEvent;   //!< Event to send the next packet
+    uint32_t m_sent;                    //!< Counter for sent packets
+    Ptr<Socket> m_socket;               //!< Socket
+    std::optional<uint16_t> m_peerPort; //!< Remote peer port (deprecated) // NS_DEPRECATED_3_44
+    EventId m_sendEvent;                //!< Event to send the next packet
 
     std::vector<TraceEntry> m_entries;    //!< Entries in the trace to send
     uint32_t m_currentEntry;              //!< Current entry index
     static TraceEntry g_defaultEntries[]; //!< Default trace to send
     uint16_t m_maxPacketSize; //!< Maximum packet size to send (including the SeqTsHeader)
     bool m_traceLoop;         //!< Loop through the trace file
+    std::string m_traceFile;  //!< The location of the trace file
 };
 
 } // namespace ns3

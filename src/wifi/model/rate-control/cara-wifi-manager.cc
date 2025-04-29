@@ -19,7 +19,7 @@ namespace ns3
 NS_LOG_COMPONENT_DEFINE("CaraWifiManager");
 
 /**
- * \brief hold per-remote-station state for CARA Wifi manager.
+ * @brief hold per-remote-station state for CARA Wifi manager.
  *
  * This struct extends from WifiRemoteStation struct to hold additional
  * information required by the CARA Wifi manager
@@ -198,9 +198,9 @@ CaraWifiManager::DoGetDataTxVector(WifiRemoteStation* st, MHz_u allowedWidth)
     NS_LOG_FUNCTION(this << st << allowedWidth);
     auto station = static_cast<CaraWifiRemoteStation*>(st);
     auto channelWidth = GetChannelWidth(station);
-    if (channelWidth > 20 && channelWidth != 22)
+    if (channelWidth > MHz_u{20} && channelWidth != MHz_u{22})
     {
-        channelWidth = 20;
+        channelWidth = MHz_u{20};
     }
     WifiMode mode = GetSupported(station, station->m_rate);
     uint64_t rate = mode.GetDataRate(channelWidth);
@@ -226,12 +226,12 @@ CaraWifiManager::DoGetRtsTxVector(WifiRemoteStation* st)
 {
     NS_LOG_FUNCTION(this << st);
     auto station = static_cast<CaraWifiRemoteStation*>(st);
-    /// \todo we could/should implement the Arf algorithm for
+    /// @todo we could/should implement the Arf algorithm for
     /// RTS only by picking a single rate within the BasicRateSet.
     auto channelWidth = GetChannelWidth(station);
-    if (channelWidth > 20 && channelWidth != 22)
+    if (channelWidth > MHz_u{20} && channelWidth != MHz_u{22})
     {
-        channelWidth = 20;
+        channelWidth = MHz_u{20};
     }
     WifiMode mode;
     if (!GetUseNonErpProtection())

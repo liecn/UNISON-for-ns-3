@@ -73,7 +73,7 @@ Txop::GetTypeId()
                           MakeUintegerAccessor((void(Txop::*)(uint32_t)) & Txop::SetMinCw,
                                                (uint32_t(Txop::*)() const) & Txop::GetMinCw),
                           MakeUintegerChecker<uint32_t>(),
-                          TypeId::OBSOLETE,
+                          TypeId::SupportLevel::OBSOLETE,
                           "Use MinCws attribute instead of MinCw")
             .AddAttribute(
                 "MinCws",
@@ -93,7 +93,7 @@ Txop::GetTypeId()
                           MakeUintegerAccessor((void(Txop::*)(uint32_t)) & Txop::SetMaxCw,
                                                (uint32_t(Txop::*)() const) & Txop::GetMaxCw),
                           MakeUintegerChecker<uint32_t>(),
-                          TypeId::OBSOLETE,
+                          TypeId::SupportLevel::OBSOLETE,
                           "Use MaxCws attribute instead of MaxCw")
             .AddAttribute(
                 "MaxCws",
@@ -114,7 +114,7 @@ Txop::GetTypeId()
                 MakeUintegerAccessor((void(Txop::*)(uint8_t)) & Txop::SetAifsn,
                                      (uint8_t(Txop::*)() const) & Txop::GetAifsn),
                 MakeUintegerChecker<uint8_t>(),
-                TypeId::OBSOLETE,
+                TypeId::SupportLevel::OBSOLETE,
                 "Use Aifsns attribute instead of Aifsn")
             .AddAttribute(
                 "Aifsns",
@@ -134,7 +134,7 @@ Txop::GetTypeId()
                           MakeTimeAccessor((void(Txop::*)(Time)) & Txop::SetTxopLimit,
                                            (Time(Txop::*)() const) & Txop::GetTxopLimit),
                           MakeTimeChecker(),
-                          TypeId::OBSOLETE,
+                          TypeId::SupportLevel::OBSOLETE,
                           "Use TxopLimits attribute instead of TxopLimit")
             .AddAttribute(
                 "TxopLimits",
@@ -358,6 +358,12 @@ Txop::GetCw(uint8_t linkId) const
     return GetLink(linkId).cw;
 }
 
+std::size_t
+Txop::GetStaRetryCount(uint8_t linkId) const
+{
+    return GetLink(linkId).staRetryCount;
+}
+
 void
 Txop::ResetCw(uint8_t linkId)
 {
@@ -365,6 +371,7 @@ Txop::ResetCw(uint8_t linkId)
     auto& link = GetLink(linkId);
     link.cw = GetMinCw(linkId);
     m_cwTrace(link.cw, linkId);
+    link.staRetryCount = 0;
 }
 
 void
@@ -372,10 +379,26 @@ Txop::UpdateFailedCw(uint8_t linkId)
 {
     NS_LOG_FUNCTION(this << linkId);
     auto& link = GetLink(linkId);
-    // see 802.11-2012, section 9.19.2.5
-    link.cw = std::min(2 * (link.cw + 1) - 1, GetMaxCw(linkId));
-    // if the MU EDCA timer is running, CW cannot be less than MU CW min
-    link.cw = std::max(link.cw, GetMinCw(linkId));
+
+    if (link.staRetryCount < m_mac->GetFrameRetryLimit())
+    {
+        // If QSRC[AC] is less than dot11ShortRetryLimit,
+        // - QSRC[AC] shall be incremented by 1.
+        // - CW[AC] shall be set to the lesser of CWmax[AC] and 2^QSRC[AC] × (CWmin[AC] + 1) – 1.
+        // (Section 10.23.2.2 of 802.11-2020)
+        ++link.staRetryCount;
+        link.cw =
+            std::min(GetMaxCw(linkId), (1 << link.staRetryCount) * (GetMinCw(linkId) + 1) - 1);
+    }
+    else
+    {
+        //  Else
+        // - QSRC[AC] shall be set to 0.
+        // - CW[AC] shall be set to CWmin[AC].
+        link.staRetryCount = 0;
+        link.cw = GetMinCw(linkId);
+    }
+
     m_cwTrace(link.cw, linkId);
 }
 

@@ -122,6 +122,18 @@ subdirlist(libs_to_build ${CMAKE_CURRENT_SOURCE_DIR}/src)
 # Scan contribution libraries
 subdirlist(contrib_libs_to_build ${CMAKE_CURRENT_SOURCE_DIR}/contrib)
 
+# Scan for additional contribution libraries OUTSIDE the ns-3 source directory,
+# in the ns-3-external-contrib directory
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../ns-3-external-contrib)
+  subdirlist(
+    external_contrib_libs_to_build
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ns-3-external-contrib
+  )
+  set(contrib_libs_to_build ${contrib_libs_to_build}
+                            ${external_contrib_libs_to_build}
+  )
+endif()
+
 # Before filtering, we need to load settings from .ns3rc
 parse_ns3rc(
   ns3rc_enabled_modules ns3rc_disabled_modules ns3rc_examples_enabled
@@ -146,6 +158,18 @@ if(${NS3_CCACHE})
         ${CCACHE} --set-config
         sloppiness=pch_defines,time_macros,include_file_mtime,include_file_ctime
     )
+    if(DEFINED MSVC)
+      if(MSVC)
+        file(COPY_FILE ${CCACHE} ${CMAKE_BINARY_DIR}/clang-cl.exe
+             ONLY_IF_DIFFERENT
+        )
+        set(CMAKE_VS_GLOBALS
+            "CLToolExe=clang-cl.exe" "CLToolPath=${CMAKE_BINARY_DIR}"
+            "TrackFileAccess=false" "UseMultiToolTask=true"
+            "DebugInformationFormat=OldStyle"
+        )
+      endif()
+    endif()
   endif()
 endif()
 

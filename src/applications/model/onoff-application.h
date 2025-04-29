@@ -14,24 +14,23 @@
 #define ONOFF_APPLICATION_H
 
 #include "seq-ts-size-header.h"
+#include "source-application.h"
 
-#include "ns3/address.h"
-#include "ns3/application.h"
 #include "ns3/data-rate.h"
 #include "ns3/event-id.h"
 #include "ns3/ptr.h"
 #include "ns3/traced-callback.h"
+#include "ns3/traced-value.h"
 
 namespace ns3
 {
 
-class Address;
 class RandomVariableStream;
 class Socket;
 
 /**
- * \ingroup applications
- * \defgroup onoff OnOffApplication
+ * @ingroup applications
+ * @defgroup onoff OnOffApplication
  *
  * This traffic generator follows an On/Off pattern: after
  * Application::StartApplication
@@ -42,9 +41,9 @@ class Socket;
  * characterized by the specified "data rate" and "packet size".
  */
 /**
- * \ingroup onoff
+ * @ingroup onoff
  *
- * \brief Generate traffic to a single destination according to an
+ * @brief Generate traffic to a single destination according to an
  *        OnOff pattern.
  *
  * This traffic generator follows an On/Off pattern: after
@@ -82,32 +81,31 @@ class Socket;
  * the header via trace sources.  Note that the continuity of the sequence
  * number may be disrupted across On/Off cycles.
  */
-class OnOffApplication : public Application
+class OnOffApplication : public SourceApplication
 {
   public:
     /**
-     * \brief Get the type ID.
-     * \return the object TypeId
+     * @brief Get the type ID.
+     * @return the object TypeId
      */
     static TypeId GetTypeId();
 
     OnOffApplication();
-
     ~OnOffApplication() override;
 
     /**
-     * \brief Set the total number of bytes to send.
+     * @brief Set the total number of bytes to send.
      *
      * Once these bytes are sent, no packet is sent again, even in on state.
      * The value zero means that there is no limit.
      *
-     * \param maxBytes the total number of bytes to send
+     * @param maxBytes the total number of bytes to send
      */
     void SetMaxBytes(uint64_t maxBytes);
 
     /**
-     * \brief Return a pointer to associated socket.
-     * \return pointer to associated socket
+     * @brief Return a pointer to associated socket.
+     * @return pointer to associated socket
      */
     Ptr<Socket> GetSocket() const;
 
@@ -122,29 +120,26 @@ class OnOffApplication : public Application
 
     // helpers
     /**
-     * \brief Cancel all pending events.
+     * @brief Cancel all pending events.
      */
     void CancelEvents();
 
     // Event handlers
     /**
-     * \brief Start an On period
+     * @brief Start an On period
      */
     void StartSending();
     /**
-     * \brief Start an Off period
+     * @brief Start an Off period
      */
     void StopSending();
     /**
-     * \brief Send a packet
+     * @brief Send a packet
      */
     void SendPacket();
 
     Ptr<Socket> m_socket;                //!< Associated socket
-    Address m_peer;                      //!< Peer address
-    Address m_local;                     //!< Local address to bind to
     bool m_connected;                    //!< True if connected
-    uint8_t m_tos;                       //!< The packets Type of Service
     Ptr<RandomVariableStream> m_onTime;  //!< rng for On Time
     Ptr<RandomVariableStream> m_offTime; //!< rng for Off Time
     DataRate m_cbrRate;                  //!< Rate that data is generated
@@ -174,27 +169,29 @@ class OnOffApplication : public Application
 
   private:
     /**
-     * \brief Schedule the next packet transmission
+     * @brief Schedule the next packet transmission
      */
     void ScheduleNextTx();
     /**
-     * \brief Schedule the next On period start
+     * @brief Schedule the next On period start
      */
     void ScheduleStartEvent();
     /**
-     * \brief Schedule the next Off period start
+     * @brief Schedule the next Off period start
      */
     void ScheduleStopEvent();
     /**
-     * \brief Handle a Connection Succeed event
-     * \param socket the connected socket
+     * @brief Handle a Connection Succeed event
+     * @param socket the connected socket
      */
     void ConnectionSucceeded(Ptr<Socket> socket);
     /**
-     * \brief Handle a Connection Failed event
-     * \param socket the not connected socket
+     * @brief Handle a Connection Failed event
+     * @param socket the not connected socket
      */
     void ConnectionFailed(Ptr<Socket> socket);
+
+    TracedValue<bool> m_state; //!< State of application (0-OFF, 1-ON)
 };
 
 } // namespace ns3

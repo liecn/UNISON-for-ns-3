@@ -7,19 +7,19 @@
  *
  */
 
-#include <ns3/callback.h>
-#include <ns3/constant-position-mobility-model.h>
-#include <ns3/log.h>
-#include <ns3/lte-helper.h>
-#include <ns3/lte-spectrum-value-helper.h>
-#include <ns3/lte-ue-rrc.h>
-#include <ns3/mobility-helper.h>
-#include <ns3/net-device-container.h>
-#include <ns3/node-container.h>
-#include <ns3/object.h>
-#include <ns3/ptr.h>
-#include <ns3/simulator.h>
-#include <ns3/test.h>
+#include "ns3/callback.h"
+#include "ns3/constant-position-mobility-model.h"
+#include "ns3/log.h"
+#include "ns3/lte-helper.h"
+#include "ns3/lte-spectrum-value-helper.h"
+#include "ns3/lte-ue-rrc.h"
+#include "ns3/mobility-helper.h"
+#include "ns3/net-device-container.h"
+#include "ns3/node-container.h"
+#include "ns3/object.h"
+#include "ns3/ptr.h"
+#include "ns3/simulator.h"
+#include "ns3/test.h"
 
 using namespace ns3;
 
@@ -61,9 +61,9 @@ struct ConfigToCheck
 NS_LOG_COMPONENT_DEFINE("TestCarrierAggregationConfig");
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  *
- * \brief Carrier aggregation configuration test case.
+ * @brief Carrier aggregation configuration test case.
  */
 class CarrierAggregationConfigTestCase : public TestCase
 {
@@ -71,10 +71,10 @@ class CarrierAggregationConfigTestCase : public TestCase
     /**
      * Constructor
      *
-     * \param numberOfNodes Total Number of eNBs and UEs
-     * \param numberOfComponentCarriers  Total number of component carriers
-     * \param configToCheck Vector containing all the configurations to check
-     * \param simulationDuration Duration of the simulation
+     * @param numberOfNodes Total Number of eNBs and UEs
+     * @param numberOfComponentCarriers  Total number of component carriers
+     * @param configToCheck Vector containing all the configurations to check
+     * @param simulationDuration Duration of the simulation
      */
     CarrierAggregationConfigTestCase(uint32_t numberOfNodes,
                                      uint16_t numberOfComponentCarriers,
@@ -98,11 +98,11 @@ class CarrierAggregationConfigTestCase : public TestCase
     /**
      * Build name string function
      *
-     * \param numberOfNodes Total Number of eNBs and UEs
-     * \param numberOfComponentCarriers  Total number of component carriers
-     * \param configToCheck Vector containing all the configurations to check
-     * \param simulationDuration Duration of the simulation
-     * \returns the name string
+     * @param numberOfNodes Total Number of eNBs and UEs
+     * @param numberOfComponentCarriers  Total number of component carriers
+     * @param configToCheck Vector containing all the configurations to check
+     * @param simulationDuration Duration of the simulation
+     * @returns the name string
      */
     std::string BuildNameString(uint32_t numberOfNodes,
                                 uint16_t numberOfComponentCarriers,
@@ -111,9 +111,9 @@ class CarrierAggregationConfigTestCase : public TestCase
     /**
      * Evaluate function
      *
-     * \param context The context
-     * \param ueRrc Pointer to the UE RRC
-     * \param sCellToAddModList List of the configuration parameters for secondary cell
+     * @param context The context
+     * @param ueRrc Pointer to the UE RRC
+     * @param sCellToAddModList List of the configuration parameters for secondary cell
      */
     void Evaluate(std::string context,
                   Ptr<LteUeRrc> ueRrc,
@@ -121,7 +121,7 @@ class CarrierAggregationConfigTestCase : public TestCase
     /**
      * Equally spaced component carriers function
      *
-     * \return Vector of maps containing the per component carrier configuration
+     * @return Vector of maps containing the per component carrier configuration
      */
     std::vector<std::map<uint16_t, ConfigToCheck>> EquallySpacedCcs();
 
@@ -375,9 +375,9 @@ CarrierAggregationConfigTestCase::DoRun()
 }
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  *
- * \brief Carrier aggregation configuration test suite.
+ * @brief Carrier aggregation configuration test suite.
  */
 class CarrierAggregationConfigTestSuite : public TestSuite
 {
@@ -439,7 +439,7 @@ CarrierAggregationConfigTestSuite::CarrierAggregationConfigTestSuite()
 }
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  * Static variable for test initialization
  */
 static CarrierAggregationConfigTestSuite g_carrierAggregationConfigTestSuite;

@@ -15,19 +15,19 @@
 #include "lte-spectrum-value-helper.h"
 #include "lte-vendor-specific-parameters.h"
 
-#include <ns3/attribute-accessor-helper.h>
-#include <ns3/double.h>
-#include <ns3/log.h>
-#include <ns3/object-factory.h>
-#include <ns3/simulator.h>
+#include "ns3/attribute-accessor-helper.h"
+#include "ns3/double.h"
+#include "ns3/log.h"
+#include "ns3/object-factory.h"
+#include "ns3/simulator.h"
 
 #include <cfloat>
 #include <cmath>
 
 // WILD HACK for the initialization of direct eNB-UE ctrl messaging
-#include <ns3/node-list.h>
-#include <ns3/node.h>
-#include <ns3/pointer.h>
+#include "ns3/node-list.h"
+#include "ns3/node.h"
+#include "ns3/pointer.h"
 
 namespace ns3
 {
@@ -55,14 +55,14 @@ static const Time DL_CTRL_DELAY_FROM_SUBFRAME_START = NanoSeconds(214286);
 // member SAP forwarders
 ////////////////////////////////////////
 
-/// \todo SetBandwidth() and SetCellId() can be removed.
+/// @todo SetBandwidth() and SetCellId() can be removed.
 class EnbMemberLteEnbPhySapProvider : public LteEnbPhySapProvider
 {
   public:
     /**
      * Constructor
      *
-     * \param phy the ENB Phy
+     * @param phy the ENB Phy
      */
     EnbMemberLteEnbPhySapProvider(LteEnbPhy* phy);
 
@@ -73,14 +73,14 @@ class EnbMemberLteEnbPhySapProvider : public LteEnbPhySapProvider
     /**
      * Set bandwidth function
      *
-     * \param ulBandwidth the UL bandwidth
-     * \param dlBandwidth the DL bandwidth
+     * @param ulBandwidth the UL bandwidth
+     * @param dlBandwidth the DL bandwidth
      */
     virtual void SetBandwidth(uint16_t ulBandwidth, uint16_t dlBandwidth);
     /**
      * Set Cell ID function
      *
-     * \param cellId the cell ID
+     * @param cellId the cell ID
      */
     virtual void SetCellId(uint16_t cellId);
 
@@ -140,7 +140,7 @@ LteEnbPhy::LteEnbPhy(Ptr<LteSpectrumPhy> dlPhy, Ptr<LteSpectrumPhy> ulPhy)
       m_nrFrames(0),
       m_nrSubFrames(0),
       m_srsPeriodicity(0),
-      m_srsStartTime(Seconds(0)),
+      m_srsStartTime(),
       m_currentSrsOffset(0),
       m_interferenceSampleCounter(0)
 {
@@ -760,6 +760,7 @@ LteEnbPhy::SendControlChannels(std::list<Ptr<LteControlMessage>> ctrlMsgList)
     NS_LOG_FUNCTION(this << " eNB " << m_cellId << " start tx ctrl frame");
     // set the current tx power spectral density (full bandwidth)
     std::vector<int> dlRb;
+    dlRb.reserve(m_dlBandwidth);
     for (uint16_t i = 0; i < m_dlBandwidth; i++)
     {
         dlRb.push_back(i);

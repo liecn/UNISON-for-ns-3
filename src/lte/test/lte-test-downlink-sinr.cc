@@ -14,13 +14,13 @@
 
 #include "ns3/boolean.h"
 #include "ns3/log.h"
+#include "ns3/lte-chunk-processor.h"
+#include "ns3/lte-control-messages.h"
 #include "ns3/lte-helper.h"
 #include "ns3/lte-phy-tag.h"
 #include "ns3/lte-spectrum-signal-parameters.h"
 #include "ns3/simulator.h"
 #include "ns3/spectrum-test.h"
-#include <ns3/lte-chunk-processor.h>
-#include <ns3/lte-control-messages.h>
 
 using namespace ns3;
 
@@ -93,7 +93,7 @@ LteDownlinkSinrTestSuite::LteDownlinkSinrTestSuite()
 }
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  * Static variable for test initialization
  */
 static LteDownlinkSinrTestSuite lteDownlinkSinrTestSuite;
@@ -254,7 +254,7 @@ LteDownlinkDataSinrTestCase::DoRun()
     ip4->cellId = pbCellId[4];
     Simulator::Schedule(ti4, &LteSpectrumPhy::StartRx, dlPhy, ip4);
 
-    Simulator::Stop(Seconds(5.0));
+    Simulator::Stop(Seconds(5));
     Simulator::Run();
 
     NS_LOG_INFO("Data Frame - Theoretical SINR: " << *m_expectedSinr);
@@ -429,7 +429,7 @@ LteDownlinkCtrlSinrTestCase::DoRun()
     ip4->pss = false;
     Simulator::Schedule(ti4, &LteSpectrumPhy::StartRx, dlPhy, ip4);
 
-    Simulator::Stop(Seconds(5.0));
+    Simulator::Stop(Seconds(5));
     Simulator::Run();
 
     NS_LOG_INFO("Ctrl Frame - Theoretical SINR: " << *m_expectedSinr);

@@ -42,10 +42,10 @@ template <typename TxopType>
 class ChannelAccessManagerTest;
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief TxopTest Txop Test
+ * @brief TxopTest Txop Test
  */
 template <typename TxopType>
 class TxopTest : public TxopType
@@ -54,15 +54,15 @@ class TxopTest : public TxopType
     /**
      * Constructor
      *
-     * \param test the test channel access manager
-     * \param i the index of the Txop
+     * @param test the test channel access manager
+     * @param i the index of the Txop
      */
     TxopTest(ChannelAccessManagerTest<TxopType>* test, uint32_t i);
 
     /**
      * Queue transmit function
-     * \param txTime the transmit time
-     * \param expectedGrantTime the expected grant time
+     * @param txTime the transmit time
+     * @param expectedGrantTime the expected grant time
      */
     void QueueTx(uint64_t txTime, uint64_t expectedGrantTime);
 
@@ -70,17 +70,17 @@ class TxopTest : public TxopType
     /// allow ChannelAccessManagerTest class access
     friend class ChannelAccessManagerTest<TxopType>;
 
-    /// \copydoc ns3::Txop::DoDispose
+    /// @copydoc ns3::Txop::DoDispose
     void DoDispose() override;
-    /// \copydoc ns3::Txop::NotifyChannelAccessed
+    /// @copydoc ns3::Txop::NotifyChannelAccessed
     void NotifyChannelAccessed(uint8_t linkId, Time txopDuration = Seconds(0)) override;
-    /// \copydoc ns3::Txop::HasFramesToTransmit
+    /// @copydoc ns3::Txop::HasFramesToTransmit
     bool HasFramesToTransmit(uint8_t linkId) override;
-    /// \copydoc ns3::Txop::NotifySleep
+    /// @copydoc ns3::Txop::NotifySleep
     void NotifySleep(uint8_t linkId) override;
-    /// \copydoc ns3::Txop::NotifyWakeUp
+    /// @copydoc ns3::Txop::NotifyWakeUp
     void NotifyWakeUp(uint8_t linkId) override;
-    /// \copydoc ns3::Txop::GenerateBackoff
+    /// @copydoc ns3::Txop::GenerateBackoff
     void GenerateBackoff(uint8_t linkId) override;
 
     typedef std::pair<uint64_t, uint64_t> ExpectedGrant; //!< the expected grant typedef
@@ -101,7 +101,7 @@ class TxopTest : public TxopType
 
     /**
      * Check if the Txop has frames to transmit.
-     * \return true if the Txop has frames to transmit.
+     * @return true if the Txop has frames to transmit.
      */
 
     ChannelAccessManagerTest<TxopType>* m_test; //!< the test DCF/EDCA manager
@@ -109,10 +109,10 @@ class TxopTest : public TxopType
 };
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief ChannelAccessManager Stub
+ * @brief ChannelAccessManager Stub
  */
 class ChannelAccessManagerStub : public ChannelAccessManager
 {
@@ -124,7 +124,7 @@ class ChannelAccessManagerStub : public ChannelAccessManager
     /**
      * Set the Short Interframe Space (SIFS).
      *
-     * \param sifs the SIFS duration
+     * @param sifs the SIFS duration
      */
     void SetSifs(Time sifs)
     {
@@ -134,7 +134,7 @@ class ChannelAccessManagerStub : public ChannelAccessManager
     /**
      * Set the slot duration.
      *
-     * \param slot the slot duration
+     * @param slot the slot duration
      */
     void SetSlot(Time slot)
     {
@@ -144,7 +144,7 @@ class ChannelAccessManagerStub : public ChannelAccessManager
     /**
      * Set the duration of EIFS - DIFS
      *
-     * \param eifsNoDifs the duration of EIFS - DIFS
+     * @param eifsNoDifs the duration of EIFS - DIFS
      */
     void SetEifsNoDifs(Time eifsNoDifs)
     {
@@ -173,10 +173,10 @@ class ChannelAccessManagerStub : public ChannelAccessManager
 };
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief Frame Exchange Manager Stub
+ * @brief Frame Exchange Manager Stub
  */
 template <typename TxopType>
 class FrameExchangeManagerStub : public FrameExchangeManager
@@ -185,7 +185,7 @@ class FrameExchangeManagerStub : public FrameExchangeManager
     /**
      * Constructor
      *
-     * \param test the test channel access manager
+     * @param test the test channel access manager
      */
     FrameExchangeManagerStub(ChannelAccessManagerTest<TxopType>* test)
         : m_test(test)
@@ -195,10 +195,10 @@ class FrameExchangeManagerStub : public FrameExchangeManager
     /**
      * Request the FrameExchangeManager to start a frame exchange sequence.
      *
-     * \param dcf the channel access function that gained channel access. It is
+     * @param dcf the channel access function that gained channel access. It is
      *            the DCF on non-QoS stations and an EDCA on QoS stations.
-     * \param allowedWidth the maximum allowed TX width
-     * \return true if a frame exchange sequence was started, false otherwise
+     * @param allowedWidth the maximum allowed TX width
+     * @return true if a frame exchange sequence was started, false otherwise
      */
     bool StartTransmission(Ptr<Txop> dcf, MHz_u allowedWidth) override
     {
@@ -206,13 +206,13 @@ class FrameExchangeManagerStub : public FrameExchangeManager
         return true;
     }
 
-    /// \copydoc ns3::FrameExchangeManager::NotifyInternalCollision
+    /// @copydoc ns3::FrameExchangeManager::NotifyInternalCollision
     void NotifyInternalCollision(Ptr<Txop> txop) override
     {
         m_test->NotifyInternalCollision(DynamicCast<TxopTest<TxopType>>(txop));
     }
 
-    /// \copydoc ns3::FrameExchangeManager::NotifySwitchingStartNow
+    /// @copydoc ns3::FrameExchangeManager::NotifySwitchingStartNow
     void NotifySwitchingStartNow(Time duration) override
     {
         m_test->NotifyChannelSwitching();
@@ -223,10 +223,10 @@ class FrameExchangeManagerStub : public FrameExchangeManager
 };
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief Channel Access Manager Test
+ * @brief Channel Access Manager Test
  */
 template <typename TxopType>
 class ChannelAccessManagerTest : public TestCase
@@ -237,17 +237,17 @@ class ChannelAccessManagerTest : public TestCase
 
     /**
      * Notify access granted function
-     * \param i the index of the Txop
+     * @param i the index of the Txop
      */
     void NotifyAccessGranted(uint32_t i);
     /**
      * Notify internal collision function
-     * \param state the Txop
+     * @param state the Txop
      */
     void NotifyInternalCollision(Ptr<TxopTest<TxopType>> state);
     /**
      * Generate backoff function
-     * \param i the index of the Txop
+     * @param i the index of the Txop
      */
     void GenerateBackoff(uint32_t i);
     /**
@@ -258,111 +258,111 @@ class ChannelAccessManagerTest : public TestCase
   private:
     /**
      * Start test function
-     * \param slotTime the slot time
-     * \param sifs the SIFS
-     * \param eifsNoDifsNoSifs the EIFS no DIFS no SIFS
-     * \param ackTimeoutValue the Ack timeout value
-     * \param chWidth the channel width
+     * @param slotTime the slot time
+     * @param sifs the SIFS
+     * @param eifsNoDifsNoSifs the EIFS no DIFS no SIFS
+     * @param ackTimeoutValue the Ack timeout value
+     * @param chWidth the channel width
      */
     void StartTest(uint64_t slotTime,
                    uint64_t sifs,
                    uint64_t eifsNoDifsNoSifs,
                    uint32_t ackTimeoutValue = 20,
-                   MHz_u chWidth = 20);
+                   MHz_u chWidth = MHz_u{20});
     /**
      * Add Txop function
-     * \param aifsn the AIFSN
+     * @param aifsn the AIFSN
      */
     void AddTxop(uint32_t aifsn);
     /// End test function
     void EndTest();
     /**
      * Expect internal collision function
-     * \param time the expected time
-     * \param nSlots the number of slots
-     * \param from the expected from
+     * @param time the expected time
+     * @param nSlots the number of slots
+     * @param from the expected from
      */
     void ExpectInternalCollision(uint64_t time, uint32_t nSlots, uint32_t from);
     /**
      * Expect generate backoff function
-     * \param time the expected time
-     * \param nSlots the number of slots
-     * \param from the expected from
+     * @param time the expected time
+     * @param nSlots the number of slots
+     * @param from the expected from
      */
     void ExpectBackoff(uint64_t time, uint32_t nSlots, uint32_t from);
     /**
      * Schedule a check that the channel access manager is busy or idle
-     * \param time the expected time
-     * \param busy whether the manager is expected to be busy
+     * @param time the expected time
+     * @param busy whether the manager is expected to be busy
      */
     void ExpectBusy(uint64_t time, bool busy);
     /**
      * Perform check that channel access manager is busy or idle
-     * \param busy whether expected state is busy
+     * @param busy whether expected state is busy
      */
     void DoCheckBusy(bool busy);
     /**
      * Add receive OK event function
-     * \param at the event time
-     * \param duration the duration
+     * @param at the event time
+     * @param duration the duration
      */
     void AddRxOkEvt(uint64_t at, uint64_t duration);
     /**
      * Add receive error event function for error at end of frame
-     * \param at the event time
-     * \param duration the duration
+     * @param at the event time
+     * @param duration the duration
      */
     void AddRxErrorEvt(uint64_t at, uint64_t duration);
     /**
      * Add receive error event function for error during frame
-     * \param at the event time
-     * \param duration the duration
-     * \param timeUntilError the time after event time to force the error
+     * @param at the event time
+     * @param duration the duration
+     * @param timeUntilError the time after event time to force the error
      */
     void AddRxErrorEvt(uint64_t at, uint64_t duration, uint64_t timeUntilError);
     /**
      * Add receive inside SIFS event function
-     * \param at the event time
-     * \param duration the duration
+     * @param at the event time
+     * @param duration the duration
      */
     void AddRxInsideSifsEvt(uint64_t at, uint64_t duration);
     /**
      * Add transmit event function
-     * \param at the event time
-     * \param duration the duration
+     * @param at the event time
+     * @param duration the duration
      */
     void AddTxEvt(uint64_t at, uint64_t duration);
     /**
      * Add NAV reset function
-     * \param at the event time
-     * \param duration the duration
+     * @param at the event time
+     * @param duration the duration
      */
     void AddNavReset(uint64_t at, uint64_t duration);
     /**
      * Add NAV start function
-     * \param at the event time
-     * \param duration the duration
+     * @param at the event time
+     * @param duration the duration
      */
     void AddNavStart(uint64_t at, uint64_t duration);
     /**
      * Add Ack timeout reset function
-     * \param at the event time
+     * @param at the event time
      */
     void AddAckTimeoutReset(uint64_t at);
     /**
      * Add access function
-     * \param at the event time
-     * \param txTime the transmit time
-     * \param expectedGrantTime the expected grant time
-     * \param from the index of the requesting Txop
+     * @param at the event time
+     * @param txTime the transmit time
+     * @param expectedGrantTime the expected grant time
+     * @param from the index of the requesting Txop
      */
     void AddAccessRequest(uint64_t at, uint64_t txTime, uint64_t expectedGrantTime, uint32_t from);
     /**
      * Add access request with Ack timeout
-     * \param at time to schedule DoAccessRequest event
-     * \param txTime the transmit time
-     * \param expectedGrantTime the expected grant time
-     * \param from the index of the requesting Txop
+     * @param at time to schedule DoAccessRequest event
+     * @param txTime the transmit time
+     * @param expectedGrantTime the expected grant time
+     * @param from the index of the requesting Txop
      */
     void AddAccessRequestWithAckTimeout(uint64_t at,
                                         uint64_t txTime,
@@ -370,11 +370,11 @@ class ChannelAccessManagerTest : public TestCase
                                         uint32_t from);
     /**
      * Add access request with successful ack
-     * \param at time to schedule DoAccessRequest event
-     * \param txTime the transmit time
-     * \param expectedGrantTime the expected grant time
-     * \param ackDelay the delay of the Ack after txEnd
-     * \param from the index of the requesting Txop
+     * @param at time to schedule DoAccessRequest event
+     * @param txTime the transmit time
+     * @param expectedGrantTime the expected grant time
+     * @param ackDelay the delay of the Ack after txEnd
+     * @param from the index of the requesting Txop
      */
     void AddAccessRequestWithSuccessfulAck(uint64_t at,
                                            uint64_t txTime,
@@ -383,19 +383,19 @@ class ChannelAccessManagerTest : public TestCase
                                            uint32_t from);
     /**
      * Add access request with successful Ack
-     * \param txTime the transmit time
-     * \param expectedGrantTime the expected grant time
-     * \param state TxopTest
+     * @param txTime the transmit time
+     * @param expectedGrantTime the expected grant time
+     * @param state TxopTest
      */
     void DoAccessRequest(uint64_t txTime,
                          uint64_t expectedGrantTime,
                          Ptr<TxopTest<TxopType>> state);
     /**
      * Add CCA busy event function
-     * \param at the event time
-     * \param duration the duration
-     * \param channelType the channel type
-     * \param per20MhzDurations vector that indicates for how long each 20 MHz subchannel is busy
+     * @param at the event time
+     * @param duration the duration
+     * @param channelType the channel type
+     * @param per20MhzDurations vector that indicates for how long each 20 MHz subchannel is busy
      */
     void AddCcaBusyEvt(uint64_t at,
                        uint64_t duration,
@@ -403,14 +403,14 @@ class ChannelAccessManagerTest : public TestCase
                        const std::vector<Time>& per20MhzDurations = {});
     /**
      * Add switching event function
-     * \param at the event time
-     * \param duration the duration
+     * @param at the event time
+     * @param duration the duration
      */
     void AddSwitchingEvt(uint64_t at, uint64_t duration);
     /**
      * Add receive start event function
-     * \param at the event time
-     * \param duration the duration
+     * @param at the event time
+     * @param duration the duration
      */
     void AddRxStartEvt(uint64_t at, uint64_t duration);
 
@@ -1216,7 +1216,7 @@ ChannelAccessManagerTest<QosTxop>::DoRun()
     //     |  rx  | sifs | aifsn |  tx  |
     //                |
     //               52 request access
-    StartTest(4, 6, 10, 20, 40);
+    StartTest(4, 6, 10, 20, MHz_u{40});
     AddTxop(1);
     AddRxOkEvt(20, 30);
     AddCcaBusyEvt(50, 10, WIFI_CHANLIST_SECONDARY);
@@ -1230,7 +1230,7 @@ ChannelAccessManagerTest<QosTxop>::DoRun()
     //     |  rx  | sifs | aifsn |  tx  |
     //                       |
     //                      58 request access
-    StartTest(4, 6, 10, 20, 80);
+    StartTest(4, 6, 10, 20, MHz_u{80});
     AddTxop(1);
     AddRxOkEvt(20, 30);
     AddCcaBusyEvt(50, 10, WIFI_CHANLIST_SECONDARY);
@@ -1244,7 +1244,7 @@ ChannelAccessManagerTest<QosTxop>::DoRun()
     //     |  rx  | sifs | aifsn | idle |  tx  |
     //                               |
     //                              62 request access
-    StartTest(4, 6, 10, 20, 80);
+    StartTest(4, 6, 10, 20, MHz_u{80});
     AddTxop(1);
     AddRxOkEvt(20, 30);
     AddCcaBusyEvt(50, 14, WIFI_CHANLIST_SECONDARY40);
@@ -1259,7 +1259,7 @@ ChannelAccessManagerTest<QosTxop>::DoRun()
     //   |    rx    | sifs | acktxttime | sifs + aifsn |  tx  |
     //                   |
     //                  55 request access
-    StartTest(4, 6, 10, 20, 160);
+    StartTest(4, 6, 10, 20, MHz_u{160});
     AddTxop(1);
     AddRxErrorEvt(20, 30);
     AddCcaBusyEvt(50, 26, WIFI_CHANLIST_SECONDARY);
@@ -1274,7 +1274,7 @@ ChannelAccessManagerTest<QosTxop>::DoRun()
     //   |    rx    | sifs | acktxttime | sifs + aifsn |  tx  |
     //                                        |
     //                                       70 request access
-    StartTest(4, 6, 10, 20, 160);
+    StartTest(4, 6, 10, 20, MHz_u{160});
     AddTxop(1);
     AddRxErrorEvt(20, 30);
     AddCcaBusyEvt(50, 26, WIFI_CHANLIST_SECONDARY40);
@@ -1289,7 +1289,7 @@ ChannelAccessManagerTest<QosTxop>::DoRun()
     //   |    rx    | sifs | acktxttime | sifs + aifsn | idle |  tx  |
     //                                                     |
     //                                                    82 request access
-    StartTest(4, 6, 10, 20, 160);
+    StartTest(4, 6, 10, 20, MHz_u{160});
     AddTxop(1);
     AddRxErrorEvt(20, 30);
     AddCcaBusyEvt(50, 34, WIFI_CHANLIST_SECONDARY80);
@@ -1328,10 +1328,10 @@ ChannelAccessManagerTest<QosTxop>::DoRun()
 }
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief Test the calculation of the largest idle primary channel performed by
+ * @brief Test the calculation of the largest idle primary channel performed by
  * ChannelAccessManager::GetLargestIdlePrimaryChannel().
  *
  * In every test, the ChannelAccessManager is notified of a CCA_BUSY period and
@@ -1351,8 +1351,8 @@ class LargestIdlePrimaryChannelTest : public TestCase
     /**
      * Test a specific combination of operating channel width and busy channel type.
      *
-     * \param chWidth the operating channel width
-     * \param busyChannel the busy channel type
+     * @param chWidth the operating channel width
+     * @param busyChannel the busy channel type
      */
     void RunOne(MHz_u chWidth, WifiChannelListType busyChannel);
 
@@ -1391,19 +1391,20 @@ LargestIdlePrimaryChannelTest::RunOne(MHz_u chWidth, WifiChannelListType busyCha
     // After 1ms, we are notified of CCA_BUSY for 1ms on the given channel
     Time ccaBusyStartDelay = MilliSeconds(1);
     Time ccaBusyDuration = MilliSeconds(1);
-    Simulator::Schedule(ccaBusyStartDelay,
-                        &ChannelAccessManager::NotifyCcaBusyStartNow,
-                        m_cam,
-                        ccaBusyDuration,
-                        busyChannel,
-                        std::vector<Time>(chWidth == 20 ? 0 : chWidth / 20, Seconds(0)));
+    Simulator::Schedule(
+        ccaBusyStartDelay,
+        &ChannelAccessManager::NotifyCcaBusyStartNow,
+        m_cam,
+        ccaBusyDuration,
+        busyChannel,
+        std::vector<Time>(chWidth == MHz_u{20} ? 0 : Count20MHzSubchannels(chWidth), Seconds(0)));
 
     // During any interval ending within CCA_BUSY period, the idle channel is the
     // primary channel contiguous to the busy secondary channel, if the busy channel
     // is a secondary channel, or there is no idle channel, otherwise.
-    MHz_u idleWidth = (busyChannel == WifiChannelListType::WIFI_CHANLIST_PRIMARY)
-                          ? 0
-                          : ((1 << (busyChannel - 1)) * 20);
+    const auto idleWidth = (busyChannel == WifiChannelListType::WIFI_CHANLIST_PRIMARY)
+                               ? MHz_u{0}
+                               : ((1 << (busyChannel - 1)) * MHz_u{20});
 
     Time checkTime1 = start + ccaBusyStartDelay + ccaBusyDuration / 2;
     Simulator::Schedule(checkTime1 - start, [=, this]() {
@@ -1480,7 +1481,7 @@ LargestIdlePrimaryChannelTest::RunOne(MHz_u chWidth, WifiChannelListType busyCha
     Simulator::Schedule(checkTime6 - start, [=, this]() {
         Time interval6 = interval5 + rxDuration / 2;
         NS_TEST_EXPECT_MSG_EQ(m_cam->GetLargestIdlePrimaryChannel(interval6, checkTime6),
-                              0,
+                              MHz_u{0},
                               "Incorrect width of the idle channel in an interval "
                                   << "overlapping RX (channel width: " << chWidth
                                   << " MHz, busy channel: " << busyChannel << ")");
@@ -1495,7 +1496,7 @@ LargestIdlePrimaryChannelTest::DoRun()
     uint8_t channel = 0;
     std::list<WifiChannelListType> busyChannels;
 
-    for (MHz_u chWidth : {20, 40, 80, 160})
+    for (auto chWidth : {MHz_u{20}, MHz_u{40}, MHz_u{80}, MHz_u{160}})
     {
         busyChannels.push_back(static_cast<WifiChannelListType>(channel));
 
@@ -1534,10 +1535,10 @@ LargestIdlePrimaryChannelTest::DoRun()
 }
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief Test the GenerateBackoffIfTxopWithoutTx and ProactiveBackoff attributes of the
+ * @brief Test the GenerateBackoffIfTxopWithoutTx and ProactiveBackoff attributes of the
  *        ChannelAccessManager. The backoff values generated by the VO AC of the AP are checked.
  *
  * The GenerateBackoffIfTxopWithoutTx test checks the generation of backoff values when the
@@ -1586,7 +1587,7 @@ class BackoffGenerationTest : public TestCase
     /**
      * Constructor
      *
-     * \param type the test type
+     * @param type the test type
      */
     BackoffGenerationTest(TestType type);
 
@@ -1597,18 +1598,18 @@ class BackoffGenerationTest : public TestCase
     /**
      * Callback invoked when a FEM passes PSDUs to the PHY.
      *
-     * \param psduMap the PSDU map
-     * \param txVector the TX vector
-     * \param txPowerW the tx power in Watts
+     * @param psduMap the PSDU map
+     * @param txVector the TX vector
+     * @param txPowerW the tx power in Watts
      */
     void Transmit(WifiConstPsduMap psduMap, WifiTxVector txVector, double txPowerW);
 
     /**
      * Callback invoked when a new backoff value is generated by the given AC on the station.
      *
-     * \param ac the AC index
-     * \param backoff the generated backoff value
-     * \param linkId the ID of the link for which the backoff value has been generated
+     * @param ac the AC index
+     * @param backoff the generated backoff value
+     * @param linkId the ID of the link for which the backoff value has been generated
      */
     void BackoffGenerated(AcIndex ac, uint32_t backoff, uint8_t linkId);
 
@@ -1997,7 +1998,7 @@ BackoffGenerationTest::GenerateInterference()
     NS_LOG_FUNCTION(this);
     auto phy = DynamicCast<SpectrumWifiPhy>(m_apMac->GetWifiPhy(SINGLE_LINK_OP_ID));
     auto psd = Create<SpectrumValue>(phy->GetCurrentInterface()->GetRxSpectrumModel());
-    *psd = DbmToW(20) / 80e6; // PSD spread across 80 MHz to generate some noise
+    *psd = DbmToW(dBm_u{20}) / 80e6; // PSD spread across 80 MHz to generate some noise
 
     auto spectrumSignalParams = Create<SpectrumSignalParameters>();
     spectrumSignalParams->duration = m_interferenceDuration;
@@ -2009,10 +2010,10 @@ BackoffGenerationTest::GenerateInterference()
 }
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief Txop Test Suite
+ * @brief Txop Test Suite
  */
 class TxopTestSuite : public TestSuite
 {
@@ -2029,10 +2030,10 @@ TxopTestSuite::TxopTestSuite()
 static TxopTestSuite g_dcfTestSuite;
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief QosTxop Test Suite
+ * @brief QosTxop Test Suite
  */
 class QosTxopTestSuite : public TestSuite
 {
@@ -2049,10 +2050,10 @@ QosTxopTestSuite::QosTxopTestSuite()
 static QosTxopTestSuite g_edcaTestSuite;
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief ChannelAccessManager Test Suite
+ * @brief ChannelAccessManager Test Suite
  */
 class ChannelAccessManagerTestSuite : public TestSuite
 {

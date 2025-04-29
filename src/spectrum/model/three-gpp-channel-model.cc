@@ -18,8 +18,9 @@
 #include "ns3/node.h"
 #include "ns3/phased-array-model.h"
 #include "ns3/pointer.h"
+#include "ns3/shuffle.h"
+#include "ns3/simulator.h"
 #include "ns3/string.h"
-#include <ns3/simulator.h>
 
 #include <algorithm>
 #include <array>
@@ -713,48 +714,48 @@ static const std::map<std::string, std::map<int, std::array<float, 22>>> NTNDens
  * the quantized elevation angle.
  * The inner vector collects the table3gpp values.
  */
-static const std::map<std::string, std::map<int, std::array<float, 20>>> NTNDenseUrbanNLOS{
+static const std::map<std::string, std::map<int, std::array<float, 22>>> NTNDenseUrbanNLOS{
     {"S",
      {
-         {10, {-6.84, 0.82, -2.08, 0.87, 1.0,  1.6, 1.0, 0.63, -2.08, 0.58,
-               2.3,   23.8, 4.4,   4.0,  20.0, 3.9, 0.0, 15.0, 7.0,   3.0}},
-         {20, {-6.81, 0.61, -1.68, 0.73, 1.44, 0.87, 0.94, 0.65, -1.66, 0.5,
-               2.3,   21.9, 6.3,   4.0,  20.0, 3.9,  0.0,  15.0, 7.0,   3.0}},
-         {30, {-6.94, 0.49, -1.46, 0.53, 1.54, 0.64, 1.15, 0.42, -1.48, 0.4,
-               2.3,   19.7, 8.1,   4.0,  20.0, 3.9,  0.0,  15.0, 7.0,   3.0}},
-         {40, {-7.14, 0.49, -1.43, 0.5, 1.53, 0.56, 1.35, 0.28, -1.46, 0.37,
-               2.3,   18.1, 9.3,   4.0, 20.0, 3.9,  0.0,  15.0, 7.0,   3.0}},
-         {50, {-7.34, 0.51, -1.44, 0.58, 1.48, 0.54, 1.44, 0.25, -1.53, 0.47,
-               2.3,   16.3, 11.5,  4.0,  20.0, 3.9,  0.0,  15.0, 7.0,   3.0}},
-         {60, {-7.53, 0.47, -1.33, 0.49, 1.39, 0.68, 1.56, 0.16, -1.61, 0.43,
-               2.3,   14.0, 13.3,  4.0,  20.0, 3.9,  0.0,  15.0, 7.0,   3.0}},
-         {70, {-7.67, 0.44, -1.31, 0.65, 1.42, 0.55, 1.64, 0.18, -1.77, 0.5,
-               2.3,   12.1, 14.9,  4.0,  20.0, 3.9,  0.0,  15.0, 7.0,   3.0}},
-         {80, {-7.82, 0.42, -1.11, 0.69, 1.38, 0.6, 1.7, 0.09, -1.9, 0.42,
-               2.3,   8.7,  17.0,  4.0,  20.0, 3.9, 0.0, 15.0, 7.0,  3.0}},
-         {90, {-7.84, 0.55, -0.11, 0.53, 1.23, 0.6, 1.7, 0.17, -1.99, 0.5,
-               2.3,   6.4,  12.3,  4.0,  20.0, 3.9, 0.0, 15.0, 7.0,   3.0}},
+         {10, {-6.84, 0.82, -2.08, 0.87, 1.0, 1.6,  1.0, 0.63, -2.08, 0.58, 0.0,
+               0.0,   2.3,  23.8,  4.4,  4.0, 20.0, 3.9, 0.0,  15.0,  7.0,  3.0}},
+         {20, {-6.81, 0.61, -1.68, 0.73, 1.44, 0.87, 0.94, 0.65, -1.66, 0.5, 0.0,
+               0.0,   2.3,  21.9,  6.3,  4.0,  20.0, 3.9,  0.0,  15.0,  7.0, 3.0}},
+         {30, {-6.94, 0.49, -1.46, 0.53, 1.54, 0.64, 1.15, 0.42, -1.48, 0.4, 0.0,
+               0.0,   2.3,  19.7,  8.1,  4.0,  20.0, 3.9,  0.0,  15.0,  7.0, 3.0}},
+         {40, {-7.14, 0.49, -1.43, 0.5, 1.53, 0.56, 1.35, 0.28, -1.46, 0.37, 0.0,
+               0.0,   2.3,  18.1,  9.3, 4.0,  20.0, 3.9,  0.0,  15.0,  7.0,  3.0}},
+         {50, {-7.34, 0.51, -1.44, 0.58, 1.48, 0.54, 1.44, 0.25, -1.53, 0.47, 0.0,
+               0.0,   2.3,  16.3,  11.5, 4.0,  20.0, 3.9,  0.0,  15.0,  7.0,  3.0}},
+         {60, {-7.53, 0.47, -1.33, 0.49, 1.39, 0.68, 1.56, 0.16, -1.61, 0.43, 0.0,
+               0.0,   2.3,  14.0,  13.3, 4.0,  20.0, 3.9,  0.0,  15.0,  7.0,  3.0}},
+         {70, {-7.67, 0.44, -1.31, 0.65, 1.42, 0.55, 1.64, 0.18, -1.77, 0.5, 0.0,
+               0.0,   2.3,  12.1,  14.9, 4.0,  20.0, 3.9,  0.0,  15.0,  7.0, 3.0}},
+         {80, {-7.82, 0.42, -1.11, 0.69, 1.38, 0.6,  1.7, 0.09, -1.9, 0.42, 0.0,
+               0.0,   2.3,  8.7,   17.0, 4.0,  20.0, 3.9, 0.0,  15.0, 7.0,  3.0}},
+         {90, {-7.84, 0.55, -0.11, 0.53, 1.23, 0.6,  1.7, 0.17, -1.99, 0.5, 0.0,
+               0.0,   2.3,  6.4,   12.3, 4.0,  20.0, 3.9, 0.0,  15.0,  7.0, 3.0}},
      }},
     {"Ka",
      {
-         {10, {-6.86, 0.81, -2.12, 0.94, 1.02, 1.44, 1.01, 0.56, -2.11, 0.59,
-               2.3,   23.7, 4.5,   4.0,  20.0, 3.9,  0.0,  15.0, 7.0,   3.0}},
-         {20, {-6.84, 0.61, -1.74, 0.79, 1.44, 0.77, 0.96, 0.55, -1.69, 0.51,
-               2.3,   21.8, 6.3,   4.0,  20.0, 3.9,  0.0,  15.0, 7.0,   3.0}},
-         {30, {-7.0, 0.56, -1.56, 0.66, 1.48, 0.7, 1.13, 0.43, -1.52, 0.46,
-               2.3,  19.6, 8.2,   4.0,  20.0, 3.9, 0.0,  15.0, 7.0,   3.0}},
-         {40, {-7.21, 0.56, -1.54, 0.63, 1.46, 0.6, 1.3, 0.37, -1.51, 0.43,
-               2.3,   18.0, 9.4,   4.0,  20.0, 3.9, 0.0, 15.0, 7.0,   3.0}},
-         {50, {-7.42, 0.57, -1.45, 0.56, 1.4,  0.59, 1.4, 0.32, -1.54, 0.45,
-               2.3,   16.3, 11.5,  4.0,  20.0, 3.9,  0.0, 15.0, 7.0,   3.0}},
-         {60, {-7.86, 0.55, -1.64, 0.78, 0.97, 1.27, 1.41, 0.45, -1.84, 0.63,
-               2.3,   15.9, 12.4,  4.0,  20.0, 3.9,  0.0,  15.0, 7.0,   3.0}},
-         {70, {-7.76, 0.47, -1.37, 0.56, 1.33, 0.56, 1.63, 0.17, -1.86, 0.51,
-               2.3,   12.3, 15.0,  4.0,  20.0, 3.9,  0.0,  15.0, 7.0,   3.0}},
-         {80, {-8.07, 0.42, -1.29, 0.76, 1.12, 1.04, 1.68, 0.14, -2.16, 0.74,
-               2.3,   10.5, 15.7,  4.0,  20.0, 3.9,  0.0,  15.0, 7.0,   3.0}},
-         {90, {-7.95, 0.59, -0.41, 0.59, 1.04, 0.63, 1.7, 0.17, -2.21, 0.61,
-               2.3,   10.5, 15.7,  4.0,  20.0, 3.9,  0.0, 15.0, 7.0,   3.0}},
+         {10, {-6.86, 0.81, -2.12, 0.94, 1.02, 1.44, 1.01, 0.56, -2.11, 0.59, 0.0,
+               0.0,   2.3,  23.7,  4.5,  4.0,  20.0, 3.9,  0.0,  15.0,  7.0,  3.0}},
+         {20, {-6.84, 0.61, -1.74, 0.79, 1.44, 0.77, 0.96, 0.55, -1.69, 0.51, 0.0,
+               0.0,   2.3,  21.8,  6.3,  4.0,  20.0, 3.9,  0.0,  15.0,  7.0,  3.0}},
+         {30, {-7.0, 0.56, -1.56, 0.66, 1.48, 0.7,  1.13, 0.43, -1.52, 0.46, 0.0,
+               0.0,  2.3,  19.6,  8.2,  4.0,  20.0, 3.9,  0.0,  15.0,  7.0,  3.0}},
+         {40, {-7.21, 0.56, -1.54, 0.63, 1.46, 0.6,  1.3, 0.37, -1.51, 0.43, 0.0,
+               0.0,   2.3,  18.0,  9.4,  4.0,  20.0, 3.9, 0.0,  15.0,  7.0,  3.0}},
+         {50, {-7.42, 0.57, -1.45, 0.56, 1.4, 0.59, 1.4, 0.32, -1.54, 0.45, 0.0,
+               0.0,   2.3,  16.3,  11.5, 4.0, 20.0, 3.9, 0.0,  15.0,  7.0,  3.0}},
+         {60, {-7.86, 0.55, -1.64, 0.78, 0.97, 1.27, 1.41, 0.45, -1.84, 0.63, 0.0,
+               0.0,   2.3,  15.9,  12.4, 4.0,  20.0, 3.9,  0.0,  15.0,  7.0,  3.0}},
+         {70, {-7.76, 0.47, -1.37, 0.56, 1.33, 0.56, 1.63, 0.17, -1.86, 0.51, 0.0,
+               0.0,   2.3,  12.3,  15.0, 4.0,  20.0, 3.9,  0.0,  15.0,  7.0,  3.0}},
+         {80, {-8.07, 0.42, -1.29, 0.76, 1.12, 1.04, 1.68, 0.14, -2.16, 0.74, 0.0,
+               0.0,   2.3,  10.5,  15.7, 4.0,  20.0, 3.9,  0.0,  15.0,  7.0,  3.0}},
+         {90, {-7.95, 0.59, -0.41, 0.59, 1.04, 0.63, 1.7, 0.17, -2.21, 0.61, 0.0,
+               0.0,   2.3,  10.5,  15.7, 4.0,  20.0, 3.9, 0.0,  15.0,  7.0,  3.0}},
      }},
 };
 
@@ -1670,7 +1671,7 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
             table3gpp->m_uLgZSD = -0.1 * log10(1 + fcGHz) + 0.73;
             table3gpp->m_sigLgZSD = -0.04 * log10(1 + fcGHz) + 0.34;
             table3gpp->m_offsetZOD = 0;
-            table3gpp->m_cDS = 5;
+            table3gpp->m_cDS = 5 * 1e-9;
             table3gpp->m_cASD = 17;
             table3gpp->m_cASA = 17;
             table3gpp->m_cZSA = 7;
@@ -1704,7 +1705,7 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
             table3gpp->m_uLgZSD = -0.04 * log10(1 + fcGHz) + 0.92;
             table3gpp->m_sigLgZSD = -0.07 * log10(1 + fcGHz) + 0.41;
             table3gpp->m_offsetZOD = 0;
-            table3gpp->m_cDS = 11;
+            table3gpp->m_cDS = 11 * 1e-9;
             table3gpp->m_cASD = 22;
             table3gpp->m_cASA = 22;
             table3gpp->m_cZSA = 7;
@@ -1738,7 +1739,7 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
             table3gpp->m_uLgZSD = -0.04 * log10(1 + fcGHz) + 0.92;
             table3gpp->m_sigLgZSD = -0.07 * log10(1 + fcGHz) + 0.41;
             table3gpp->m_offsetZOD = 0;
-            table3gpp->m_cDS = 11;
+            table3gpp->m_cDS = 11 * 1e-9;
             table3gpp->m_cASD = 22;
             table3gpp->m_cASA = 22;
             table3gpp->m_cZSA = 7;
@@ -1779,7 +1780,7 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
             table3gpp->m_uLgZSD = -0.1 * log10(1 + fcGHz) + 0.73;
             table3gpp->m_sigLgZSD = -0.04 * log10(1 + fcGHz) + 0.34;
             table3gpp->m_offsetZOD = 0;
-            table3gpp->m_cDS = 5;
+            table3gpp->m_cDS = 5 * 1e-9;
             table3gpp->m_cASD = 17;
             table3gpp->m_cASA = 17;
             table3gpp->m_cZSA = 7;
@@ -1813,7 +1814,7 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
             table3gpp->m_uLgZSD = -0.04 * log10(1 + fcGHz) + 0.92;
             table3gpp->m_sigLgZSD = -0.07 * log10(1 + fcGHz) + 0.41;
             table3gpp->m_offsetZOD = 0;
-            table3gpp->m_cDS = 11;
+            table3gpp->m_cDS = 11 * 1e-9;
             table3gpp->m_cASD = 22;
             table3gpp->m_cASA = 22;
             table3gpp->m_cZSA = 7;
@@ -1851,7 +1852,7 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
             table3gpp->m_uLgZSD = -0.04 * log10(1 + fcGHz) + 0.92;
             table3gpp->m_sigLgZSD = -0.07 * log10(1 + fcGHz) + 0.41;
             table3gpp->m_offsetZOD = 0;
-            table3gpp->m_cDS = 11;
+            table3gpp->m_cDS = 11 * 1e-9;
             table3gpp->m_cASD = 22;
             table3gpp->m_cASA = 22;
             table3gpp->m_cZSA = 7;
@@ -1971,7 +1972,8 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
                 table3gpp->m_raysPerCluster = NTNDenseUrbanLOS.at(freqBand).at(
                     elevAngleQuantized)[Table3gppParams::raysPerCluster];
                 table3gpp->m_cDS =
-                    NTNDenseUrbanLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS];
+                    NTNDenseUrbanLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS] *
+                    1e-9;
                 table3gpp->m_cASD =
                     NTNDenseUrbanLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cASD];
                 table3gpp->m_cASA =
@@ -2023,7 +2025,8 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
                 table3gpp->m_raysPerCluster = NTNDenseUrbanNLOS.at(freqBand).at(
                     elevAngleQuantized)[Table3gppParams::raysPerCluster];
                 table3gpp->m_cDS =
-                    NTNDenseUrbanNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS];
+                    NTNDenseUrbanNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS] *
+                    1e-9;
                 table3gpp->m_cASD =
                     NTNDenseUrbanNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cASD];
                 table3gpp->m_cASA =
@@ -2081,7 +2084,7 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
                 table3gpp->m_raysPerCluster = NTNUrbanLOS.at(freqBand).at(
                     elevAngleQuantized)[Table3gppParams::raysPerCluster];
                 table3gpp->m_cDS =
-                    NTNUrbanLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS];
+                    NTNUrbanLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS] * 1e-9;
                 table3gpp->m_cASD =
                     NTNUrbanLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cASD];
                 table3gpp->m_cASA =
@@ -2136,7 +2139,7 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
                 table3gpp->m_raysPerCluster = NTNUrbanNLOS.at(freqBand).at(
                     elevAngleQuantized)[Table3gppParams::raysPerCluster];
                 table3gpp->m_cDS =
-                    NTNUrbanNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS];
+                    NTNUrbanNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS] * 1e-9;
                 table3gpp->m_cASD =
                     NTNUrbanNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cASD];
                 table3gpp->m_cASA =
@@ -2195,7 +2198,7 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
                 table3gpp->m_raysPerCluster = NTNSuburbanLOS.at(freqBand).at(
                     elevAngleQuantized)[Table3gppParams::raysPerCluster];
                 table3gpp->m_cDS =
-                    NTNSuburbanLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS];
+                    NTNSuburbanLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS] * 1e-9;
                 table3gpp->m_cASD =
                     NTNSuburbanLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cASD];
                 table3gpp->m_cASA =
@@ -2250,7 +2253,8 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
                 table3gpp->m_raysPerCluster = NTNSuburbanNLOS.at(freqBand).at(
                     elevAngleQuantized)[Table3gppParams::raysPerCluster];
                 table3gpp->m_cDS =
-                    NTNSuburbanNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS];
+                    NTNSuburbanNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS] *
+                    1e-9;
                 table3gpp->m_cASD =
                     NTNSuburbanNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cASD];
                 table3gpp->m_cASA =
@@ -2308,7 +2312,7 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
                 table3gpp->m_raysPerCluster = NTNRuralLOS.at(freqBand).at(
                     elevAngleQuantized)[Table3gppParams::raysPerCluster];
                 table3gpp->m_cDS =
-                    NTNRuralLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS];
+                    NTNRuralLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS] * 1e-9;
                 table3gpp->m_cASD =
                     NTNRuralLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cASD];
                 table3gpp->m_cASA =
@@ -2363,7 +2367,7 @@ ThreeGppChannelModel::GetThreeGppTable(const Ptr<const MobilityModel> aMob,
                 table3gpp->m_raysPerCluster = NTNRuralNLOS.at(freqBand).at(
                     elevAngleQuantized)[Table3gppParams::raysPerCluster];
                 table3gpp->m_cDS =
-                    NTNRuralNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS];
+                    NTNRuralNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cDS] * 1e-9;
                 table3gpp->m_cASD =
                     NTNRuralNLOS.at(freqBand).at(elevAngleQuantized)[Table3gppParams::cASD];
                 table3gpp->m_cASA =
@@ -2460,8 +2464,9 @@ ThreeGppChannelModel::AntennaSetupChanged(Ptr<const PhasedArrayModel> aAntenna,
     size_t uAntNumElems = bAntenna->GetNumElems();
     size_t chanNumRows = channelMatrix->m_channel.GetNumRows();
     size_t chanNumCols = channelMatrix->m_channel.GetNumCols();
-    return ((uAntNumElems != chanNumRows) || (sAntNumElems != chanNumCols)) &&
-           ((uAntNumElems != chanNumCols) || (sAntNumElems != chanNumRows));
+    return (((uAntNumElems != chanNumRows) || (sAntNumElems != chanNumCols)) &&
+            ((uAntNumElems != chanNumCols) || (sAntNumElems != chanNumRows))) ||
+           aAntenna->IsChannelOutOfDate(bAntenna);
 }
 
 Ptr<const MatrixBasedChannelModel::ChannelMatrix>
@@ -3036,10 +3041,10 @@ ThreeGppChannelModel::GenerateChannelParameters(const Ptr<const ChannelCondition
 
     for (uint8_t cIndex = 0; cIndex < channelParams->m_reducedClusterNumber; cIndex++)
     {
-        Shuffle(&rayAodRadian[cIndex][0], &rayAodRadian[cIndex][table3gpp->m_raysPerCluster]);
-        Shuffle(&rayAoaRadian[cIndex][0], &rayAoaRadian[cIndex][table3gpp->m_raysPerCluster]);
-        Shuffle(&rayZodRadian[cIndex][0], &rayZodRadian[cIndex][table3gpp->m_raysPerCluster]);
-        Shuffle(&rayZoaRadian[cIndex][0], &rayZoaRadian[cIndex][table3gpp->m_raysPerCluster]);
+        Shuffle(rayAodRadian[cIndex].begin(), rayAodRadian[cIndex].end(), m_uniformRvShuffle);
+        Shuffle(rayAoaRadian[cIndex].begin(), rayAoaRadian[cIndex].end(), m_uniformRvShuffle);
+        Shuffle(rayZodRadian[cIndex].begin(), rayZodRadian[cIndex].end(), m_uniformRvShuffle);
+        Shuffle(rayZoaRadian[cIndex].begin(), rayZoaRadian[cIndex].end(), m_uniformRvShuffle);
     }
 
     // store values
@@ -3863,15 +3868,6 @@ ThreeGppChannelModel::CalcAttenuationOfBlockage(
         }
     }
     return powerAttenuation;
-}
-
-void
-ThreeGppChannelModel::Shuffle(double* first, double* last) const
-{
-    for (auto i = (last - first) - 1; i > 0; --i)
-    {
-        std::swap(first[i], first[m_uniformRvShuffle->GetInteger(0, i)]);
-    }
 }
 
 int64_t

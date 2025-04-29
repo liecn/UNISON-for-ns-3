@@ -832,29 +832,25 @@ WifiMacHeader::IsPowerManagement() const
 bool
 WifiMacHeader::IsQosBlockAck() const
 {
-    NS_ASSERT(IsQosData());
-    return (m_qosAckPolicy == 3);
+    return (IsQosData() && m_qosAckPolicy == 3);
 }
 
 bool
 WifiMacHeader::IsQosNoAck() const
 {
-    NS_ASSERT(IsQosData());
-    return (m_qosAckPolicy == 1);
+    return (IsQosData() && m_qosAckPolicy == 1);
 }
 
 bool
 WifiMacHeader::IsQosAck() const
 {
-    NS_ASSERT(IsQosData());
-    return (m_qosAckPolicy == 0);
+    return (IsQosData() && m_qosAckPolicy == 0);
 }
 
 bool
 WifiMacHeader::IsQosEosp() const
 {
-    NS_ASSERT(IsQosData());
-    return (m_qosEosp == 1);
+    return (IsQosData() && m_qosEosp == 1);
 }
 
 WifiMacHeader::QosAckPolicy
@@ -886,8 +882,7 @@ WifiMacHeader::GetQosAckPolicy() const
 bool
 WifiMacHeader::IsQosAmsdu() const
 {
-    NS_ASSERT(IsQosData());
-    return (m_amsduPresent == 1);
+    return (IsQosData() && m_amsduPresent == 1);
 }
 
 uint8_t
@@ -1140,6 +1135,7 @@ WifiMacHeader::Print(std::ostream& os) const
            << ", SeqNumber=" << m_seqSeq;
         break;
     case WIFI_MAC_DATA:
+    case WIFI_MAC_QOSDATA:
         PrintFrameControl(os);
         os << " Duration/ID=" << m_duration << "us";
         if (!m_ctrlToDs && !m_ctrlFromDs)
@@ -1198,7 +1194,6 @@ WifiMacHeader::Print(std::ostream& os) const
     case WIFI_MAC_DATA_NULL_CFACK:
     case WIFI_MAC_DATA_NULL_CFPOLL:
     case WIFI_MAC_DATA_NULL_CFACK_CFPOLL:
-    case WIFI_MAC_QOSDATA:
     case WIFI_MAC_QOSDATA_CFACK:
     case WIFI_MAC_QOSDATA_CFPOLL:
     case WIFI_MAC_QOSDATA_CFACK_CFPOLL:

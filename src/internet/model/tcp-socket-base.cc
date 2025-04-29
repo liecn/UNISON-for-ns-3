@@ -58,7 +58,7 @@ namespace
 {
 
 /**
- * \brief map TcpPacketType and EcnMode to boolean value to check whether ECN-marking is allowed or
+ * @brief map TcpPacketType and EcnMode to boolean value to check whether ECN-marking is allowed or
  * not
  */
 const std::map<std::pair<ns3::TcpSocketBase::TcpPacketType_t, ns3::TcpSocketState::EcnMode_t>, bool>
@@ -142,7 +142,7 @@ TcpSocketBase::GetTypeId()
             .AddAttribute(
                 "MinRto",
                 "Minimum retransmit timeout value",
-                TimeValue(Seconds(1.0)), // RFC 6298 says min RTO=1 sec, but Linux uses 200ms.
+                TimeValue(Seconds(1)), // RFC 6298 says min RTO=1 sec, but Linux uses 200ms.
                 // See http://www.postel.org/pipermail/end2end-interest/2004-November/004402.html
                 MakeTimeAccessor(&TcpSocketBase::SetMinRto, &TcpSocketBase::GetMinRto),
                 MakeTimeChecker())
@@ -808,7 +808,7 @@ int
 TcpSocketBase::Close()
 {
     NS_LOG_FUNCTION(this);
-    /// \internal
+    /// @internal
     /// First we check to see if there is any unread rx data.
     /// \bugid{426} claims we should send reset in this case.
     if (m_tcb->m_rxBuffer->Size() != 0)
@@ -1553,7 +1553,7 @@ TcpSocketBase::ProcessEstablished(Ptr<Packet> packet, const TcpHeader& tcpHeader
             NS_LOG_WARN("Ignored ack of " << tcpHeader.GetAckNumber()
                                           << " HighTxMark = " << m_tcb->m_highTxMark);
 
-            // Receiver sets ECE flags when it receives a packet with CE bit on or sender hasn’t
+            // Receiver sets ECE flags when it receives a packet with CE bit on or sender hasn't
             // responded to ECN echo sent by receiver
             if (m_tcb->m_ecnState == TcpSocketState::ECN_CE_RCVD ||
                 m_tcb->m_ecnState == TcpSocketState::ECN_SENDING_ECE)

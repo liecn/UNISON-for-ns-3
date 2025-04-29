@@ -211,7 +211,7 @@ Ipv4Interface::Send(Ptr<Packet> p, const Ipv4Header& hdr, Ipv4Address dest)
     // traffic control layer
     if (DynamicCast<LoopbackNetDevice>(m_device))
     {
-        /// \todo additional checks needed here (such as whether multicast
+        /// @todo additional checks needed here (such as whether multicast
         /// goes to loopback)?
         p->AddHeader(hdr);
         m_device->Send(p, m_device->GetBroadcast(), Ipv4L3Protocol::PROT_NUMBER);
@@ -323,24 +323,22 @@ Ipv4InterfaceAddress
 Ipv4Interface::GetAddress(uint32_t index) const
 {
     NS_LOG_FUNCTION(this << index);
-    if (index < m_ifaddrs.size())
-    {
-        uint32_t tmp = 0;
-        for (auto i = m_ifaddrs.begin(); i != m_ifaddrs.end(); i++)
-        {
-            if (tmp == index)
-            {
-                return *i;
-            }
-            ++tmp;
-        }
-    }
-    else
+    if (index >= m_ifaddrs.size())
     {
         NS_FATAL_ERROR("index " << index << " out of bounds");
     }
-    Ipv4InterfaceAddress addr;
-    return addr; // quiet compiler
+
+    uint32_t tmp = 0;
+    for (auto i = m_ifaddrs.begin(); i != m_ifaddrs.end(); i++)
+    {
+        if (tmp == index)
+        {
+            return *i;
+        }
+        ++tmp;
+    }
+
+    return {}; // quiet compiler
 }
 
 Ipv4InterfaceAddress
@@ -351,14 +349,16 @@ Ipv4Interface::RemoveAddress(uint32_t index)
     {
         NS_FATAL_ERROR("Bug in Ipv4Interface::RemoveAddress");
     }
-    auto i = m_ifaddrs.begin();
+
     uint32_t tmp = 0;
-    while (i != m_ifaddrs.end())
+    for (auto it = m_ifaddrs.begin(); it != m_ifaddrs.end(); it++)
     {
         if (tmp == index)
         {
-            Ipv4InterfaceAddress addr = *i;
-            m_ifaddrs.erase(i);
+            // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
+            Ipv4InterfaceAddress addr = *it;
+
+            m_ifaddrs.erase(it);
             if (!m_removeAddressCallback.IsNull())
             {
                 m_removeAddressCallback(this, addr);
@@ -366,11 +366,9 @@ Ipv4Interface::RemoveAddress(uint32_t index)
             return addr;
         }
         ++tmp;
-        ++i;
     }
     NS_FATAL_ERROR("Address " << index << " not found");
-    Ipv4InterfaceAddress addr;
-    return addr; // quiet compiler
+    return {}; // quiet compiler
 }
 
 Ipv4InterfaceAddress
@@ -388,7 +386,9 @@ Ipv4Interface::RemoveAddress(Ipv4Address address)
     {
         if ((*it).GetLocal() == address)
         {
+            // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
             Ipv4InterfaceAddress ifAddr = *it;
+
             m_ifaddrs.erase(it);
             if (!m_removeAddressCallback.IsNull())
             {
@@ -397,7 +397,7 @@ Ipv4Interface::RemoveAddress(Ipv4Address address)
             return ifAddr;
         }
     }
-    return Ipv4InterfaceAddress();
+    return {};
 }
 
 void

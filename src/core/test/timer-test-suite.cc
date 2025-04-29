@@ -11,46 +11,42 @@
 #include "ns3/timer.h"
 
 /**
- * \file
- * \ingroup timer-tests
+ * @file
+ * @ingroup timer-tests
  * Timer test suite
  */
 
 /**
- * \ingroup core-tests
- * \defgroup timer-tests Timer tests
+ * @ingroup core-tests
+ * @defgroup timer-tests Timer tests
  */
 
 namespace
 {
 
-// clang-format off
-
 /// Function with one int parameter.
-void bari (int) {};
+void bari(int){};
 /// Function with two int parameters.
-void bar2i (int, int) {};
+void bar2i(int, int){};
 /// Function with three int parameters.
-void bar3i (int, int, int) {};
+void bar3i(int, int, int){};
 /// Function with four int parameters.
-void bar4i (int, int, int, int) {};
+void bar4i(int, int, int, int){};
 /// Function with five int parameters.
-void bar5i (int, int, int, int, int) {};
+void bar5i(int, int, int, int, int){};
 /// Function with one const int reference parameter.
-void barcir (const int &) {};
+void barcir(const int&){};
 /// Function with one int reference parameter.
-void barir (int &) {};
-
-// clang-format on
+void barir(int&){};
 
 } // anonymous namespace
 
 using namespace ns3;
 
 /**
- * \ingroup timer-tests
+ * @ingroup timer-tests
  *
- * \brief Check correct state transitions.
+ * @brief Check correct state transitions.
  */
 class TimerStateTestCase : public TestCase
 {
@@ -71,7 +67,7 @@ TimerStateTestCase::DoRun()
 
     timer.SetFunction(&bari);
     timer.SetArguments(1);
-    timer.SetDelay(Seconds(10.0));
+    timer.SetDelay(Seconds(10));
     NS_TEST_ASSERT_MSG_EQ(!timer.IsRunning(), true, "");
     NS_TEST_ASSERT_MSG_EQ(timer.IsExpired(), true, "");
     NS_TEST_ASSERT_MSG_EQ(!timer.IsSuspended(), true, "");
@@ -99,9 +95,9 @@ TimerStateTestCase::DoRun()
 }
 
 /**
- * \ingroup timer-tests
+ * @ingroup timer-tests
  *
- * \brief Check that Timer template magic is working.
+ * @brief Check that Timer template magic is working.
  */
 class TimerTemplateTestCase : public TestCase
 {
@@ -164,7 +160,7 @@ TimerTemplateTestCase::DoRun()
     // the following call cannot possibly work and is flagged by
     // a runtime error.
     // timer.SetArguments (0.0);
-    timer.SetDelay(Seconds(1.0));
+    timer.SetDelay(Seconds(1));
     timer.Schedule();
 
     timer.SetFunction(&TimerTemplateTestCase::bazi, this);
@@ -210,9 +206,9 @@ TimerTemplateTestCase::DoTeardown()
 }
 
 /**
- * \ingroup timer-tests
+ * @ingroup timer-tests
  *
- * \brief The timer Test Suite.
+ * @brief The timer Test Suite.
  */
 class TimerTestSuite : public TestSuite
 {

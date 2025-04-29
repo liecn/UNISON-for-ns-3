@@ -9,25 +9,25 @@
 
 #include "lte-test-secondary-cell-selection.h"
 
-#include <ns3/boolean.h>
-#include <ns3/double.h>
-#include <ns3/friis-spectrum-propagation-loss.h>
-#include <ns3/integer.h>
-#include <ns3/internet-stack-helper.h>
-#include <ns3/ipv4-address-helper.h>
-#include <ns3/ipv4-interface-container.h>
-#include <ns3/ipv4-static-routing-helper.h>
-#include <ns3/log.h>
-#include <ns3/lte-enb-net-device.h>
-#include <ns3/lte-helper.h>
-#include <ns3/lte-ue-net-device.h>
-#include <ns3/lte-ue-rrc.h>
-#include <ns3/mobility-helper.h>
-#include <ns3/net-device-container.h>
-#include <ns3/node-container.h>
-#include <ns3/point-to-point-epc-helper.h>
-#include <ns3/point-to-point-helper.h>
-#include <ns3/simulator.h>
+#include "ns3/boolean.h"
+#include "ns3/double.h"
+#include "ns3/friis-spectrum-propagation-loss.h"
+#include "ns3/integer.h"
+#include "ns3/internet-stack-helper.h"
+#include "ns3/ipv4-address-helper.h"
+#include "ns3/ipv4-interface-container.h"
+#include "ns3/ipv4-static-routing-helper.h"
+#include "ns3/log.h"
+#include "ns3/lte-enb-net-device.h"
+#include "ns3/lte-helper.h"
+#include "ns3/lte-ue-net-device.h"
+#include "ns3/lte-ue-rrc.h"
+#include "ns3/mobility-helper.h"
+#include "ns3/net-device-container.h"
+#include "ns3/node-container.h"
+#include "ns3/point-to-point-epc-helper.h"
+#include "ns3/point-to-point-helper.h"
+#include "ns3/simulator.h"
 
 using namespace ns3;
 
@@ -57,7 +57,7 @@ LteSecondaryCellSelectionTestSuite::LteSecondaryCellSelectionTestSuite()
 } // end of LteSecondaryCellSelectionTestSuite::LteSecondaryCellSelectionTestSuite ()
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  * Static variable for test initialization
  */
 static LteSecondaryCellSelectionTestSuite g_lteSecondaryCellSelectionTestSuite;
@@ -142,7 +142,7 @@ LteSecondaryCellSelectionTestCase::DoRun()
         MakeCallback(&LteSecondaryCellSelectionTestCase::ConnectionEstablishedCallback, this));
 
     // Run simulation.
-    Simulator::Stop(Seconds(2.0));
+    Simulator::Stop(Seconds(2));
     Simulator::Run();
 
     for (auto& it : enbDev->GetCcMap())
@@ -173,8 +173,7 @@ LteSecondaryCellSelectionTestCase::StateTransitionCallback(std::string context,
                                                            LteUeRrc::State oldState,
                                                            LteUeRrc::State newState)
 {
-    NS_LOG_FUNCTION(this << imsi << cellId << rnti << LteUeRrc::ToString(oldState)
-                         << LteUeRrc::ToString(newState));
+    NS_LOG_FUNCTION(this << imsi << cellId << rnti << oldState << newState);
     m_lastState[imsi] = newState;
 }
 

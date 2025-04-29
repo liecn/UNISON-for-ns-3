@@ -9,16 +9,16 @@
  *  Tommaso Pecorella <tommaso.pecorella@unifi.it>
  */
 
+#include "ns3/constant-position-mobility-model.h"
+#include "ns3/core-module.h"
+#include "ns3/log.h"
+#include "ns3/lr-wpan-module.h"
+#include "ns3/packet.h"
+#include "ns3/propagation-delay-model.h"
+#include "ns3/propagation-loss-model.h"
 #include "ns3/rng-seed-manager.h"
-#include <ns3/constant-position-mobility-model.h>
-#include <ns3/core-module.h>
-#include <ns3/log.h>
-#include <ns3/lr-wpan-module.h>
-#include <ns3/packet.h>
-#include <ns3/propagation-delay-model.h>
-#include <ns3/propagation-loss-model.h>
-#include <ns3/simulator.h>
-#include <ns3/single-model-spectrum-channel.h>
+#include "ns3/simulator.h"
+#include "ns3/single-model-spectrum-channel.h"
 
 #include <fstream>
 #include <iostream>
@@ -31,15 +31,15 @@ using namespace ns3::lrwpan;
 NS_LOG_COMPONENT_DEFINE("lr-wpan-ack-test");
 
 /**
- * \ingroup lr-wpan
- * \defgroup lr-wpan-test LrWpan module tests
+ * @ingroup lr-wpan
+ * @defgroup lr-wpan-test LrWpan module tests
  */
 
 /**
- * \ingroup lr-wpan-test
- * \ingroup tests
+ * @ingroup lr-wpan-test
+ * @ingroup tests
  *
- * \brief LrWpan ACK Test
+ * @brief LrWpan ACK Test
  */
 class LrWpanAckTestCase : public TestCase
 {
@@ -58,31 +58,31 @@ class LrWpanAckTestCase : public TestCase
     /**
      * Create test case
      *
-     * \param prefix Unique file names prefix
-     * \param mode   Test mode
+     * @param prefix Unique file names prefix
+     * @param mode   Test mode
      */
     LrWpanAckTestCase(const char* const prefix, TestMode_e mode);
 
     /**
-     * \brief Function called when DataIndication is hit on dev0.
-     * \param params The MCPS params.
-     * \param p the packet.
+     * @brief Function called when DataIndication is hit on dev0.
+     * @param params The MCPS params.
+     * @param p the packet.
      */
     void DataIndicationDev0(McpsDataIndicationParams params, Ptr<Packet> p);
     /**
-     * \brief Function called when DataIndication is hit on dev1.
-     * \param params The MCPS params.
-     * \param p the packet.
+     * @brief Function called when DataIndication is hit on dev1.
+     * @param params The MCPS params.
+     * @param p the packet.
      */
     void DataIndicationDev1(McpsDataIndicationParams params, Ptr<Packet> p);
     /**
-     * \brief Function called when DataConfirm is hit on dev0.
-     * \param params The MCPS params.
+     * @brief Function called when DataConfirm is hit on dev0.
+     * @param params The MCPS params.
      */
     void DataConfirmDev0(McpsDataConfirmParams params);
     /**
-     * \brief Function called when DataConfirm is hit on dev1.
-     * \param params The MCPS params.
+     * @brief Function called when DataConfirm is hit on dev1.
+     * @param params The MCPS params.
      */
     void DataConfirmDev1(McpsDataConfirmParams params);
 
@@ -277,12 +277,14 @@ LrWpanAckTestCase::DoRun()
     }
     traceFile.close();
 
-    // Note: the packet being correctly sent includes receiving an ACK in case of for unicact
+    // Note: the packet being correctly sent includes receiving an ACK in case of for unicast
     // packets.
     NS_TEST_EXPECT_MSG_LT(m_requestTime,
                           m_replyTime,
                           "Sent the request before the reply (as expected)");
-    NS_TEST_EXPECT_MSG_GT(m_requestSentTime, Time(0), "The request was sent (as expected)");
+    NS_TEST_EXPECT_MSG_EQ(m_requestSentTime.IsStrictlyPositive(),
+                          true,
+                          "The request was sent (as expected)");
     NS_TEST_EXPECT_MSG_LT(m_requestSentTime,
                           m_replyArrivalTime,
                           "The request was sent before the reply arrived (as expected)");
@@ -300,10 +302,10 @@ LrWpanAckTestCase::DoRun()
 }
 
 /**
- * \ingroup lr-wpan-test
- * \ingroup tests
+ * @ingroup lr-wpan-test
+ * @ingroup tests
  *
- * \brief LrWpan ACK TestSuite
+ * @brief LrWpan ACK TestSuite
  */
 class LrWpanAckTestSuite : public TestSuite
 {

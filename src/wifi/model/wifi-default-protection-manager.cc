@@ -9,12 +9,12 @@
 #include "wifi-default-protection-manager.h"
 
 #include "ap-wifi-mac.h"
-#include "frame-exchange-manager.h"
 #include "sta-wifi-mac.h"
 #include "wifi-mpdu.h"
 #include "wifi-tx-parameters.h"
 
 #include "ns3/boolean.h"
+#include "ns3/eht-frame-exchange-manager.h"
 #include "ns3/emlsr-manager.h"
 #include "ns3/erp-ofdm-phy.h"
 #include "ns3/log.h"
@@ -48,6 +48,12 @@ WifiDefaultProtectionManager::GetTypeId()
                           "Initial Control Frame to an EMLSR client).",
                           BooleanValue(false),
                           MakeBooleanAccessor(&WifiDefaultProtectionManager::m_singleRtsPerTxop),
+                          MakeBooleanChecker())
+            .AddAttribute("SkipMuRtsBeforeBsrp",
+                          "If enabled, MU-RTS is not used to protect the transmission of a BSRP "
+                          "Trigger Frame.",
+                          BooleanValue(true),
+                          MakeBooleanAccessor(&WifiDefaultProtectionManager::m_skipMuRtsBeforeBsrp),
                           MakeBooleanChecker());
     return tid;
 }
@@ -206,8 +212,7 @@ WifiDefaultProtectionManager::GetPsduProtection(const WifiMacHeader& hdr,
     }
 
     // check if CTS-to-Self is needed
-    if (GetWifiRemoteStationManager()->GetUseNonErpProtection() &&
-        GetWifiRemoteStationManager()->NeedCtsToSelf(txParams.m_txVector))
+    if (GetWifiRemoteStationManager()->NeedCtsToSelf(txParams.m_txVector, hdr))
     {
         auto protection = std::make_unique<WifiCtsToSelfProtection>();
         protection->ctsTxVector = GetWifiRemoteStationManager()->GetCtsToSelfTxVector();
@@ -259,10 +264,9 @@ WifiDefaultProtectionManager::TryAddMpduToMuPpdu(Ptr<const WifiMpdu> mpdu,
     {
         // we get here if this is the first MPDU for this receiver.
         NS_ABORT_MSG_IF(m_mac->GetTypeOfStation() != AP, "HE APs only can send DL MU PPDUs");
-        auto apMac = StaticCast<ApWifiMac>(m_mac);
         auto modClass = txParams.m_txVector.GetModulationClass();
         auto txWidth = modClass == WIFI_MOD_CLASS_DSSS || modClass == WIFI_MOD_CLASS_HR_DSSS
-                           ? 20
+                           ? MHz_u{20}
                            : txParams.m_txVector.GetChannelWidth();
 
         if (protection != nullptr)
@@ -310,12 +314,12 @@ WifiDefaultProtectionManager::TryAddMpduToMuPpdu(Ptr<const WifiMpdu> mpdu,
             }
         }
 
-        // The initial Control frame of frame exchanges shall be sent in the non-HT PPDU or
-        // non-HT duplicate PPDU format using a rate of 6 Mb/s, 12 Mb/s, or 24 Mb/s.
-        // (Sec. 35.3.17 of 802.11be D3.0)
         if (isEmlsrDestination && !isProtected)
         {
-            GetWifiRemoteStationManager()->AdjustTxVectorForIcf(protection->muRtsTxVector);
+            // This MU-RTS is an ICF for some EMLSR client
+            auto ehtFem =
+                StaticCast<EhtFrameExchangeManager>(m_mac->GetFrameExchangeManager(m_linkId));
+            ehtFem->SetIcfPaddingAndTxVector(protection->muRts, protection->muRtsTxVector);
         }
 
         return std::unique_ptr<WifiMuRtsCtsProtection>(protection);
@@ -376,6 +380,10 @@ WifiDefaultProtectionManager::TryUlMuTransmission(Ptr<const WifiMpdu> mpdu,
         (m_sendMuRts && !allProtected && (!m_singleRtsPerTxop || protectedStas.empty())) ||
         isUnprotectedEmlsrDst;
 
+    // if we are sending a BSRP TF and SkipMuRtsBeforeBsrpTf is true, do not use MU-RTS (even in
+    // case of unprotected EMLSR, because the BSRP TF is an ICF)
+    needMuRts = needMuRts && (!m_skipMuRtsBeforeBsrp || !trigger.IsBsrp());
+
     if (!needMuRts)
     {
         // No protection needed
@@ -395,12 +403,11 @@ WifiDefaultProtectionManager::TryUlMuTransmission(Ptr<const WifiMpdu> mpdu,
     {
         protection->muRtsTxVector.SetMode(ErpOfdmPhy::GetErpOfdmRate6Mbps());
     }
-    // The initial Control frame of frame exchanges shall be sent in the non-HT PPDU or
-    // non-HT duplicate PPDU format using a rate of 6 Mb/s, 12 Mb/s, or 24 Mb/s.
-    // (Sec. 35.3.17 of 802.11be D3.0)
     if (isUnprotectedEmlsrDst)
     {
-        GetWifiRemoteStationManager()->AdjustTxVectorForIcf(protection->muRtsTxVector);
+        // This MU-RTS is an ICF for some EMLSR client
+        auto ehtFem = StaticCast<EhtFrameExchangeManager>(m_mac->GetFrameExchangeManager(m_linkId));
+        ehtFem->SetIcfPaddingAndTxVector(protection->muRts, protection->muRtsTxVector);
     }
 
     return protection;

@@ -21,9 +21,9 @@
 using namespace ns3;
 
 /**
- * \ingroup brite-tests
+ * @ingroup brite-tests
  *
- * \brief BRITE topology structure Test
+ * @brief BRITE topology structure Test
  *
  * Test that two brite topologies created with same seed value
  * produce same graph (not an exact test)
@@ -90,9 +90,9 @@ BriteTopologyStructureTestCase::DoRun()
 }
 
 /**
- * \ingroup brite-tests
+ * @ingroup brite-tests
  *
- * \brief BRITE topology function Test
+ * @brief BRITE topology function Test
  *
  * Test that packets can be send across a BRITE topology using UDP
  */
@@ -174,19 +174,19 @@ BriteTopologyFunctionTestCase::DoRun()
 
     ApplicationContainer apps = onOff.Install(source.Get(0));
 
-    apps.Start(Seconds(1.0));
-    apps.Stop(Seconds(10.0));
+    apps.Start(Seconds(1));
+    apps.Stop(Seconds(10));
 
     PacketSinkHelper sinkHelper("ns3::UdpSocketFactory",
                                 Address(InetSocketAddress(Ipv4Address::GetAny(), port)));
     apps = sinkHelper.Install(sink.Get(0));
 
-    apps.Start(Seconds(1.0));
-    apps.Stop(Seconds(10.0));
+    apps.Start(Seconds(1));
+    apps.Stop(Seconds(10));
 
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
-    Simulator::Stop(Seconds(10.0));
+    Simulator::Stop(Seconds(10));
     Simulator::Run();
 
     Ptr<PacketSink> sink1 = DynamicCast<PacketSink>(apps.Get(0));
@@ -196,9 +196,9 @@ BriteTopologyFunctionTestCase::DoRun()
 }
 
 /**
- * \ingroup brite-tests
+ * @ingroup brite-tests
  *
- * \brief BRITE TestSuite
+ * @brief BRITE TestSuite
  */
 class BriteTestSuite : public TestSuite
 {

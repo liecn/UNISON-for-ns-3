@@ -12,7 +12,6 @@
 
 #include "onoff-application.h"
 
-#include "ns3/address.h"
 #include "ns3/boolean.h"
 #include "ns3/data-rate.h"
 #include "ns3/inet-socket-address.h"
@@ -44,7 +43,7 @@ OnOffApplication::GetTypeId()
 {
     static TypeId tid =
         TypeId("ns3::OnOffApplication")
-            .SetParent<Application>()
+            .SetParent<SourceApplication>()
             .SetGroupName("Applications")
             .AddConstructor<OnOffApplication>()
             .AddAttribute("DataRate",
@@ -57,23 +56,6 @@ OnOffApplication::GetTypeId()
                           UintegerValue(512),
                           MakeUintegerAccessor(&OnOffApplication::m_pktSize),
                           MakeUintegerChecker<uint32_t>(1))
-            .AddAttribute("Remote",
-                          "The address of the destination",
-                          AddressValue(),
-                          MakeAddressAccessor(&OnOffApplication::m_peer),
-                          MakeAddressChecker())
-            .AddAttribute("Local",
-                          "The Address on which to bind the socket. If not set, it is generated "
-                          "automatically.",
-                          AddressValue(),
-                          MakeAddressAccessor(&OnOffApplication::m_local),
-                          MakeAddressChecker())
-            .AddAttribute("Tos",
-                          "The Type of Service used to send IPv4 packets. "
-                          "All 8 bits of the TOS byte are set (including ECN bits).",
-                          UintegerValue(0),
-                          MakeUintegerAccessor(&OnOffApplication::m_tos),
-                          MakeUintegerChecker<uint8_t>())
             .AddAttribute("OnTime",
                           "A RandomVariableStream used to pick the duration of the 'On' state.",
                           StringValue("ns3::ConstantRandomVariable[Constant=1.0]"),
@@ -114,7 +96,11 @@ OnOffApplication::GetTypeId()
             .AddTraceSource("TxWithSeqTsSize",
                             "A new packet is created with SeqTsSizeHeader",
                             MakeTraceSourceAccessor(&OnOffApplication::m_txTraceWithSeqTsSize),
-                            "ns3::PacketSink::SeqTsSizeCallback");
+                            "ns3::PacketSink::SeqTsSizeCallback")
+            .AddTraceSource("OnOffState",
+                            "Application state (0-OFF, 1-ON)",
+                            MakeTraceSourceAccessor(&OnOffApplication::m_state),
+                            "ns3::TracedValueCallback::Bool");
     return tid;
 }
 
@@ -122,7 +108,7 @@ OnOffApplication::OnOffApplication()
     : m_socket(nullptr),
       m_connected(false),
       m_residualBits(0),
-      m_lastStartTime(Seconds(0)),
+      m_lastStartTime(),
       m_totBytes(0),
       m_unsentPacket(nullptr)
 {
@@ -152,9 +138,11 @@ int64_t
 OnOffApplication::AssignStreams(int64_t stream)
 {
     NS_LOG_FUNCTION(this << stream);
-    m_onTime->SetStream(stream);
-    m_offTime->SetStream(stream + 1);
-    return 2;
+    auto currentStream = stream;
+    m_onTime->SetStream(currentStream++);
+    m_offTime->SetStream(currentStream++);
+    currentStream += Application::AssignStreams(currentStream);
+    return (currentStream - stream);
 }
 
 void
@@ -284,6 +272,7 @@ OnOffApplication::StartSending()
     m_lastStartTime = Simulator::Now();
     ScheduleNextTx(); // Schedule the send packet event
     ScheduleStopEvent();
+    m_state = true;
 }
 
 void
@@ -291,8 +280,8 @@ OnOffApplication::StopSending()
 {
     NS_LOG_FUNCTION(this);
     CancelEvents();
-
     ScheduleStartEvent();
+    m_state = false;
 }
 
 // Private helpers

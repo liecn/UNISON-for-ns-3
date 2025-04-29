@@ -6,10 +6,10 @@
 
 #include "uniform-planar-array.h"
 
-#include <ns3/boolean.h>
-#include <ns3/double.h>
-#include <ns3/log.h>
-#include <ns3/uinteger.h>
+#include "ns3/boolean.h"
+#include "ns3/double.h"
+#include "ns3/log.h"
+#include "ns3/uinteger.h"
 
 namespace ns3
 {
@@ -60,16 +60,18 @@ UniformPlanarArray::GetTypeId()
                           MakeUintegerAccessor(&UniformPlanarArray::SetNumRows,
                                                &UniformPlanarArray::GetNumRows),
                           MakeUintegerChecker<uint32_t>(1))
-            .AddAttribute("BearingAngle",
-                          "The bearing angle in radians",
-                          DoubleValue(0.0),
-                          MakeDoubleAccessor(&UniformPlanarArray::SetAlpha),
-                          MakeDoubleChecker<double>(-M_PI, M_PI))
-            .AddAttribute("DowntiltAngle",
-                          "The downtilt angle in radians",
-                          DoubleValue(0.0),
-                          MakeDoubleAccessor(&UniformPlanarArray::SetBeta),
-                          MakeDoubleChecker<double>(-M_PI, M_PI))
+            .AddAttribute(
+                "BearingAngle",
+                "The bearing angle in radians",
+                DoubleValue(0.0),
+                MakeDoubleAccessor(&UniformPlanarArray::SetAlpha, &UniformPlanarArray::GetAlpha),
+                MakeDoubleChecker<double>(-M_PI, M_PI))
+            .AddAttribute(
+                "DowntiltAngle",
+                "The downtilt angle in radians",
+                DoubleValue(0.0),
+                MakeDoubleAccessor(&UniformPlanarArray::SetBeta, &UniformPlanarArray::GetBeta),
+                MakeDoubleChecker<double>(-M_PI, M_PI))
             .AddAttribute("PolSlantAngle",
                           "The polarization slant angle in radians",
                           DoubleValue(0.0),
@@ -104,6 +106,7 @@ UniformPlanarArray::SetNumColumns(uint32_t n)
     if (n != m_numColumns)
     {
         m_isBfVectorValid = false;
+        InvalidateChannels();
     }
     m_numColumns = n;
 }
@@ -121,6 +124,7 @@ UniformPlanarArray::SetNumRows(uint32_t n)
     if (n != m_numRows)
     {
         m_isBfVectorValid = false;
+        InvalidateChannels();
     }
     m_numRows = n;
 }
@@ -137,6 +141,7 @@ UniformPlanarArray::SetAlpha(double alpha)
     m_alpha = alpha;
     m_cosAlpha = cos(m_alpha);
     m_sinAlpha = sin(m_alpha);
+    InvalidateChannels();
 }
 
 void
@@ -145,6 +150,7 @@ UniformPlanarArray::SetBeta(double beta)
     m_beta = beta;
     m_cosBeta = cos(m_beta);
     m_sinBeta = sin(m_beta);
+    InvalidateChannels();
 }
 
 void
@@ -153,6 +159,7 @@ UniformPlanarArray::SetPolSlant(double polSlant)
     m_polSlant = polSlant;
     m_cosPolSlant[0] = cos(m_polSlant);
     m_sinPolSlant[0] = sin(m_polSlant);
+    InvalidateChannels();
 }
 
 void
@@ -164,6 +171,7 @@ UniformPlanarArray::SetAntennaHorizontalSpacing(double s)
     if (s != m_disH)
     {
         m_isBfVectorValid = false;
+        InvalidateChannels();
     }
     m_disH = s;
 }
@@ -183,6 +191,7 @@ UniformPlanarArray::SetAntennaVerticalSpacing(double s)
     if (s != m_disV)
     {
         m_isBfVectorValid = false;
+        InvalidateChannels();
     }
     m_disV = s;
 }
@@ -290,6 +299,7 @@ UniformPlanarArray::SetNumVerticalPorts(uint16_t nPorts)
     NS_ASSERT_MSG(((m_numRows % nPorts) == 0),
                   "The number of vertical ports must divide number of rows");
     m_numVPorts = nPorts;
+    InvalidateChannels();
 }
 
 void
@@ -299,6 +309,7 @@ UniformPlanarArray::SetNumHorizontalPorts(uint16_t nPorts)
     NS_ASSERT_MSG(((m_numColumns % nPorts) == 0),
                   "The number of horizontal ports must divide number of columns");
     m_numHPorts = nPorts;
+    InvalidateChannels();
 }
 
 uint16_t
@@ -378,6 +389,19 @@ UniformPlanarArray::SetDualPol(bool isDualPol)
         m_cosPolSlant[1] = cos(m_polSlant - M_PI / 2);
         m_sinPolSlant[1] = sin(m_polSlant - M_PI / 2);
     }
+    InvalidateChannels();
+}
+
+double
+UniformPlanarArray::GetAlpha() const
+{
+    return m_alpha;
+}
+
+double
+UniformPlanarArray::GetBeta() const
+{
+    return m_beta;
 }
 
 double

@@ -619,7 +619,7 @@ PhyEntity::ScheduleEndOfMpdus(Ptr<Event> event)
             if (GetRandomValue() > snrPer.per)
             {
                 // interference level should permit to correctly decode the MAC header
-                m_endOfMacHdrEvents.push_back(
+                m_endOfMacHdrEvents[staId].push_back(
                     Simulator::Schedule(endOfMpduDuration + macHdrDuration, [=, this]() {
                         m_wifiPhy->m_phyRxMacHeaderEndTrace((*mpdu)->GetHeader(),
                                                             txVector,
@@ -630,14 +630,14 @@ PhyEntity::ScheduleEndOfMpdus(Ptr<Event> event)
         }
 
         uint32_t size = (mpduType == NORMAL_MPDU) ? psdu->GetSize() : psdu->GetAmpduSubframeSize(i);
-        Time mpduDuration = m_wifiPhy->GetPayloadDuration(size,
-                                                          txVector,
-                                                          m_wifiPhy->GetPhyBand(),
-                                                          mpduType,
-                                                          true,
-                                                          totalAmpduSize,
-                                                          totalAmpduNumSymbols,
-                                                          staId);
+        Time mpduDuration = WifiPhy::GetPayloadDuration(size,
+                                                        txVector,
+                                                        m_wifiPhy->GetPhyBand(),
+                                                        mpduType,
+                                                        true,
+                                                        totalAmpduSize,
+                                                        totalAmpduNumSymbols,
+                                                        staId);
 
         remainingAmpduDuration -= mpduDuration;
         if (i == (nMpdus - 1) && !remainingAmpduDuration.IsZero()) // no more MPDUs coming
@@ -693,7 +693,7 @@ PhyEntity::EndOfMpdu(Ptr<Event> event,
     signalNoiseIt->second = rxInfo.second;
 
     RxSignalInfo rxSignalInfo;
-    rxSignalInfo.snr = DbToRatio(rxInfo.second.signal - rxInfo.second.noise);
+    rxSignalInfo.snr = DbToRatio(dB_u{rxInfo.second.signal - rxInfo.second.noise});
     rxSignalInfo.rssi = rxInfo.second.signal;
 
     auto statusPerMpduIt = m_statusPerMpduMap.find({ppdu->GetUid(), staId});
@@ -844,6 +844,27 @@ PhyEntity::GetReceptionStatus(Ptr<WifiMpdu> mpdu,
     }
 }
 
+std::optional<Time>
+PhyEntity::GetTimeToMacHdrEnd(uint16_t staId) const
+{
+    const auto it = m_endOfMacHdrEvents.find(staId);
+
+    if (it == m_endOfMacHdrEvents.cend())
+    {
+        return std::nullopt;
+    }
+
+    for (const auto& endOfMacHdrEvent : it->second)
+    {
+        if (endOfMacHdrEvent.IsPending())
+        {
+            return Simulator::GetDelayLeft(endOfMacHdrEvent);
+        }
+    }
+
+    return std::nullopt;
+}
+
 std::pair<MHz_u, WifiSpectrumBandInfo>
 PhyEntity::GetChannelWidthAndBand(const WifiTxVector& txVector, uint16_t /* staId */) const
 {
@@ -942,9 +963,12 @@ PhyEntity::NotifyInterferenceRxEndAndClear(bool reset)
         NS_ASSERT(endOfMpduEvent.IsExpired());
     }
     m_endOfMpduEvents.clear();
-    for (const auto& endOfMacHdrEvent : m_endOfMacHdrEvents)
+    for (const auto& [staId, endOfMacHdrEvents] : m_endOfMacHdrEvents)
     {
-        NS_ASSERT(endOfMacHdrEvent.IsExpired());
+        for (const auto& endOfMacHdrEvent : endOfMacHdrEvents)
+        {
+            NS_ASSERT(endOfMacHdrEvent.IsExpired());
+        }
     }
     m_endOfMacHdrEvents.clear();
     if (reset)
@@ -968,14 +992,14 @@ PhyEntity::StartPreambleDetectionPeriod(Ptr<Event> event)
 {
     NS_LOG_FUNCTION(this << *event);
     const auto rxPower = GetRxPowerForPpdu(event);
-    NS_LOG_DEBUG("Sync to signal (power=" << (rxPower > 0.0
+    NS_LOG_DEBUG("Sync to signal (power=" << (rxPower > Watt_u{0.0}
                                                   ? std::to_string(WToDbm(rxPower)) + "dBm)"
                                                   : std::to_string(rxPower) + "W)"));
     m_wifiPhy->m_interference->NotifyRxStart(
         m_wifiPhy->GetCurrentFrequencyRange()); // We need to notify it now so that it starts
                                                 // recording events
     m_endPreambleDetectionEvents.push_back(
-        Simulator::Schedule(m_wifiPhy->GetPreambleDetectionDuration(),
+        Simulator::Schedule(WifiPhy::GetPreambleDetectionDuration(),
                             &PhyEntity::EndPreambleDetectionPeriod,
                             this,
                             event));
@@ -1036,8 +1060,8 @@ PhyEntity::EndPreambleDetectionPeriod(Ptr<Event> event)
     NS_LOG_DEBUG("SNR(dB)=" << RatioToDb(snr) << " at end of preamble detection period");
 
     if (const auto power = m_wifiPhy->m_currentEvent->GetRxPower(measurementBand);
-        (!m_wifiPhy->m_preambleDetectionModel && maxRxPower && (*maxRxPower > 0.0)) ||
-        (m_wifiPhy->m_preambleDetectionModel && power > 0.0 &&
+        (!m_wifiPhy->m_preambleDetectionModel && maxRxPower && (*maxRxPower > Watt_u{0.0})) ||
+        (m_wifiPhy->m_preambleDetectionModel && power > Watt_u{0.0} &&
          m_wifiPhy->m_preambleDetectionModel->IsPreambleDetected(WToDbm(power),
                                                                  snr,
                                                                  measurementChannelWidth)))
@@ -1090,7 +1114,7 @@ PhyEntity::EndPreambleDetectionPeriod(Ptr<Event> event)
         // Continue receiving preamble
         const auto durationTillEnd =
             GetDuration(WIFI_PPDU_FIELD_PREAMBLE, event->GetPpdu()->GetTxVector()) -
-            m_wifiPhy->GetPreambleDetectionDuration();
+            WifiPhy::GetPreambleDetectionDuration();
         m_wifiPhy->NotifyCcaBusy(event->GetPpdu(),
                                  durationTillEnd); // will be prolonged by next field
         m_wifiPhy->m_endPhyRxEvent = Simulator::Schedule(durationTillEnd,
@@ -1147,9 +1171,12 @@ PhyEntity::CancelAllEvents()
         endMpduEvent.Cancel();
     }
     m_endOfMpduEvents.clear();
-    for (auto& endMacHdrEvent : m_endOfMacHdrEvents)
+    for (auto& [staId, endOfMacHdrEvents] : m_endOfMacHdrEvents)
     {
-        endMacHdrEvent.Cancel();
+        for (auto& endMacHdrEvent : endOfMacHdrEvents)
+        {
+            endMacHdrEvent.Cancel();
+        }
     }
     m_endOfMacHdrEvents.clear();
 }
@@ -1190,9 +1217,12 @@ PhyEntity::DoAbortCurrentReception(WifiPhyRxfailureReason reason)
             endMpduEvent.Cancel();
         }
         m_endOfMpduEvents.clear();
-        for (auto& endMacHdrEvent : m_endOfMacHdrEvents)
+        for (auto& [staId, endOfMacHdrEvents] : m_endOfMacHdrEvents)
         {
-            endMacHdrEvent.Cancel();
+            for (auto& endMacHdrEvent : endOfMacHdrEvents)
+            {
+                endMacHdrEvent.Cancel();
+            }
         }
         m_endOfMacHdrEvents.clear();
     }
@@ -1251,7 +1281,7 @@ PhyEntity::GetPrimaryBand(MHz_u bandWidth) const
 WifiSpectrumBandInfo
 PhyEntity::GetSecondaryBand(MHz_u bandWidth) const
 {
-    NS_ASSERT(m_wifiPhy->GetChannelWidth() >= 40);
+    NS_ASSERT(m_wifiPhy->GetChannelWidth() >= MHz_u{40});
     return m_wifiPhy->GetBand(bandWidth,
                               m_wifiPhy->GetOperatingChannel().GetSecondaryChannelIndex(bandWidth));
 }
@@ -1345,10 +1375,10 @@ void
 PhyEntity::StartTx(Ptr<const WifiPpdu> ppdu)
 {
     NS_LOG_FUNCTION(this << ppdu);
-    auto txPowerDbm = m_wifiPhy->GetTxPowerForTransmission(ppdu) + m_wifiPhy->GetTxGain();
+    auto txPower = m_wifiPhy->GetTxPowerForTransmission(ppdu) + m_wifiPhy->GetTxGain();
     auto txVector = ppdu->GetTxVector();
-    auto txPowerSpectrum = GetTxPowerSpectralDensity(DbmToW(txPowerDbm), ppdu);
-    Transmit(ppdu->GetTxDuration(), ppdu, txPowerDbm, txPowerSpectrum, "transmission");
+    auto txPowerSpectrum = GetTxPowerSpectralDensity(DbmToW(txPower), ppdu);
+    Transmit(ppdu->GetTxDuration(), ppdu, txPower, txPowerSpectrum, "transmission");
 }
 
 void
@@ -1404,18 +1434,18 @@ PhyEntity::CanStartRx(Ptr<const WifiPpdu> ppdu) const
     // not overlap the primary channel
     const auto channelWidth = m_wifiPhy->GetChannelWidth();
     const auto primaryWidth = ((static_cast<uint16_t>(channelWidth) % 20 == 0)
-                                   ? 20
+                                   ? MHz_u{20}
                                    : channelWidth); // if the channel width is a multiple of 20 MHz,
                                                     // then we consider the primary20 channel
     const auto p20CenterFreq =
         m_wifiPhy->GetOperatingChannel().GetPrimaryChannelCenterFrequency(primaryWidth);
-    const uint16_t p20MinFreq = p20CenterFreq - (primaryWidth / 2);
-    const uint16_t p20MaxFreq = p20CenterFreq + (primaryWidth / 2);
+    const auto p20MinFreq = p20CenterFreq - (primaryWidth / 2);
+    const auto p20MaxFreq = p20CenterFreq + (primaryWidth / 2);
     const auto txChannelWidth = (ppdu->GetTxChannelWidth() / ppdu->GetTxCenterFreqs().size());
     for (auto txCenterFreq : ppdu->GetTxCenterFreqs())
     {
-        const uint16_t minTxFreq = txCenterFreq - txChannelWidth / 2;
-        const uint16_t maxTxFreq = txCenterFreq + txChannelWidth / 2;
+        const auto minTxFreq = txCenterFreq - txChannelWidth / 2;
+        const auto maxTxFreq = txCenterFreq + txChannelWidth / 2;
         if ((p20MinFreq >= minTxFreq) && (p20MaxFreq <= maxTxFreq))
         {
             return true;

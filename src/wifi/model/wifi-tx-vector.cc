@@ -10,6 +10,7 @@
 #include "wifi-tx-vector.h"
 
 #include "wifi-phy-common.h"
+#include "wifi-utils.h"
 
 #include "ns3/abort.h"
 #include "ns3/eht-phy.h"
@@ -25,7 +26,7 @@ namespace ns3
 WifiTxVector::WifiTxVector()
     : m_txPowerLevel(1),
       m_preamble(WIFI_PREAMBLE_LONG),
-      m_channelWidth(20),
+      m_channelWidth(MHz_u{20}),
       m_guardInterval(NanoSeconds(800)),
       m_nTx(1),
       m_nss(1),
@@ -266,7 +267,7 @@ WifiTxVector::IsLdpc() const
 bool
 WifiTxVector::IsNonHtDuplicate() const
 {
-    return ((m_channelWidth >= 40) && !IsMu() && (GetModulationClass() < WIFI_MOD_CLASS_HT));
+    return ((m_channelWidth >= MHz_u{40}) && !IsMu() && (GetModulationClass() < WIFI_MOD_CLASS_HT));
 }
 
 void
@@ -442,7 +443,7 @@ WifiTxVector::IsValid(WifiPhyBand band) const
         return false;
     }
     const auto& modeName = m_mode.GetUniqueName();
-    if (m_channelWidth == 20)
+    if (m_channelWidth == MHz_u{20})
     {
         if (m_nss != 3 && m_nss != 6)
         {
@@ -452,7 +453,7 @@ WifiTxVector::IsValid(WifiPhyBand band) const
             }
         }
     }
-    else if (m_channelWidth == 80)
+    else if (m_channelWidth == MHz_u{80})
     {
         if (m_nss == 3 || m_nss == 7)
         {
@@ -469,7 +470,7 @@ WifiTxVector::IsValid(WifiPhyBand band) const
             }
         }
     }
-    else if (m_channelWidth == 160)
+    else if (m_channelWidth == MHz_u{160})
     {
         if (m_nss == 3)
         {
@@ -657,11 +658,10 @@ WifiTxVector::SetInactiveSubchannels(const std::vector<bool>& inactiveSubchannel
     NS_ABORT_MSG_IF(m_preamble < WIFI_PREAMBLE_HE_SU,
                     "Only HE (or later) authorized for preamble puncturing");
     NS_ABORT_MSG_IF(
-        m_channelWidth < 80,
+        m_channelWidth < MHz_u{80},
         "Preamble puncturing only possible for transmission bandwidth of 80 MHz or larger");
-    [[maybe_unused]] const std::size_t num20MhzSubchannels = m_channelWidth / 20;
     NS_ABORT_MSG_IF(!inactiveSubchannels.empty() &&
-                        inactiveSubchannels.size() != num20MhzSubchannels,
+                        inactiveSubchannels.size() != Count20MHzSubchannels(m_channelWidth),
                     "The size of the inactive subchannnels bitmap should be equal to the number of "
                     "20 MHz subchannels");
     m_inactiveSubchannels = inactiveSubchannels;
@@ -686,7 +686,7 @@ WifiTxVector::SetCenter26ToneRuIndication(Center26ToneRuIndication center26ToneR
 std::optional<Center26ToneRuIndication>
 WifiTxVector::GetCenter26ToneRuIndication() const
 {
-    if (!IsDlMu() || (m_channelWidth < 80))
+    if (!IsDlMu() || (m_channelWidth < MHz_u{80}))
     {
         return std::nullopt;
     }
@@ -786,7 +786,7 @@ WifiTxVector::GetUserInfoMapOrderedByRus(uint8_t p20Index) const
 RuAllocation
 WifiTxVector::DeriveRuAllocation(uint8_t p20Index) const
 {
-    RuAllocation ruAllocations(m_channelWidth / 20, HeRu::EMPTY_242_TONE_RU);
+    RuAllocation ruAllocations(Count20MHzSubchannels(m_channelWidth), HeRu::EMPTY_242_TONE_RU);
     std::vector<HeRu::RuType> ruTypes{};
     ruTypes.resize(ruAllocations.size());
     const auto& orderedMap = GetUserInfoMapOrderedByRus(p20Index);
@@ -795,9 +795,10 @@ WifiTxVector::DeriveRuAllocation(uint8_t p20Index) const
         const auto ruType = ru.GetRuType();
         const auto ruBw = HeRu::GetBandwidth(ruType);
         const auto isPrimary80MHz = ru.GetPrimary80MHz();
-        const auto rusPerSubchannel = HeRu::GetRusOfType(ruBw > 20 ? ruBw : 20, ruType);
+        const auto rusPerSubchannel =
+            HeRu::GetRusOfType(ruBw > MHz_u{20} ? ruBw : MHz_u{20}, ruType);
         auto ruIndex = ru.GetIndex();
-        if ((m_channelWidth >= 80) && (ruIndex > 19))
+        if ((m_channelWidth >= MHz_u{80}) && (ruIndex > 19))
         {
             // take into account the center 26-tone RU in the primary 80 MHz
             ruIndex--;
@@ -809,17 +810,16 @@ WifiTxVector::DeriveRuAllocation(uint8_t p20Index) const
         }
         if (!isPrimary80MHz && (ruType != HeRu::RU_2x996_TONE))
         {
-            NS_ASSERT(m_channelWidth > 80);
+            NS_ASSERT(m_channelWidth > MHz_u{80});
             // adjust RU index for the secondary 80 MHz: in that case index is restarting at 1,
             // hence we need to add an offset corresponding to the number of RUs of the same type in
             // the primary 80 MHz
-            ruIndex += HeRu::GetRusOfType(80, ruType).size();
+            ruIndex += HeRu::GetRusOfType(MHz_u{80}, ruType).size();
         }
-        const auto index =
-            (ruBw < 20) ? ((ruIndex - 1) / rusPerSubchannel.size()) : ((ruIndex - 1) * (ruBw / 20));
-        const auto numSubchannelsForRu = (ruBw < 20) ? 1 : (ruBw / 20);
-        [[maybe_unused]] const std::size_t num20MhzSubchannels = m_channelWidth / 20;
-        NS_ABORT_IF(index >= num20MhzSubchannels);
+        const auto numSubchannelsForRu = (ruBw < MHz_u{20}) ? 1 : Count20MHzSubchannels(ruBw);
+        const auto index = (ruBw < MHz_u{20}) ? ((ruIndex - 1) / rusPerSubchannel.size())
+                                              : ((ruIndex - 1) * numSubchannelsForRu);
+        NS_ABORT_IF(index >= Count20MHzSubchannels(m_channelWidth));
         auto ruAlloc = HeRu::GetEqualizedRuAllocation(ruType, false);
         if (ruAllocations.at(index) != HeRu::EMPTY_242_TONE_RU)
         {
@@ -840,7 +840,7 @@ WifiTxVector::DeriveRuAllocation(uint8_t p20Index) const
                 NS_ASSERT_MSG(false, "unsupported RU combination");
             }
         }
-        for (auto i = 0; i < numSubchannelsForRu; ++i)
+        for (std::size_t i = 0; i < numSubchannelsForRu; ++i)
         {
             ruTypes.at(index + i) = ruType;
             ruAllocations.at(index + i) = ruAlloc;

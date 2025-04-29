@@ -16,6 +16,8 @@
 #include "ns3/inet-socket-address.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
+#include "ns3/ipv4-static-routing-helper.h"
+#include "ns3/ipv4-static-routing.h"
 #include "ns3/log.h"
 #include "ns3/packet-sink-helper.h"
 #include "ns3/packet-sink.h"
@@ -25,25 +27,23 @@
 #include "ns3/test.h"
 #include "ns3/udp-echo-helper.h"
 #include "ns3/uinteger.h"
-#include <ns3/ipv4-static-routing-helper.h>
-#include <ns3/ipv4-static-routing.h>
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("EpcTestS1uDownlink");
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  *
- * \brief Custom structure for testing UE downlink data
+ * @brief Custom structure for testing UE downlink data
  */
 struct UeDlTestData
 {
     /**
      * Constructor
      *
-     * \param n number of packets
-     * \param s packet size
+     * @param n number of packets
+     * @param s packet size
      */
     UeDlTestData(uint32_t n, uint32_t s);
 
@@ -61,9 +61,9 @@ UeDlTestData::UeDlTestData(uint32_t n, uint32_t s)
 }
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  *
- * \brief Custom structure for testing eNodeB downlink data, contains
+ * @brief Custom structure for testing eNodeB downlink data, contains
  * the list of data structures for UEs
  */
 struct EnbDlTestData
@@ -72,9 +72,9 @@ struct EnbDlTestData
 };
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  *
- * \brief EpcS1uDlTestCase class
+ * @brief EpcS1uDlTestCase class
  */
 class EpcS1uDlTestCase : public TestCase
 {
@@ -82,8 +82,8 @@ class EpcS1uDlTestCase : public TestCase
     /**
      * Constructor
      *
-     * \param name the name of the test case instance
-     * \param v list of eNodeB downlink test data information
+     * @param name the name of the test case instance
+     * @param v list of eNodeB downlink test data information
      */
     EpcS1uDlTestCase(std::string name, std::vector<EnbDlTestData> v);
     ~EpcS1uDlTestCase() override;
@@ -202,8 +202,8 @@ EpcS1uDlTestCase::DoRun()
             PacketSinkHelper packetSinkHelper("ns3::UdpSocketFactory",
                                               InetSocketAddress(Ipv4Address::GetAny(), port));
             ApplicationContainer apps = packetSinkHelper.Install(ue);
-            apps.Start(Seconds(1.0));
-            apps.Stop(Seconds(10.0));
+            apps.Start(Seconds(1));
+            apps.Stop(Seconds(10));
             enbit->ues[u].serverApp = apps.Get(0)->GetObject<PacketSink>();
 
             Time interPacketInterval = Seconds(0.01);
@@ -212,8 +212,8 @@ EpcS1uDlTestCase::DoRun()
             client.SetAttribute("Interval", TimeValue(interPacketInterval));
             client.SetAttribute("PacketSize", UintegerValue(enbit->ues[u].pktSize));
             apps = client.Install(remoteHost);
-            apps.Start(Seconds(2.0));
-            apps.Stop(Seconds(10.0));
+            apps.Start(Seconds(2));
+            apps.Stop(Seconds(10));
             enbit->ues[u].clientApp = apps.Get(0);
 
             uint64_t imsi = ++imsiCounter;

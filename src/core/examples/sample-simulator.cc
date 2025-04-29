@@ -15,9 +15,9 @@
 #include <iostream>
 
 /**
- * \file
- * \ingroup core-examples
- * \ingroup simulator
+ * @file
+ * @ingroup core-examples
+ * @ingroup simulator
  * Example program demonstrating use of various Schedule functions.
  */
 
@@ -37,7 +37,7 @@ class MyModel
     /**
      *  Simple event handler.
      *
-     * \param [in] eventValue Event argument.
+     * @param [in] eventValue Event argument.
      */
     void HandleEvent(double eventValue);
 };
@@ -45,7 +45,7 @@ class MyModel
 void
 MyModel::Start()
 {
-    Simulator::Schedule(Seconds(10.0), &MyModel::HandleEvent, this, Simulator::Now().GetSeconds());
+    Simulator::Schedule(Seconds(10), &MyModel::HandleEvent, this, Simulator::Now().GetSeconds());
 }
 
 void
@@ -58,7 +58,7 @@ MyModel::HandleEvent(double value)
 /**
  * Simple function event handler which Starts a MyModel object.
  *
- * \param [in] model The MyModel object to start.
+ * @param [in] model The MyModel object to start.
  */
 void
 ExampleFunction(MyModel* model)
@@ -98,14 +98,14 @@ main(int argc, char* argv[])
     v->SetAttribute("Min", DoubleValue(10));
     v->SetAttribute("Max", DoubleValue(20));
 
-    Simulator::Schedule(Seconds(10.0), &ExampleFunction, &model);
+    Simulator::Schedule(Seconds(10), &ExampleFunction, &model);
 
     Simulator::Schedule(Seconds(v->GetValue()), &RandomFunction);
 
-    EventId id = Simulator::Schedule(Seconds(30.0), &CancelledEvent);
+    EventId id = Simulator::Schedule(Seconds(30), &CancelledEvent);
     Simulator::Cancel(id);
 
-    Simulator::Schedule(Seconds(25.0), []() {
+    Simulator::Schedule(Seconds(25), []() {
         std::cout << "Code within a lambda expression at time " << Simulator::Now().As(Time::S)
                   << std::endl;
     });

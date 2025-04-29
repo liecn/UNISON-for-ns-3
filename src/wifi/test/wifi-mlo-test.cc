@@ -71,11 +71,11 @@ GetRnrLinkInfoTest::DoRun()
 
     rnr.AddTbttInformationField(nbrId);
     tbttId = rnr.GetNTbttInformationFields(nbrId) - 1;
-    rnr.SetMldParameters(nbrId, tbttId, 0, 0, 0);
+    rnr.SetMldParameters(nbrId, tbttId, {0, 0, 0, 1, 1});
 
     rnr.AddTbttInformationField(nbrId);
     tbttId = rnr.GetNTbttInformationFields(nbrId) - 1;
-    rnr.SetMldParameters(nbrId, tbttId, 5, 0, 0);
+    rnr.SetMldParameters(nbrId, tbttId, {5, 0, 0, 1, 0});
 
     // Add a third Neighbor AP Information field with MLD Parameters; none of the
     // TBTT Information fields is related to an AP affiliated to the same AP MLD
@@ -85,11 +85,11 @@ GetRnrLinkInfoTest::DoRun()
 
     rnr.AddTbttInformationField(nbrId);
     tbttId = rnr.GetNTbttInformationFields(nbrId) - 1;
-    rnr.SetMldParameters(nbrId, tbttId, 3, 0, 0);
+    rnr.SetMldParameters(nbrId, tbttId, {3, 0, 0, 0, 1});
 
     rnr.AddTbttInformationField(nbrId);
     tbttId = rnr.GetNTbttInformationFields(nbrId) - 1;
-    rnr.SetMldParameters(nbrId, tbttId, 4, 0, 0);
+    rnr.SetMldParameters(nbrId, tbttId, {4, 0, 0, 0, 0});
 
     // Add a fourth Neighbor AP Information field with MLD Parameters; the first
     // TBTT Information field is not related to an AP affiliated to the same AP MLD
@@ -99,11 +99,11 @@ GetRnrLinkInfoTest::DoRun()
 
     rnr.AddTbttInformationField(nbrId);
     tbttId = rnr.GetNTbttInformationFields(nbrId) - 1;
-    rnr.SetMldParameters(nbrId, tbttId, 6, 0, 0);
+    rnr.SetMldParameters(nbrId, tbttId, {6, 0, 0, 1, 1});
 
     rnr.AddTbttInformationField(nbrId);
     tbttId = rnr.GetNTbttInformationFields(nbrId) - 1;
-    rnr.SetMldParameters(nbrId, tbttId, 0, 0, 0);
+    rnr.SetMldParameters(nbrId, tbttId, {0, 0, 0, 0, 0});
 
     // check implementation of WifiAssocManager::GetNextAffiliatedAp()
     auto ret = WifiAssocManager::GetNextAffiliatedAp(rnr, 0);
@@ -178,6 +178,7 @@ MldSwapLinksTest::RunOne(std::string text,
 
     std::vector<Ptr<WifiPhy>> phys;
     std::vector<Ptr<FrameExchangeManager>> feManagers;
+    std::vector<Ptr<WifiRemoteStationManager>> rsManagers;
 
     for (std::size_t i = 0; i < nLinks; ++i)
     {
@@ -185,9 +186,11 @@ MldSwapLinksTest::RunOne(std::string text,
         phy->SetPhyId(i);
         phys.emplace_back(phy);
         feManagers.emplace_back(CreateObject<TestFrameExchangeManager>());
+        rsManagers.emplace_back(CreateObject<TestRemoteStationManager>());
     }
     mac->SetWifiPhys(phys); // create links containing the given PHYs
     mac->SetFrameExchangeManagers(feManagers);
+    mac->SetWifiRemoteStationManagers(rsManagers);
     mac->GetTxop()->SetWifiMac(mac);
 
     // set CWmin of each Txop LinkEntity to the link ID, so that we can check where it has moved
@@ -219,6 +222,12 @@ MldSwapLinksTest::RunOne(std::string text,
                  ->GetLinkId(),
             +linkId,
             text << ": Link ID stored by FrameExchangeManager has not been updated");
+
+        NS_TEST_EXPECT_MSG_EQ(
+            +DynamicCast<TestRemoteStationManager>(mac->GetWifiRemoteStationManager(linkId))
+                 ->GetLinkId(),
+            +linkId,
+            text << ": Link ID stored by RemoteStationManager has not been updated");
 
         NS_TEST_EXPECT_MSG_EQ(mac->GetTxop()->GetMinCw(linkId),
                               +phyId,
@@ -634,7 +643,7 @@ void
 MultiLinkOperationsTestBase::DoSetup()
 {
     RngSeedManager::SetSeed(1);
-    RngSeedManager::SetRun(3);
+    RngSeedManager::SetRun(5);
     int64_t streamNumber = 30;
 
     NodeContainer wifiApNode;
@@ -668,6 +677,8 @@ MultiLinkOperationsTestBase::DoSetup()
 
     WifiMacHelper mac;
     mac.SetType("ns3::StaWifiMac", // default SSID
+                "MaxMissedBeacons",
+                UintegerValue(1e6), // do not deassociate
                 "ActiveProbing",
                 BooleanValue(false));
 
@@ -797,6 +808,9 @@ MultiLinkOperationsTestBase::SetSsid(uint16_t aid, Mac48Address /* addr */)
         m_staMacs[aid]->SetSsid(Ssid("ns-3-ssid"));
         return;
     }
+    // stop generation of beacon frames in order to avoid interference
+    m_apMac->SetAttribute("BeaconGeneration", BooleanValue(false));
+
     // wait some time (5ms) to allow the completion of association before generating traffic
     Simulator::Schedule(MilliSeconds(5), &MultiLinkOperationsTestBase::StartTraffic, this);
 }
@@ -1103,7 +1117,7 @@ MultiLinkSetupTest::CheckBeacon(Ptr<WifiMpdu> mpdu, uint8_t linkId)
         NS_TEST_EXPECT_MSG_EQ(rnr->GetNTbttInformationFields(nbrApInfoId),
                               1,
                               "Expected only one TBTT Info subfield per Neighbor AP Info");
-        uint8_t nbrLinkId = rnr->GetLinkId(nbrApInfoId, 0);
+        uint8_t nbrLinkId = rnr->GetMldParameters(nbrApInfoId, 0).linkId;
         NS_TEST_EXPECT_MSG_EQ(rnr->GetBssid(nbrApInfoId, 0),
                               m_apMac->GetFrameExchangeManager(nbrLinkId)->GetAddress(),
                               "BSSID advertised in Neighbor AP Info field "
@@ -1162,7 +1176,7 @@ MultiLinkSetupTest::CheckProbeResponse(Ptr<WifiMpdu> mpdu, uint8_t linkId)
         NS_TEST_EXPECT_MSG_EQ(rnr->GetNTbttInformationFields(nbrApInfoId),
                               1,
                               "Expected only one TBTT Info subfield per Neighbor AP Info");
-        uint8_t nbrLinkId = rnr->GetLinkId(nbrApInfoId, 0);
+        uint8_t nbrLinkId = rnr->GetMldParameters(nbrApInfoId, 0).linkId;
         NS_TEST_EXPECT_MSG_EQ(rnr->GetBssid(nbrApInfoId, 0),
                               m_apMac->GetFrameExchangeManager(nbrLinkId)->GetAddress(),
                               "BSSID advertised in Neighbor AP Info field "
@@ -1439,12 +1453,12 @@ MultiLinkSetupTest::CheckMlSetup()
         const auto& apChannel = m_apMac->GetWifiPhy(apLinkId)->GetOperatingChannel();
 
         auto width = apChannel.GetTotalWidth();
-        auto primary20 = apChannel.GetPrimaryChannelIndex(20);
+        auto primary20 = apChannel.GetPrimaryChannelIndex(MHz_u{20});
 
-        if (width > 80 && !m_support160MHzOp)
+        if (width > MHz_u{80} && !m_support160MHzOp)
         {
-            width = 80;
-            primary20 -= apChannel.GetPrimaryChannelIndex(80) * 4;
+            width = MHz_u{80};
+            primary20 -= apChannel.GetPrimaryChannelIndex(MHz_u{80}) * 4;
         }
 
         NS_TEST_EXPECT_MSG_EQ(+staChannel.GetNumber(),
@@ -1460,7 +1474,7 @@ MultiLinkSetupTest::CheckMlSetup()
         NS_TEST_EXPECT_MSG_EQ(+staChannel.GetPhyBand(),
                               +apChannel.GetPhyBand(),
                               "Incorrect operating PHY band for STA on link " << +staLinkId);
-        NS_TEST_EXPECT_MSG_EQ(+staChannel.GetPrimaryChannelIndex(20),
+        NS_TEST_EXPECT_MSG_EQ(+staChannel.GetPrimaryChannelIndex(MHz_u{20}),
                               +primary20,
                               "Incorrect operating primary channel index for STA on link "
                                   << +staLinkId);
@@ -1592,9 +1606,9 @@ MultiLinkSetupTest::CheckQosData(Ptr<WifiMpdu> mpdu,
                                                                      << hdr.IsFromDs() << ")");
     }
 
-    if (width > 80 && !m_support160MHzOp)
+    if (width > MHz_u{80} && !m_support160MHzOp)
     {
-        width = 80;
+        width = MHz_u{80};
     }
     NS_TEST_EXPECT_MSG_EQ(txvector.GetChannelWidth(), width, "Unexpected TX width");
 

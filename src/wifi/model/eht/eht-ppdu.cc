@@ -14,6 +14,7 @@
 #include "ns3/wifi-phy-operating-channel.h"
 #include "ns3/wifi-psdu.h"
 
+#include <algorithm>
 #include <numeric>
 
 namespace ns3
@@ -47,11 +48,19 @@ EhtPpdu::SetEhtPhyHeader(const WifiTxVector& txVector)
     NS_ASSERT(bssColor < 64);
     if (ns3::IsDlMu(m_preamble))
     {
-        const auto p20Index = m_operatingChannel.GetPrimaryChannelIndex(20);
+        const auto p20Index = m_operatingChannel.GetPrimaryChannelIndex(MHz_u{20});
         m_ehtPhyHeader.emplace<EhtMuPhyHeader>(EhtMuPhyHeader{
             .m_bandwidth = GetChannelWidthEncodingFromMhz(txVector.GetChannelWidth()),
             .m_bssColor = bssColor,
             .m_ppduType = txVector.GetEhtPpduType(),
+            // TODO: EHT PPDU should store U-SIG per 20 MHz band, assume it is the lowest 20 MHz
+            // band for now
+            .m_puncturedChannelInfo =
+                GetPuncturedInfo(txVector.GetInactiveSubchannels(),
+                                 txVector.GetEhtPpduType(),
+                                 (txVector.IsDlMu() && (txVector.GetChannelWidth() > MHz_u{80}))
+                                     ? std::optional{true}
+                                     : std::nullopt),
             .m_ehtSigMcs = txVector.GetSigBMode().GetMcsValue(),
             .m_giLtfSize = GetGuardIntervalAndNltfEncoding(txVector.GetGuardInterval(),
                                                            2 /*NLTF currently unused*/),
@@ -115,14 +124,19 @@ EhtPpdu::SetTxVectorFromPhyHeaders(WifiTxVector& txVector) const
     {
         auto ehtPhyHeader = std::get_if<EhtMuPhyHeader>(&m_ehtPhyHeader);
         NS_ASSERT(ehtPhyHeader);
-        txVector.SetChannelWidth(GetChannelWidthMhzFromEncoding(ehtPhyHeader->m_bandwidth));
+        const auto bw = GetChannelWidthMhzFromEncoding(ehtPhyHeader->m_bandwidth);
+        txVector.SetChannelWidth(bw);
         txVector.SetBssColor(ehtPhyHeader->m_bssColor);
         txVector.SetEhtPpduType(ehtPhyHeader->m_ppduType);
+        if (bw > MHz_u{80})
+        {
+            // TODO: use punctured channel information
+        }
         txVector.SetSigBMode(HePhy::GetVhtMcs(ehtPhyHeader->m_ehtSigMcs));
         txVector.SetGuardInterval(GetGuardIntervalFromEncoding(ehtPhyHeader->m_giLtfSize));
         const auto ruAllocation = ehtPhyHeader->m_ruAllocationA; // RU Allocation-B not supported
                                                                  // yet
-        if (const auto p20Index = m_operatingChannel.GetPrimaryChannelIndex(20);
+        if (const auto p20Index = m_operatingChannel.GetPrimaryChannelIndex(MHz_u{20});
             ruAllocation.has_value())
         {
             txVector.SetRuAllocation(ruAllocation.value(), p20Index);
@@ -200,14 +214,15 @@ EhtPpdu::GetEhtSigFieldSize(MHz_u channelWidth,
     if (!compression)
     {
         commonFieldSize = 4 /* CRC */ + 6 /* tail */;
-        if (channelWidth <= 40)
+        if (channelWidth <= MHz_u{40})
         {
             commonFieldSize += 8; // only one allocation subfield
         }
         else
         {
             commonFieldSize +=
-                8 * (channelWidth / 40) /* one allocation field per 40 MHz */ + 1 /* center RU */;
+                8 * (channelWidth / MHz_u{40}) /* one allocation field per 40 MHz */ +
+                1 /* center RU */;
         }
     }
 
@@ -228,6 +243,63 @@ EhtPpdu::GetEhtSigFieldSize(MHz_u channelWidth,
     }
 
     return commonFieldSize + userSpecificFieldSize;
+}
+
+uint8_t
+EhtPpdu::GetPuncturedInfo(const std::vector<bool>& inactiveSubchannels,
+                          uint8_t ehtPpduType,
+                          std::optional<bool> isLow80MHz)
+{
+    if (inactiveSubchannels.size() < 4)
+    {
+        // no puncturing if less than 80 MHz
+        return 0;
+    }
+    NS_ASSERT_MSG(inactiveSubchannels.size() <= 8,
+                  "Puncturing over more than 160 MHz is not supported");
+    if (ehtPpduType == 0)
+    {
+        // IEEE 802.11be D5.0 Table 36-28
+        NS_ASSERT(inactiveSubchannels.size() <= 4 || isLow80MHz.has_value());
+        const auto startIndex = (inactiveSubchannels.size() <= 4) ? 0 : (*isLow80MHz ? 0 : 4);
+        const auto stopIndex =
+            (inactiveSubchannels.size() <= 4) ? inactiveSubchannels.size() : (*isLow80MHz ? 4 : 8);
+        uint8_t puncturedInfoField = 0;
+        for (std::size_t i = startIndex; i < stopIndex; ++i)
+        {
+            if (!inactiveSubchannels.at(i))
+            {
+                puncturedInfoField |= 1 << (i / 4);
+            }
+        }
+        return puncturedInfoField;
+    }
+    // IEEE 802.11be D5.0 Table 36-30
+    const auto numPunctured = std::count_if(inactiveSubchannels.cbegin(),
+                                            inactiveSubchannels.cend(),
+                                            [](bool punctured) { return punctured; });
+    if (numPunctured == 0)
+    {
+        // no puncturing
+        return 0;
+    }
+    const auto firstPunctured = std::find_if(inactiveSubchannels.cbegin(),
+                                             inactiveSubchannels.cend(),
+                                             [](bool punctured) { return punctured; });
+    const auto firstIndex = std::distance(inactiveSubchannels.cbegin(), firstPunctured);
+    switch (numPunctured)
+    {
+    case 1:
+        return firstIndex + 1;
+    case 2:
+        NS_ASSERT_MSG(((firstIndex % 2) == 0) && inactiveSubchannels.at(firstIndex + 1),
+                      "invalid 40 MHz puncturing pattern");
+        return 9 + (firstIndex / 2);
+    default:
+        break;
+    }
+    NS_ASSERT_MSG(false, "invalid puncturing pattern");
+    return 0;
 }
 
 Ptr<WifiPpdu>

@@ -43,7 +43,7 @@ static Ptr<ThreeGppSpectrumPropagationLossModel>
     m_spectrumLossModel; //!< the SpectrumPropagationLossModel object
 
 /**
- * \brief A structure that holds the parameters for the
+ * @brief A structure that holds the parameters for the
  * ComputeSnr function. In this way the problem with the limited
  * number of parameters of method Schedule is avoided.
  */
@@ -59,9 +59,9 @@ struct ComputeSnrParams
 
 /**
  * Perform the beamforming using the DFT beamforming method
- * \param thisDevice the device performing the beamforming
- * \param thisAntenna the antenna object associated to thisDevice
- * \param otherDevice the device towards which point the beam
+ * @param thisDevice the device performing the beamforming
+ * @param thisAntenna the antenna object associated to thisDevice
+ * @param otherDevice the device towards which point the beam
  */
 static void
 DoBeamforming(Ptr<NetDevice> thisDevice,
@@ -106,7 +106,7 @@ DoBeamforming(Ptr<NetDevice> thisDevice,
 
 /**
  * Compute the average SNR
- * \param params A structure that holds the parameters that are needed to perform calculations in
+ * @param params A structure that holds the parameters that are needed to perform calculations in
  * ComputeSnr
  */
 static void
@@ -174,7 +174,7 @@ main(int argc, char* argv[])
     Config::SetDefault("ns3::ThreeGppChannelModel::UpdatePeriod",
                        TimeValue(MilliSeconds(1))); // update the channel at each iteration
     Config::SetDefault("ns3::ThreeGppChannelConditionModel::UpdatePeriod",
-                       TimeValue(MilliSeconds(0.0))); // do not update the channel condition
+                       TimeValue(MilliSeconds(0))); // do not update the channel condition
 
     RngSeedManager::SetSeed(1);
     RngSeedManager::SetRun(1);

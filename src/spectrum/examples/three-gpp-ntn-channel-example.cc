@@ -6,7 +6,7 @@
  */
 
 /**
- * \file
+ * @file
  * This example is a modified version of "three-gpp-channel-example", to include
  * the 3GPP NTN channel model.
  * Specifically, most changes (which are also highlighted throughout the code)
@@ -20,6 +20,7 @@
  * The result is the SNR of the signal and the path loss, saved in the ntn-snr-trace.txt file.
  */
 
+#include "ns3/antenna-model.h"
 #include "ns3/channel-condition-model.h"
 #include "ns3/constant-position-mobility-model.h"
 #include "ns3/core-module.h"
@@ -36,7 +37,6 @@
 #include "ns3/three-gpp-propagation-loss-model.h"
 #include "ns3/three-gpp-spectrum-propagation-loss-model.h"
 #include "ns3/uniform-planar-array.h"
-#include <ns3/antenna-model.h>
 
 #include <fstream>
 
@@ -143,7 +143,7 @@ CreateNoisePowerSpectralDensity(double fcHz, double noiseFigureDb, double bwHz, 
 }
 
 /**
- * \brief A structure that holds the parameters for the
+ * @brief A structure that holds the parameters for the
  * ComputeSnr function. In this way the problem with the limited
  * number of parameters of method Schedule is avoided.
  */
@@ -160,16 +160,16 @@ struct ComputeSnrParams
     double resourceBlockBandwidth;   //!< the Resource Block bandwidth in Hz
 
     /**
-     * \brief Constructor
-     * \param pTxMob the tx mobility model
-     * \param pRxMob the rx mobility model
-     * \param pTxPow the tx power in dBm
-     * \param pNoiseFigure the noise figure in dB
-     * \param pTxAntenna the tx antenna array
-     * \param pRxAntenna the rx antenna array
-     * \param pFrequency the carrier frequency in Hz
-     * \param pBandwidth the total bandwidth in Hz
-     * \param pResourceBlockBandwidth the Resource Block bandwidth in Hz
+     * @brief Constructor
+     * @param pTxMob the tx mobility model
+     * @param pRxMob the rx mobility model
+     * @param pTxPow the tx power in dBm
+     * @param pNoiseFigure the noise figure in dB
+     * @param pTxAntenna the tx antenna array
+     * @param pRxAntenna the rx antenna array
+     * @param pFrequency the carrier frequency in Hz
+     * @param pBandwidth the total bandwidth in Hz
+     * @param pResourceBlockBandwidth the Resource Block bandwidth in Hz
      */
     ComputeSnrParams(Ptr<MobilityModel> pTxMob,
                      Ptr<MobilityModel> pRxMob,
@@ -195,9 +195,9 @@ struct ComputeSnrParams
 
 /**
  * Perform the beamforming using the DFT beamforming method
- * \param thisDevice the device performing the beamforming
- * \param thisAntenna the antenna object associated to thisDevice
- * \param otherDevice the device towards which point the beam
+ * @param thisDevice the device performing the beamforming
+ * @param thisAntenna the antenna object associated to thisDevice
+ * @param otherDevice the device towards which point the beam
  */
 static void
 DoBeamforming(Ptr<NetDevice> thisDevice,
@@ -241,7 +241,7 @@ DoBeamforming(Ptr<NetDevice> thisDevice,
 
 /**
  * Compute the average SNR
- * \param params A structure that holds the parameters that are needed to perform calculations in
+ * @param params A structure that holds the parameters that are needed to perform calculations in
  * ComputeSnr
  */
 static void
@@ -345,7 +345,7 @@ main(int argc, char* argv[])
     Config::SetDefault("ns3::ThreeGppChannelModel::UpdatePeriod",
                        TimeValue(MilliSeconds(10))); // update the channel at every 10 ms
     Config::SetDefault("ns3::ThreeGppChannelConditionModel::UpdatePeriod",
-                       TimeValue(MilliSeconds(0.0))); // do not update the channel condition
+                       TimeValue(MilliSeconds(0))); // do not update the channel condition
 
     RngSeedManager::SetSeed(1);
     RngSeedManager::SetRun(1);

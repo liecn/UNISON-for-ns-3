@@ -415,6 +415,68 @@ Adding a module is the only case where
 
 More information on how to create a new module are provided in :ref:`Adding a New Module to ns3`.
 
+Note: Advanced users who wish to organize their custom contrib modules outside the
+`ns-3-dev/contrib` directory can take advantage of a feature introduced in ns-3.44.
+The build system now also scans for contrib modules in a dedicated ns-3-external-contrib folder.
+This approach simplifies managing a top-level project that handles multiple repositories
+without requiring explicit dependencies between them.
+
+You should have a source tree like the following:
+
+.. sourcecode:: console
+
+   $ tree -d -L 3
+   .
+   ├── ns-3-dev
+   │   ├── LICENSES
+   │   ├── bindings
+   │   │   └── python
+   │   ├── build-support
+   │   │   ├── 3rd-party
+   │   │   ├── custom-modules
+   │   │   ├── pip-wheel
+   │   │   └── test-files
+   │   ├── contrib
+   │   ├── doc
+   │   │   ├── contributing
+   │   │   ├── ...
+   │   │   └── tutorial
+   │   ├── examples
+   │   │   ├── channel-models
+   │   │   ├── ...
+   │   │   └── wireless
+   │   ├── scratch
+   │   │   ├── nested-subdir
+   │   │   ├── ...
+   │   │   └── subdir2
+   │   ├── src
+   │   │   ├── antenna
+   │   │   ├── ...
+   │   │   ├── wifi
+   │   │   └── wimax
+   │   ├── third-party
+   │   └── utils
+   │       ├── perf
+   │       └── tests
+   └── ns-3-external-contrib
+       └── nr
+           ├── LICENSES
+           ├── doc
+           ├── examples
+           ├── helper
+           ├── model
+           ├── test
+           ├── tools
+           ├── tutorial
+           └── utils
+
+The module will be automatically mapped to `ns-3-dev/contrib`, as if it was part
+of the typical contrib module location. No copying or symlink required.
+
+Note: For that to always work, you may need to adjust paths dependent on
+CMAKE_CURRENT_SOURCE_DIR, if using custom CMake constructs instead of the
+ns-3 macros.
+
 Migrating a Waf module to CMake
 *******************************
 
@@ -2855,7 +2917,7 @@ followed by a header configuration:
     else()
       # If it is false, we add necessary C++ definitions (e.g. NS3_MPI)
       message(STATUS "MPI was found.")
-      add_definitions(-DNS3_MPI)
+      target_compile_definitions(MPI::MPI_CXX INTERFACE NS3_MPI)
 
       # Then set ENABLE_MPI to TRUE, which can be used to check
       # if NS3_MPI is enabled AND MPI was found

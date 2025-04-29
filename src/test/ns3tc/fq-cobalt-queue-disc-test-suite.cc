@@ -31,7 +31,7 @@ using namespace ns3;
 static int32_t g_hash;
 
 /**
- * \ingroup system-tests-tc
+ * @ingroup system-tests-tc
  *
  * Simple test packet filter able to classify IPv4 packets.
  */
@@ -39,8 +39,8 @@ class Ipv4FqCobaltTestPacketFilter : public Ipv4PacketFilter
 {
   public:
     /**
-     * \brief Get the type ID.
-     * \return the object TypeId
+     * @brief Get the type ID.
+     * @return the object TypeId
      */
     static TypeId GetTypeId();
 
@@ -50,15 +50,15 @@ class Ipv4FqCobaltTestPacketFilter : public Ipv4PacketFilter
   private:
     /**
      * Classify a QueueDiscItem
-     * \param item The item to classify (unused).
-     * \return a pre-set hash value.
+     * @param item The item to classify (unused).
+     * @return a pre-set hash value.
      */
     int32_t DoClassify(Ptr<QueueDiscItem> item) const override;
 
     /**
      * Check the protocol.
-     * \param item The item to check (unused).
-     * \return true.
+     * @param item The item to check (unused).
+     * @return true.
      */
     bool CheckProtocol(Ptr<QueueDiscItem> item) const override;
 };
@@ -94,7 +94,7 @@ Ipv4FqCobaltTestPacketFilter::CheckProtocol(Ptr<QueueDiscItem> item) const
 }
 
 /**
- * \ingroup system-tests-tc
+ * @ingroup system-tests-tc
  *
  * This class tests packets for which there is no suitable filter.
  */
@@ -152,7 +152,7 @@ FqCobaltQueueDiscNoSuitableFilter::DoRun()
 }
 
 /**
- * \ingroup system-tests-tc
+ * @ingroup system-tests-tc
  *
  * This class tests the IP flows separation and the packet limit.
  */
@@ -166,8 +166,8 @@ class FqCobaltQueueDiscIPFlowsSeparationAndPacketLimit : public TestCase
     void DoRun() override;
     /**
      * Enqueue a packet.
-     * \param queue The queue disc.
-     * \param hdr The IPv4 header.
+     * @param queue The queue disc.
+     * @param hdr The IPv4 header.
      */
     void AddPacket(Ptr<FqCobaltQueueDisc> queue, Ipv4Header hdr);
 };
@@ -248,7 +248,7 @@ FqCobaltQueueDiscIPFlowsSeparationAndPacketLimit::DoRun()
 }
 
 /**
- * \ingroup system-tests-tc
+ * @ingroup system-tests-tc
  *
  * This class tests the deficit per flow.
  */
@@ -262,8 +262,8 @@ class FqCobaltQueueDiscDeficit : public TestCase
     void DoRun() override;
     /**
      * Enqueue a packet.
-     * \param queue The queue disc.
-     * \param hdr The IPv4 header.
+     * @param queue The queue disc.
+     * @param hdr The IPv4 header.
      */
     void AddPacket(Ptr<FqCobaltQueueDisc> queue, Ipv4Header hdr);
 };
@@ -474,7 +474,7 @@ FqCobaltQueueDiscDeficit::DoRun()
 }
 
 /**
- * \ingroup system-tests-tc
+ * @ingroup system-tests-tc
  *
  * This class tests the TCP flows separation.
  */
@@ -488,9 +488,9 @@ class FqCobaltQueueDiscTCPFlowsSeparation : public TestCase
     void DoRun() override;
     /**
      * Enqueue a packet.
-     * \param queue The queue disc.
-     * \param ipHdr The IPv4 header.
-     * \param tcpHdr The TCP header.
+     * @param queue The queue disc.
+     * @param ipHdr The IPv4 header.
+     * @param tcpHdr The TCP header.
      */
     void AddPacket(Ptr<FqCobaltQueueDisc> queue, Ipv4Header ipHdr, TcpHeader tcpHdr);
 };
@@ -599,7 +599,7 @@ FqCobaltQueueDiscTCPFlowsSeparation::DoRun()
 }
 
 /**
- * \ingroup system-tests-tc
+ * @ingroup system-tests-tc
  *
  * This class tests the UDP flows separation
  */
@@ -613,9 +613,9 @@ class FqCobaltQueueDiscUDPFlowsSeparation : public TestCase
     void DoRun() override;
     /**
      * Enqueue a packet.
-     * \param queue the queue disc
-     * \param ipHdr the IPv4 header
-     * \param udpHdr the UDP header
+     * @param queue the queue disc
+     * @param ipHdr the IPv4 header
+     * @param udpHdr the UDP header
      */
     void AddPacket(Ptr<FqCobaltQueueDisc> queue, Ipv4Header ipHdr, UdpHeader udpHdr);
 };
@@ -724,9 +724,9 @@ FqCobaltQueueDiscUDPFlowsSeparation::DoRun()
 }
 
 /**
- * \ingroup system-tests-tc
+ * @ingroup system-tests-tc
  *
- * \brief This class tests ECN marking.
+ * @brief This class tests ECN marking.
  *
  * The test is divided into 3 sub test cases.
  * 1) CE threshold disabled
@@ -753,11 +753,11 @@ class FqCobaltQueueDiscEcnMarking : public TestCase
     void DoRun() override;
     /**
      * Enqueue the given number of packets.
-     * \param queue The queue disc.
-     * \param hdr The IPv4 header.
-     * \param nPkt The number of packets.
-     * \param nPktEnqueued The expected number of enqueued packets.
-     * \param nQueueFlows The expected number of flow queues.
+     * @param queue The queue disc.
+     * @param hdr The IPv4 header.
+     * @param nPkt The number of packets.
+     * @param nPktEnqueued The expected number of enqueued packets.
+     * @param nQueueFlows The expected number of flow queues.
      */
     void AddPacket(Ptr<FqCobaltQueueDisc> queue,
                    Ipv4Header hdr,
@@ -766,21 +766,21 @@ class FqCobaltQueueDiscEcnMarking : public TestCase
                    uint32_t nQueueFlows);
     /**
      * Dequeue the given number of packets.
-     * \param queue The queue disc.
-     * \param nPkt The number of packets.
+     * @param queue The queue disc.
+     * @param nPkt The number of packets.
      */
     void Dequeue(Ptr<FqCobaltQueueDisc> queue, uint32_t nPkt);
     /**
      * Dequeue the given number of packets at different times.
-     * \param queue The queue disc.
-     * \param delay The time between two consecutive dequeue operations.
-     * \param nPkt The number of packets.
+     * @param queue The queue disc.
+     * @param delay The time between two consecutive dequeue operations.
+     * @param nPkt The number of packets.
      */
     void DequeueWithDelay(Ptr<FqCobaltQueueDisc> queue, double delay, uint32_t nPkt);
     /**
      * Tracer for the DropNext attribute
-     * \param oldVal Old value.
-     * \param newVal New value.
+     * @param oldVal Old value.
+     * @param newVal New value.
      */
     void DropNextTracer(int64_t oldVal, int64_t newVal);
     uint32_t m_dropNextCount; ///< count the number of times m_dropNext is recalculated
@@ -845,7 +845,7 @@ FqCobaltQueueDiscEcnMarking::DequeueWithDelay(Ptr<FqCobaltQueueDisc> queue,
 {
     for (uint32_t i = 0; i < nPkt; i++)
     {
-        Simulator::Schedule(Time(Seconds((i + 1) * delay)),
+        Simulator::Schedule(Seconds((i + 1) * delay),
                             &FqCobaltQueueDiscEcnMarking::Dequeue,
                             this,
                             queue,
@@ -888,7 +888,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
     hdr.SetEcn(Ipv4Header::ECN_ECT0);
 
     // Add 20 ECT0 (ECN capable) packets from the first flow
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -899,7 +899,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
 
     // Add 20 ECT0 (ECN capable) packets from second flow
     hdr.SetDestination(Ipv4Address("10.10.1.10"));
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -910,7 +910,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
 
     // Add 20 ECT0 (ECN capable) packets from third flow
     hdr.SetDestination(Ipv4Address("10.10.1.20"));
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -922,7 +922,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
     // Add 20 NotECT packets from fourth flow
     hdr.SetDestination(Ipv4Address("10.10.1.30"));
     hdr.SetEcn(Ipv4Header::ECN_NotECT);
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -933,7 +933,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
 
     // Add 20 NotECT packets from fifth flow
     hdr.SetDestination(Ipv4Address("10.10.1.40"));
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -946,7 +946,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
     // each queue
     DequeueWithDelay(queueDisc, 0.11, 60);
     Simulator::Run();
-    Simulator::Stop(Seconds(8.0));
+    Simulator::Stop(Seconds(8));
     Ptr<CobaltQueueDisc> q0 =
         queueDisc->GetQueueDiscClass(0)->GetQueueDisc()->GetObject<CobaltQueueDisc>();
     Ptr<CobaltQueueDisc> q1 =
@@ -1020,7 +1020,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
     // Add 20 ECT0 (ECN capable) packets from first flow
     hdr.SetDestination(Ipv4Address("10.10.1.2"));
     hdr.SetEcn(Ipv4Header::ECN_ECT0);
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -1031,7 +1031,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
 
     // Add 20 ECT0 (ECN capable) packets from second flow
     hdr.SetDestination(Ipv4Address("10.10.1.10"));
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -1042,7 +1042,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
 
     // Add 20 ECT0 (ECN capable) packets from third flow
     hdr.SetDestination(Ipv4Address("10.10.1.20"));
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -1054,7 +1054,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
     // Add 20 NotECT packets from fourth flow
     hdr.SetDestination(Ipv4Address("10.10.1.30"));
     hdr.SetEcn(Ipv4Header::ECN_NotECT);
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -1065,7 +1065,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
 
     // Add 20 NotECT packets from fifth flow
     hdr.SetDestination(Ipv4Address("10.10.1.40"));
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -1078,7 +1078,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
     // each queue
     DequeueWithDelay(queueDisc, 0.0001, 60);
     Simulator::Run();
-    Simulator::Stop(Seconds(8.0));
+    Simulator::Stop(Seconds(8));
     q0 = queueDisc->GetQueueDiscClass(0)->GetQueueDisc()->GetObject<CobaltQueueDisc>();
     q1 = queueDisc->GetQueueDiscClass(1)->GetQueueDisc()->GetObject<CobaltQueueDisc>();
     q2 = queueDisc->GetQueueDiscClass(2)->GetQueueDisc()->GetObject<CobaltQueueDisc>();
@@ -1155,7 +1155,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
     // Add 20 ECT0 (ECN capable) packets from first flow
     hdr.SetDestination(Ipv4Address("10.10.1.2"));
     hdr.SetEcn(Ipv4Header::ECN_ECT0);
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -1166,7 +1166,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
 
     // Add 20 ECT0 (ECN capable) packets from second flow
     hdr.SetDestination(Ipv4Address("10.10.1.10"));
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -1177,7 +1177,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
 
     // Add 20 ECT0 (ECN capable) packets from third flow
     hdr.SetDestination(Ipv4Address("10.10.1.20"));
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -1189,7 +1189,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
     // Add 20 NotECT packets from fourth flow
     hdr.SetDestination(Ipv4Address("10.10.1.30"));
     hdr.SetEcn(Ipv4Header::ECN_NotECT);
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -1200,7 +1200,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
 
     // Add 20 NotECT packets from fifth flow
     hdr.SetDestination(Ipv4Address("10.10.1.40"));
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscEcnMarking::AddPacket,
                         this,
                         queueDisc,
@@ -1216,7 +1216,7 @@ FqCobaltQueueDiscEcnMarking::DoRun()
     // each queue
     DequeueWithDelay(queueDisc, 0.110, 60);
     Simulator::Run();
-    Simulator::Stop(Seconds(8.0));
+    Simulator::Stop(Seconds(8));
     q0 = queueDisc->GetQueueDiscClass(0)->GetQueueDisc()->GetObject<CobaltQueueDisc>();
     q1 = queueDisc->GetQueueDiscClass(1)->GetQueueDisc()->GetObject<CobaltQueueDisc>();
     q2 = queueDisc->GetQueueDiscClass(2)->GetQueueDisc()->GetObject<CobaltQueueDisc>();
@@ -1277,9 +1277,9 @@ FqCobaltQueueDiscEcnMarking::DoRun()
 }
 
 /**
- * \ingroup system-tests-tc
+ * @ingroup system-tests-tc
  *
- * \brief This class tests linear probing, collision response, and set
+ * @brief This class tests linear probing, collision response, and set
  * creation capability of set associative hashing in FqCobalt.
  *
  * We modified DoClassify () and CheckProtocol () so that we could control
@@ -1310,8 +1310,8 @@ class FqCobaltQueueDiscSetLinearProbing : public TestCase
     void DoRun() override;
     /**
      * Enqueue a packet.
-     * \param queue The queue disc.
-     * \param hdr The IPv4 header.
+     * @param queue The queue disc.
+     * @param hdr The IPv4 header.
      */
     void AddPacket(Ptr<FqCobaltQueueDisc> queue, Ipv4Header hdr);
 };
@@ -1414,9 +1414,9 @@ FqCobaltQueueDiscSetLinearProbing::DoRun()
 }
 
 /**
- * \ingroup system-tests-tc
+ * @ingroup system-tests-tc
  *
- * \brief This class tests L4S mode.
+ * @brief This class tests L4S mode.
  *
  * This test is divided to sub test one without hash collisions and so ECT0 and ECT1 flows are
  * classified into different flows.
@@ -1438,17 +1438,17 @@ class FqCobaltQueueDiscL4sMode : public TestCase
     void DoRun() override;
     /**
      * Enqueue the given number of packets.
-     * \param queue The queue disc.
-     * \param hdr The IPv4 header.
-     * \param nPkt The number of packets.
+     * @param queue The queue disc.
+     * @param hdr The IPv4 header.
+     * @param nPkt The number of packets.
      */
     void AddPacket(Ptr<FqCobaltQueueDisc> queue, Ipv4Header hdr, uint32_t nPkt);
     /**
      * Enqueue the given number of packets at different times.
-     * \param queue The queue disc.
-     * \param hdr The IPv4 header.
-     * \param delay The time between two consecutive enqueue operations.
-     * \param nPkt The number of packets.
+     * @param queue The queue disc.
+     * @param hdr The IPv4 header.
+     * @param delay The time between two consecutive enqueue operations.
+     * @param nPkt The number of packets.
      */
     void AddPacketWithDelay(Ptr<FqCobaltQueueDisc> queue,
                             Ipv4Header hdr,
@@ -1456,15 +1456,15 @@ class FqCobaltQueueDiscL4sMode : public TestCase
                             uint32_t nPkt);
     /**
      * Dequeue the given number of packets.
-     * \param queue The queue disc.
-     * \param nPkt The number of packets.
+     * @param queue The queue disc.
+     * @param nPkt The number of packets.
      */
     void Dequeue(Ptr<FqCobaltQueueDisc> queue, uint32_t nPkt);
     /**
      * Dequeue the given number of packets at different times.
-     * \param queue The queue disc.
-     * \param delay The time between two consecutive dequeue operations.
-     * \param nPkt The number of packets.
+     * @param queue The queue disc.
+     * @param delay The time between two consecutive dequeue operations.
+     * @param nPkt The number of packets.
      */
     void DequeueWithDelay(Ptr<FqCobaltQueueDisc> queue, double delay, uint32_t nPkt);
 };
@@ -1498,7 +1498,7 @@ FqCobaltQueueDiscL4sMode::AddPacketWithDelay(Ptr<FqCobaltQueueDisc> queue,
 {
     for (uint32_t i = 0; i < nPkt; i++)
     {
-        Simulator::Schedule(Time(Seconds((i + 1) * delay)),
+        Simulator::Schedule(Seconds((i + 1) * delay),
                             &FqCobaltQueueDiscL4sMode::AddPacket,
                             this,
                             queue,
@@ -1523,7 +1523,7 @@ FqCobaltQueueDiscL4sMode::DequeueWithDelay(Ptr<FqCobaltQueueDisc> queue,
 {
     for (uint32_t i = 0; i < nPkt; i++)
     {
-        Simulator::Schedule(Time(Seconds((i + 1) * delay)),
+        Simulator::Schedule(Seconds((i + 1) * delay),
                             &FqCobaltQueueDiscL4sMode::Dequeue,
                             this,
                             queue,
@@ -1563,7 +1563,7 @@ FqCobaltQueueDiscL4sMode::DoRun()
     // Add 70 ECT1 (ECN capable) packets from the first flow
     // Set delay = 0.5ms
     double delay = 0.0005;
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscL4sMode::AddPacketWithDelay,
                         this,
                         queueDisc,
@@ -1574,7 +1574,7 @@ FqCobaltQueueDiscL4sMode::DoRun()
     // Add 70 ECT0 (ECN capable) packets from second flow
     hdr.SetEcn(Ipv4Header::ECN_ECT0);
     hdr.SetDestination(Ipv4Address("10.10.1.10"));
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscL4sMode::AddPacketWithDelay,
                         this,
                         queueDisc,
@@ -1586,7 +1586,7 @@ FqCobaltQueueDiscL4sMode::DoRun()
     delay = 0.001;
     DequeueWithDelay(queueDisc, delay, 140);
     Simulator::Run();
-    Simulator::Stop(Seconds(8.0));
+    Simulator::Stop(Seconds(8));
     Ptr<CobaltQueueDisc> q0 =
         queueDisc->GetQueueDiscClass(0)->GetQueueDisc()->GetObject<CobaltQueueDisc>();
     Ptr<CobaltQueueDisc> q1 =
@@ -1645,13 +1645,13 @@ FqCobaltQueueDiscL4sMode::DoRun()
     // Add 70 ECT1 (ECN capable) packets from the first flow
     // Set delay = 1ms
     delay = 0.001;
-    Simulator::Schedule(Time(Seconds(0.0005)),
+    Simulator::Schedule(Seconds(0.0005),
                         &FqCobaltQueueDiscL4sMode::AddPacket,
                         this,
                         queueDisc,
                         hdr,
                         1);
-    Simulator::Schedule(Time(Seconds(0.0005)),
+    Simulator::Schedule(Seconds(0.0005),
                         &FqCobaltQueueDiscL4sMode::AddPacketWithDelay,
                         this,
                         queueDisc,
@@ -1661,7 +1661,7 @@ FqCobaltQueueDiscL4sMode::DoRun()
 
     // Add 70 ECT0 (ECN capable) packets from first flow
     hdr.SetEcn(Ipv4Header::ECN_ECT0);
-    Simulator::Schedule(Time(Seconds(0)),
+    Simulator::Schedule(Seconds(0),
                         &FqCobaltQueueDiscL4sMode::AddPacketWithDelay,
                         this,
                         queueDisc,
@@ -1672,7 +1672,7 @@ FqCobaltQueueDiscL4sMode::DoRun()
     // Dequeue 140 packets with delay 1ms
     DequeueWithDelay(queueDisc, delay, 140);
     Simulator::Run();
-    Simulator::Stop(Seconds(8.0));
+    Simulator::Stop(Seconds(8));
     q0 = queueDisc->GetQueueDiscClass(0)->GetQueueDisc()->GetObject<CobaltQueueDisc>();
     q0 = queueDisc->GetQueueDiscClass(0)->GetQueueDisc()->GetObject<CobaltQueueDisc>();
 
@@ -1696,7 +1696,7 @@ FqCobaltQueueDiscL4sMode::DoRun()
 }
 
 /**
- * \ingroup system-tests-tc
+ * @ingroup system-tests-tc
  *
  * FQ-COBALT queue disc test suite.
  */

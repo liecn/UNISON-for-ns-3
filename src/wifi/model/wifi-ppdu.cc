@@ -21,9 +21,9 @@ namespace
  * If the specified channel width is spread over multiple frequency segments (e.g. 160 MHz if
  * operating channel is 80+80MHz), multiple center frequencies are returned.
  *
- * \param channel the operating channel of the PHY
- * \param channelWidth the channel width
- * \return the center frequency of each segment covered by the given width
+ * @param channel the operating channel of the PHY
+ * @param channelWidth the channel width
+ * @return the center frequency of each segment covered by the given width
  */
 std::vector<ns3::MHz_u>
 GetChannelCenterFrequenciesPerSegment(const ns3::WifiPhyOperatingChannel& channel,
@@ -98,15 +98,6 @@ WifiPpdu::WifiPpdu(const WifiConstPsduMap& psdus,
 {
     NS_LOG_FUNCTION(this << psdus << txVector << channel << uid);
     m_psdus = psdus;
-}
-
-WifiPpdu::~WifiPpdu()
-{
-    for (auto& psdu : m_psdus)
-    {
-        psdu.second = nullptr;
-    }
-    m_psdus.clear();
 }
 
 const WifiTxVector&
@@ -273,7 +264,7 @@ std::string
 WifiPpdu::PrintPayload() const
 {
     std::ostringstream ss;
-    ss << "PSDU=" << GetPsdu() << " ";
+    ss << "PSDU=" << *GetPsdu() << " ";
     return ss.str();
 }
 
@@ -289,16 +280,6 @@ std::ostream&
 operator<<(std::ostream& os, const Ptr<const WifiPpdu>& ppdu)
 {
     ppdu->Print(os);
-    return os;
-}
-
-std::ostream&
-operator<<(std::ostream& os, const WifiConstPsduMap& psdus)
-{
-    for (const auto& psdu : psdus)
-    {
-        os << "PSDU for STA_ID=" << psdu.first << " (" << *psdu.second << ") ";
-    }
     return os;
 }
 

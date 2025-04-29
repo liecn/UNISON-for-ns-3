@@ -11,32 +11,32 @@
 
 #include "lte-test-ue-measurements.h"
 
-#include <ns3/boolean.h>
-#include <ns3/callback.h>
-#include <ns3/config.h>
-#include <ns3/double.h>
-#include <ns3/enum.h>
-#include <ns3/ff-mac-scheduler.h>
-#include <ns3/internet-stack-helper.h>
-#include <ns3/ipv4-address-helper.h>
-#include <ns3/ipv4-interface-container.h>
-#include <ns3/ipv4-static-routing-helper.h>
-#include <ns3/log.h>
-#include <ns3/lte-common.h>
-#include <ns3/lte-enb-net-device.h>
-#include <ns3/lte-enb-phy.h>
-#include <ns3/lte-enb-rrc.h>
-#include <ns3/lte-helper.h>
-#include <ns3/lte-ue-net-device.h>
-#include <ns3/lte-ue-phy.h>
-#include <ns3/lte-ue-rrc.h>
-#include <ns3/mobility-helper.h>
-#include <ns3/net-device-container.h>
-#include <ns3/node-container.h>
-#include <ns3/point-to-point-epc-helper.h>
-#include <ns3/point-to-point-helper.h>
-#include <ns3/simulator.h>
-#include <ns3/string.h>
+#include "ns3/boolean.h"
+#include "ns3/callback.h"
+#include "ns3/config.h"
+#include "ns3/double.h"
+#include "ns3/enum.h"
+#include "ns3/ff-mac-scheduler.h"
+#include "ns3/internet-stack-helper.h"
+#include "ns3/ipv4-address-helper.h"
+#include "ns3/ipv4-interface-container.h"
+#include "ns3/ipv4-static-routing-helper.h"
+#include "ns3/log.h"
+#include "ns3/lte-common.h"
+#include "ns3/lte-enb-net-device.h"
+#include "ns3/lte-enb-phy.h"
+#include "ns3/lte-enb-rrc.h"
+#include "ns3/lte-helper.h"
+#include "ns3/lte-ue-net-device.h"
+#include "ns3/lte-ue-phy.h"
+#include "ns3/lte-ue-rrc.h"
+#include "ns3/mobility-helper.h"
+#include "ns3/net-device-container.h"
+#include "ns3/node-container.h"
+#include "ns3/point-to-point-epc-helper.h"
+#include "ns3/point-to-point-helper.h"
+#include "ns3/simulator.h"
+#include "ns3/string.h"
 
 using namespace ns3;
 
@@ -222,7 +222,7 @@ LteUeMeasurementsTestSuite::LteUeMeasurementsTestSuite()
 }
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  * Static variable for test initialization
  */
 static LteUeMeasurementsTestSuite lteUeMeasurementsTestSuite;
@@ -687,7 +687,7 @@ LteUeMeasurementsPiecewiseTestSuite1::LteUeMeasurementsPiecewiseTestSuite1()
 } // end of LteUeMeasurementsPiecewiseTestSuite1::LteUeMeasurementsPiecewiseTestSuite1
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  * Static variable for test initialization
  */
 static LteUeMeasurementsPiecewiseTestSuite1 lteUeMeasurementsPiecewiseTestSuite1;
@@ -1390,7 +1390,7 @@ LteUeMeasurementsPiecewiseTestSuite2::LteUeMeasurementsPiecewiseTestSuite2()
 } // end of LteUeMeasurementsPiecewiseTestSuite2::LteUeMeasurementsPiecewiseTestSuite2
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  * Static variable for test initialization
  */
 static LteUeMeasurementsPiecewiseTestSuite2 lteUeMeasurementsPiecewiseTestSuite2;
@@ -1571,81 +1571,82 @@ LteUeMeasurementsPiecewiseTestCase2::RecvMeasurementReportCallback(
     NS_ASSERT(rnti == 1);
     NS_ASSERT(cellId == 1);
 
-    if (report.measResults.measId == m_expectedMeasId)
+    if (report.measResults.measId != m_expectedMeasId)
     {
-        // verifying the report completeness
-        LteRrcSap::MeasResults measResults = report.measResults;
-        NS_LOG_DEBUG(
-            this << " Serving cellId=" << cellId
-                 << " rsrp=" << (uint16_t)measResults.measResultPCell.rsrpResult << " ("
-                 << EutranMeasurementMapping::RsrpRange2Dbm(measResults.measResultPCell.rsrpResult)
-                 << " dBm)"
-                 << " rsrq=" << (uint16_t)measResults.measResultPCell.rsrqResult << " ("
-                 << EutranMeasurementMapping::RsrqRange2Db(measResults.measResultPCell.rsrqResult)
-                 << " dB)");
+        return;
+    }
 
-        // verifying reported best cells
-        if (measResults.measResultListEutra.empty())
-        {
-            NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
-                                  false,
-                                  "Unexpected report content");
-        }
-        else
-        {
-            NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
-                                  true,
-                                  "Unexpected report content");
-            auto it = measResults.measResultListEutra.begin();
-            NS_ASSERT(it != measResults.measResultListEutra.end());
-            NS_ASSERT(it->physCellId == 2);
-            NS_TEST_ASSERT_MSG_EQ(it->haveCgiInfo,
-                                  false,
-                                  "Report contains cgi-info, which is not supported");
-            NS_TEST_ASSERT_MSG_EQ(it->haveRsrpResult,
-                                  true,
-                                  "Report does not contain measured RSRP result");
-            NS_TEST_ASSERT_MSG_EQ(it->haveRsrqResult,
-                                  true,
-                                  "Report does not contain measured RSRQ result");
-            NS_LOG_DEBUG(this << " Neighbour cellId=" << it->physCellId
-                              << " rsrp=" << (uint16_t)it->rsrpResult << " ("
-                              << EutranMeasurementMapping::RsrpRange2Dbm(it->rsrpResult) << " dBm)"
-                              << " rsrq=" << (uint16_t)it->rsrqResult << " ("
-                              << EutranMeasurementMapping::RsrqRange2Db(it->rsrqResult) << " dB)");
+    // verifying the report completeness
+    LteRrcSap::MeasResults measResults = report.measResults;
+    NS_LOG_DEBUG(
+        this << " Serving cellId=" << cellId
+             << " rsrp=" << (uint16_t)measResults.measResultPCell.rsrpResult << " ("
+             << EutranMeasurementMapping::RsrpRange2Dbm(measResults.measResultPCell.rsrpResult)
+             << " dBm)"
+             << " rsrq=" << (uint16_t)measResults.measResultPCell.rsrqResult << " ("
+             << EutranMeasurementMapping::RsrqRange2Db(measResults.measResultPCell.rsrqResult)
+             << " dB)");
 
-        } // end of else of if (measResults.measResultListEutra.size () == 0)
-
-        // verifying the report timing
-        bool hasEnded = m_itExpectedTime == m_expectedTime.end();
-        NS_TEST_ASSERT_MSG_EQ(hasEnded,
+    // verifying reported best cells
+    if (measResults.measResultListEutra.empty())
+    {
+        NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
                               false,
-                              "Reporting should not have occurred at "
-                                  << Simulator::Now().As(Time::S));
-        if (!hasEnded)
-        {
-            hasEnded = m_itExpectedRsrp == m_expectedRsrp.end();
-            NS_ASSERT(!hasEnded);
+                              "Unexpected report content");
+    }
+    else
+    {
+        NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
+                              true,
+                              "Unexpected report content");
+        auto it = measResults.measResultListEutra.begin();
+        NS_ASSERT(it != measResults.measResultListEutra.end());
+        NS_ASSERT(it->physCellId == 2);
+        NS_TEST_ASSERT_MSG_EQ(it->haveCgiInfo,
+                              false,
+                              "Report contains cgi-info, which is not supported");
+        NS_TEST_ASSERT_MSG_EQ(it->haveRsrpResult,
+                              true,
+                              "Report does not contain measured RSRP result");
+        NS_TEST_ASSERT_MSG_EQ(it->haveRsrqResult,
+                              true,
+                              "Report does not contain measured RSRQ result");
+        NS_LOG_DEBUG(this << " Neighbour cellId=" << it->physCellId
+                          << " rsrp=" << (uint16_t)it->rsrpResult << " ("
+                          << EutranMeasurementMapping::RsrpRange2Dbm(it->rsrpResult) << " dBm)"
+                          << " rsrq=" << (uint16_t)it->rsrqResult << " ("
+                          << EutranMeasurementMapping::RsrqRange2Db(it->rsrqResult) << " dB)");
 
-            // using milliseconds to avoid floating-point comparison
-            uint64_t timeNowMs = Simulator::Now().GetMilliSeconds();
-            uint64_t timeExpectedMs = m_itExpectedTime->GetMilliSeconds();
-            m_itExpectedTime++;
+    } // end of else of if (measResults.measResultListEutra.size () == 0)
 
-            uint16_t observedRsrp = measResults.measResultPCell.rsrpResult;
-            uint16_t referenceRsrp = *m_itExpectedRsrp;
-            m_itExpectedRsrp++;
+    // verifying the report timing
+    bool hasEnded = m_itExpectedTime == m_expectedTime.end();
+    NS_TEST_ASSERT_MSG_EQ(hasEnded,
+                          false,
+                          "Reporting should not have occurred at " << Simulator::Now().As(Time::S));
+    if (hasEnded)
+    {
+        return;
+    }
 
-            NS_TEST_ASSERT_MSG_EQ(timeNowMs,
-                                  timeExpectedMs,
-                                  "Reporting should not have occurred at this time");
-            NS_TEST_ASSERT_MSG_EQ(observedRsrp,
-                                  referenceRsrp,
-                                  "The RSRP observed differs with the reference RSRP");
+    hasEnded = m_itExpectedRsrp == m_expectedRsrp.end();
+    NS_ASSERT(!hasEnded);
 
-        } // end of if (!hasEnded)
+    // using milliseconds to avoid floating-point comparison
+    uint64_t timeNowMs = Simulator::Now().GetMilliSeconds();
+    uint64_t timeExpectedMs = m_itExpectedTime->GetMilliSeconds();
+    m_itExpectedTime++;
 
-    } // end of if (report.measResults.measId == m_expectedMeasId)
+    uint16_t observedRsrp = measResults.measResultPCell.rsrpResult;
+    uint16_t referenceRsrp = *m_itExpectedRsrp;
+    m_itExpectedRsrp++;
+
+    NS_TEST_ASSERT_MSG_EQ(timeNowMs,
+                          timeExpectedMs,
+                          "Reporting should not have occurred at this time");
+    NS_TEST_ASSERT_MSG_EQ(observedRsrp,
+                          referenceRsrp,
+                          "The RSRP observed differs with the reference RSRP");
 
 } // end of void LteUeMeasurementsPiecewiseTestCase2::RecvMeasurementReportCallback
 
@@ -1717,7 +1718,7 @@ LteUeMeasurementsPiecewiseTestSuite3::LteUeMeasurementsPiecewiseTestSuite3()
 } // end of LteUeMeasurementsPiecewiseTestSuite3::LteUeMeasurementsPiecewiseTestSuite3
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  * Static variable for test initialization
  */
 static LteUeMeasurementsPiecewiseTestSuite3 lteUeMeasurementsPiecewiseTestSuite3;
@@ -1863,75 +1864,76 @@ LteUeMeasurementsPiecewiseTestCase3::RecvMeasurementReportCallback(
     NS_ASSERT(rnti == 1);
     NS_ASSERT(cellId == 1);
 
-    if (report.measResults.measId == m_expectedMeasId)
+    if (report.measResults.measId != m_expectedMeasId)
     {
-        // verifying the report completeness
-        LteRrcSap::MeasResults measResults = report.measResults;
-        NS_LOG_DEBUG(
-            this << " Serving cellId=" << cellId
-                 << " rsrp=" << (uint16_t)measResults.measResultPCell.rsrpResult << " ("
-                 << EutranMeasurementMapping::RsrpRange2Dbm(measResults.measResultPCell.rsrpResult)
-                 << " dBm)"
-                 << " rsrq=" << (uint16_t)measResults.measResultPCell.rsrqResult << " ("
-                 << EutranMeasurementMapping::RsrqRange2Db(measResults.measResultPCell.rsrqResult)
-                 << " dB)");
+        return;
+    }
 
-        // verifying reported best cells
-        if (measResults.measResultListEutra.empty())
-        {
-            NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
-                                  false,
-                                  "Unexpected report content");
-        }
-        else
-        {
-            NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
-                                  true,
-                                  "Unexpected report content");
-            auto it = measResults.measResultListEutra.begin();
-            NS_ASSERT(it != measResults.measResultListEutra.end());
-            for (const auto& it : measResults.measResultListEutra)
-            {
-                NS_ASSERT(it.physCellId == 2 || it.physCellId == 3);
-                NS_TEST_ASSERT_MSG_EQ(it.haveCgiInfo,
-                                      false,
-                                      "Report contains cgi-info, which is not supported");
-                NS_TEST_ASSERT_MSG_EQ(it.haveRsrpResult,
-                                      true,
-                                      "Report does not contain measured RSRP result");
-                NS_TEST_ASSERT_MSG_EQ(it.haveRsrqResult,
-                                      true,
-                                      "Report does not contain measured RSRQ result");
-                NS_LOG_DEBUG(
-                    this << " Neighbour cellId=" << it.physCellId
-                         << " rsrp=" << (uint16_t)it.rsrpResult << " ("
-                         << EutranMeasurementMapping::RsrpRange2Dbm(it.rsrpResult) << " dBm)"
-                         << " rsrq=" << (uint16_t)it.rsrqResult << " ("
-                         << EutranMeasurementMapping::RsrqRange2Db(it.rsrqResult) << " dB)");
-            }
+    // verifying the report completeness
+    LteRrcSap::MeasResults measResults = report.measResults;
+    NS_LOG_DEBUG(
+        this << " Serving cellId=" << cellId
+             << " rsrp=" << (uint16_t)measResults.measResultPCell.rsrpResult << " ("
+             << EutranMeasurementMapping::RsrpRange2Dbm(measResults.measResultPCell.rsrpResult)
+             << " dBm)"
+             << " rsrq=" << (uint16_t)measResults.measResultPCell.rsrqResult << " ("
+             << EutranMeasurementMapping::RsrqRange2Db(measResults.measResultPCell.rsrqResult)
+             << " dB)");
 
-        } // end of else of if (measResults.measResultListEutra.size () == 0)
-
-        // verifying the report timing
-        bool hasEnded = m_itExpectedTime == m_expectedTime.end();
-        NS_TEST_ASSERT_MSG_EQ(hasEnded,
+    // verifying reported best cells
+    if (measResults.measResultListEutra.empty())
+    {
+        NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
                               false,
-                              "Reporting should not have occurred at "
-                                  << Simulator::Now().GetSeconds() << "s");
-        if (!hasEnded)
+                              "Unexpected report content");
+    }
+    else
+    {
+        NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
+                              true,
+                              "Unexpected report content");
+        auto it = measResults.measResultListEutra.begin();
+        NS_ASSERT(it != measResults.measResultListEutra.end());
+        for (const auto& it : measResults.measResultListEutra)
         {
-            // using milliseconds to avoid floating-point comparison
-            uint64_t timeNowMs = Simulator::Now().GetMilliSeconds();
-            uint64_t timeExpectedMs = m_itExpectedTime->GetMilliSeconds();
-            m_itExpectedTime++;
+            NS_ASSERT(it.physCellId == 2 || it.physCellId == 3);
+            NS_TEST_ASSERT_MSG_EQ(it.haveCgiInfo,
+                                  false,
+                                  "Report contains cgi-info, which is not supported");
+            NS_TEST_ASSERT_MSG_EQ(it.haveRsrpResult,
+                                  true,
+                                  "Report does not contain measured RSRP result");
+            NS_TEST_ASSERT_MSG_EQ(it.haveRsrqResult,
+                                  true,
+                                  "Report does not contain measured RSRQ result");
+            NS_LOG_DEBUG(this << " Neighbour cellId=" << it.physCellId
+                              << " rsrp=" << (uint16_t)it.rsrpResult << " ("
+                              << EutranMeasurementMapping::RsrpRange2Dbm(it.rsrpResult) << " dBm)"
+                              << " rsrq=" << (uint16_t)it.rsrqResult << " ("
+                              << EutranMeasurementMapping::RsrqRange2Db(it.rsrqResult) << " dB)");
+        }
 
-            NS_TEST_ASSERT_MSG_EQ(timeNowMs,
-                                  timeExpectedMs,
-                                  "Reporting should not have occurred at this time");
+    } // end of else of if (measResults.measResultListEutra.size () == 0)
 
-        } // end of if (!hasEnded)
+    // verifying the report timing
+    bool hasEnded = m_itExpectedTime == m_expectedTime.end();
+    NS_TEST_ASSERT_MSG_EQ(hasEnded,
+                          false,
+                          "Reporting should not have occurred at " << Simulator::Now().GetSeconds()
+                                                                   << "s");
+    if (hasEnded)
+    {
+        return;
+    }
 
-    } // end of if (report.measResults.measId == m_expectedMeasId)
+    // using milliseconds to avoid floating-point comparison
+    uint64_t timeNowMs = Simulator::Now().GetMilliSeconds();
+    uint64_t timeExpectedMs = m_itExpectedTime->GetMilliSeconds();
+    m_itExpectedTime++;
+
+    NS_TEST_ASSERT_MSG_EQ(timeNowMs,
+                          timeExpectedMs,
+                          "Reporting should not have occurred at this time");
 
 } // end of void LteUeMeasurementsPiecewiseTestCase3::RecvMeasurementReportCallback
 
@@ -2268,7 +2270,7 @@ LteUeMeasurementsHandoverTestSuite::LteUeMeasurementsHandoverTestSuite()
 } // end of LteUeMeasurementsHandoverTestSuite::LteUeMeasurementsHandoverTestSuite
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  * Static variable for test initialization
  */
 static LteUeMeasurementsHandoverTestSuite lteUeMeasurementsHandoverTestSuite;
@@ -2491,81 +2493,82 @@ LteUeMeasurementsHandoverTestCase::RecvMeasurementReportCallback(
         NS_FATAL_ERROR("Invalid cell ID " << cellId);
     }
 
-    if (isCorrectMeasId)
+    if (!isCorrectMeasId)
     {
-        // verifying the report completeness
-        LteRrcSap::MeasResults measResults = report.measResults;
-        NS_LOG_DEBUG(
-            this << " Serving cellId=" << cellId
-                 << " rsrp=" << (uint16_t)measResults.measResultPCell.rsrpResult << " ("
-                 << EutranMeasurementMapping::RsrpRange2Dbm(measResults.measResultPCell.rsrpResult)
-                 << " dBm)"
-                 << " rsrq=" << (uint16_t)measResults.measResultPCell.rsrqResult << " ("
-                 << EutranMeasurementMapping::RsrqRange2Db(measResults.measResultPCell.rsrqResult)
-                 << " dB)");
+        return;
+    }
 
-        // verifying reported best cells
-        if (measResults.measResultListEutra.empty())
-        {
-            NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
-                                  false,
-                                  "Unexpected report content");
-        }
-        else
-        {
-            NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
-                                  true,
-                                  "Unexpected report content");
-            auto it = measResults.measResultListEutra.begin();
-            NS_ASSERT(it != measResults.measResultListEutra.end());
-            NS_ASSERT(it->physCellId != cellId);
-            NS_ASSERT(it->physCellId <= 2);
-            NS_TEST_ASSERT_MSG_EQ(it->haveCgiInfo,
-                                  false,
-                                  "Report contains cgi-info, which is not supported");
-            NS_TEST_ASSERT_MSG_EQ(it->haveRsrpResult,
-                                  true,
-                                  "Report does not contain measured RSRP result");
-            NS_TEST_ASSERT_MSG_EQ(it->haveRsrqResult,
-                                  true,
-                                  "Report does not contain measured RSRQ result");
-            NS_LOG_DEBUG(this << " Neighbour cellId=" << it->physCellId
-                              << " rsrp=" << (uint16_t)it->rsrpResult << " ("
-                              << EutranMeasurementMapping::RsrpRange2Dbm(it->rsrpResult) << " dBm)"
-                              << " rsrq=" << (uint16_t)it->rsrqResult << " ("
-                              << EutranMeasurementMapping::RsrqRange2Db(it->rsrqResult) << " dB)");
+    // verifying the report completeness
+    LteRrcSap::MeasResults measResults = report.measResults;
+    NS_LOG_DEBUG(
+        this << " Serving cellId=" << cellId
+             << " rsrp=" << (uint16_t)measResults.measResultPCell.rsrpResult << " ("
+             << EutranMeasurementMapping::RsrpRange2Dbm(measResults.measResultPCell.rsrpResult)
+             << " dBm)"
+             << " rsrq=" << (uint16_t)measResults.measResultPCell.rsrqResult << " ("
+             << EutranMeasurementMapping::RsrqRange2Db(measResults.measResultPCell.rsrqResult)
+             << " dB)");
 
-        } // end of else of if (measResults.measResultListEutra.size () == 0)
-
-        // verifying the report timing
-        bool hasEnded = m_itExpectedTime == m_expectedTime.end();
-        NS_TEST_ASSERT_MSG_EQ(hasEnded,
+    // verifying reported best cells
+    if (measResults.measResultListEutra.empty())
+    {
+        NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
                               false,
-                              "Reporting should not have occurred at "
-                                  << Simulator::Now().As(Time::S));
-        if (!hasEnded)
-        {
-            hasEnded = m_itExpectedRsrp == m_expectedRsrp.end();
-            NS_ASSERT(!hasEnded);
+                              "Unexpected report content");
+    }
+    else
+    {
+        NS_TEST_ASSERT_MSG_EQ(measResults.haveMeasResultNeighCells,
+                              true,
+                              "Unexpected report content");
+        auto it = measResults.measResultListEutra.begin();
+        NS_ASSERT(it != measResults.measResultListEutra.end());
+        NS_ASSERT(it->physCellId != cellId);
+        NS_ASSERT(it->physCellId <= 2);
+        NS_TEST_ASSERT_MSG_EQ(it->haveCgiInfo,
+                              false,
+                              "Report contains cgi-info, which is not supported");
+        NS_TEST_ASSERT_MSG_EQ(it->haveRsrpResult,
+                              true,
+                              "Report does not contain measured RSRP result");
+        NS_TEST_ASSERT_MSG_EQ(it->haveRsrqResult,
+                              true,
+                              "Report does not contain measured RSRQ result");
+        NS_LOG_DEBUG(this << " Neighbour cellId=" << it->physCellId
+                          << " rsrp=" << (uint16_t)it->rsrpResult << " ("
+                          << EutranMeasurementMapping::RsrpRange2Dbm(it->rsrpResult) << " dBm)"
+                          << " rsrq=" << (uint16_t)it->rsrqResult << " ("
+                          << EutranMeasurementMapping::RsrqRange2Db(it->rsrqResult) << " dB)");
 
-            // using milliseconds to avoid floating-point comparison
-            uint64_t timeNowMs = Simulator::Now().GetMilliSeconds();
-            uint64_t timeExpectedMs = m_itExpectedTime->GetMilliSeconds();
-            m_itExpectedTime++;
+    } // end of else of if (measResults.measResultListEutra.size () == 0)
 
-            uint16_t observedRsrp = measResults.measResultPCell.rsrpResult;
-            uint16_t referenceRsrp = *m_itExpectedRsrp;
-            m_itExpectedRsrp++;
+    // verifying the report timing
+    bool hasEnded = m_itExpectedTime == m_expectedTime.end();
+    NS_TEST_ASSERT_MSG_EQ(hasEnded,
+                          false,
+                          "Reporting should not have occurred at " << Simulator::Now().As(Time::S));
+    if (hasEnded)
+    {
+        return;
+    }
 
-            NS_TEST_ASSERT_MSG_EQ(timeNowMs,
-                                  timeExpectedMs,
-                                  "Reporting should not have occurred at this time");
-            NS_TEST_ASSERT_MSG_EQ(observedRsrp,
-                                  referenceRsrp,
-                                  "The RSRP observed differs with the reference RSRP");
+    hasEnded = m_itExpectedRsrp == m_expectedRsrp.end();
+    NS_ASSERT(!hasEnded);
 
-        } // end of if (!hasEnded)
+    // using milliseconds to avoid floating-point comparison
+    uint64_t timeNowMs = Simulator::Now().GetMilliSeconds();
+    uint64_t timeExpectedMs = m_itExpectedTime->GetMilliSeconds();
+    m_itExpectedTime++;
 
-    } // end of if (report.measResults.measId == correctMeasId)
+    uint16_t observedRsrp = measResults.measResultPCell.rsrpResult;
+    uint16_t referenceRsrp = *m_itExpectedRsrp;
+    m_itExpectedRsrp++;
+
+    NS_TEST_ASSERT_MSG_EQ(timeNowMs,
+                          timeExpectedMs,
+                          "Reporting should not have occurred at this time");
+    NS_TEST_ASSERT_MSG_EQ(observedRsrp,
+                          referenceRsrp,
+                          "The RSRP observed differs with the reference RSRP");
 
 } // end of void LteUeMeasurementsHandoverTestCase::RecvMeasurementReportCallback

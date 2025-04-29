@@ -92,7 +92,7 @@ LiIonEnergySource::GetTypeId()
                           MakeDoubleChecker<double>())
             .AddAttribute("PeriodicEnergyUpdateInterval",
                           "Time between two consecutive periodic energy updates.",
-                          TimeValue(Seconds(1.0)),
+                          TimeValue(Seconds(1)),
                           MakeTimeAccessor(&LiIonEnergySource::SetEnergyUpdateInterval,
                                            &LiIonEnergySource::GetEnergyUpdateInterval),
                           MakeTimeChecker())
@@ -105,7 +105,7 @@ LiIonEnergySource::GetTypeId()
 
 LiIonEnergySource::LiIonEnergySource()
     : m_drainedCapacity(0.0),
-      m_lastUpdateTime(Seconds(0.0))
+      m_lastUpdateTime()
 {
     NS_LOG_FUNCTION(this);
 }

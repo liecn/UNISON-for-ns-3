@@ -15,12 +15,12 @@
 #include "lte-ue-net-device.h"
 #include "lte-ue-rrc.h"
 
-#include <ns3/fatal-error.h>
-#include <ns3/log.h>
-#include <ns3/node-list.h>
-#include <ns3/node.h>
-#include <ns3/nstime.h>
-#include <ns3/simulator.h>
+#include "ns3/fatal-error.h"
+#include "ns3/log.h"
+#include "ns3/node-list.h"
+#include "ns3/node.h"
+#include "ns3/nstime.h"
+#include "ns3/simulator.h"
 
 namespace ns3
 {
@@ -28,7 +28,7 @@ namespace ns3
 NS_LOG_COMPONENT_DEFINE("LteRrcProtocolReal");
 
 /// RRC real message delay
-const Time RRC_REAL_MSG_DELAY = MilliSeconds(0);
+const Time RRC_REAL_MSG_DELAY;
 
 NS_OBJECT_ENSURE_REGISTERED(LteUeRrcProtocolReal);
 

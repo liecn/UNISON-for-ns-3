@@ -25,10 +25,10 @@
 using namespace ns3;
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief Power Rate Adaptation Test
+ * @brief Power Rate Adaptation Test
  */
 class PowerRateAdaptationTest : public TestCase
 {
@@ -46,7 +46,7 @@ class PowerRateAdaptationTest : public TestCase
     void TestRrpaa();
     /**
      * Configure nde function
-     * \returns the node
+     * @returns the node
      */
     Ptr<Node> ConfigureNode();
 
@@ -94,8 +94,8 @@ PowerRateAdaptationTest::ConfigureNode()
      * Configure power control parameters.
      */
     phy->SetNTxPower(18);
-    phy->SetTxPowerStart(0);
-    phy->SetTxPowerEnd(17);
+    phy->SetTxPowerStart(dBm_u{0});
+    phy->SetTxPowerEnd(dBm_u{17});
 
     /*
      * Create manager.
@@ -1136,7 +1136,7 @@ PowerRateAdaptationTest::TestRrpaa()
         "RRPAA: Incorrect vale of data rate");
     NS_TEST_ASSERT_MSG_EQ(power, 0, "RRPAA: Incorrect value of power level");
 
-    Simulator::Stop(Seconds(10.0));
+    Simulator::Stop(Seconds(10));
 
     Simulator::Run();
     Simulator::Destroy();
@@ -1151,10 +1151,10 @@ PowerRateAdaptationTest::DoRun()
 }
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief Power Rate Adaptation Test Suite
+ * @brief Power Rate Adaptation Test Suite
  */
 class PowerRateAdaptationTestSuite : public TestSuite
 {

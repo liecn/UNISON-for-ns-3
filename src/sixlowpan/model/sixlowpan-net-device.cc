@@ -282,7 +282,7 @@ SixLowPanNetDevice::ReceiveFromDevice(Ptr<NetDevice> incomingPort,
                 Ptr<Packet> sendPkt = copyPkt->Copy();
                 sendPkt->AddHeader(bc0Hdr);
                 sendPkt->AddHeader(meshHdr);
-                Simulator::Schedule(Time(MilliSeconds(m_meshUnderJitter->GetValue())),
+                Simulator::Schedule(MilliSeconds(m_meshUnderJitter->GetValue()),
                                     &NetDevice::Send,
                                     m_netDevice,
                                     sendPkt,
@@ -2732,7 +2732,7 @@ SixLowPanNetDevice::AddContext(uint8_t contextId,
         return;
     }
 
-    if (validLifetime == Time(0))
+    if (validLifetime.IsZero())
     {
         NS_LOG_LOGIC("Context (" << +contextId << "), removed (validity time is zero)");
         m_contextTable.erase(contextId);

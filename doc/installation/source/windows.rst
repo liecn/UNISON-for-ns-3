@@ -113,7 +113,7 @@ This is the minimal set of packages needed to run ns-3 C++ programs from a relea
 Netanim animator
 ++++++++++++++++
 
-Qt5 development tools are needed for Netanim animator. Qt4 will also work but we have migrated to qt5.
+Qt5 or Qt6 development tools are needed for Netanim animator.
 
 .. sourcecode:: console
 
@@ -267,7 +267,6 @@ Save the following Dockerfile to the base directory.
                        mingw-w64-x86_64-qt5 \
                        git \
                        mingw-w64-x86_64-msmpi \
-                       mingw-w64-x86_64-uncrustify \
                        mingw-w64-x86_64-imagemagick \
                        mingw-w64-x86_64-doxygen \
                        mingw-w64-x86_64-graphviz \

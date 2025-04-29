@@ -10,19 +10,19 @@
 #ifndef LTE_SIMPLE_SPECTRUM_PHY_H
 #define LTE_SIMPLE_SPECTRUM_PHY_H
 
-#include <ns3/event-id.h>
-#include <ns3/mobility-model.h>
-#include <ns3/net-device.h>
-#include <ns3/spectrum-channel.h>
-#include <ns3/spectrum-phy.h>
-#include <ns3/spectrum-value.h>
-#include <ns3/traced-callback.h>
+#include "ns3/event-id.h"
+#include "ns3/mobility-model.h"
+#include "ns3/net-device.h"
+#include "ns3/spectrum-channel.h"
+#include "ns3/spectrum-phy.h"
+#include "ns3/spectrum-value.h"
+#include "ns3/traced-callback.h"
 
 namespace ns3
 {
 
 /**
- * \ingroup lte
+ * @ingroup lte
  *
  * The LteSimpleSpectrumPhy models the physical layer of LTE
  * This class is used to test Frequency Reuse Algorithms,
@@ -40,8 +40,8 @@ class LteSimpleSpectrumPhy : public SpectrumPhy
     ~LteSimpleSpectrumPhy() override;
 
     /**
-     * \brief Get the type ID.
-     * \return the object TypeId
+     * @brief Get the type ID.
+     * @return the object TypeId
      */
     static TypeId GetTypeId();
     // inherited from Object
@@ -58,14 +58,14 @@ class LteSimpleSpectrumPhy : public SpectrumPhy
     void StartRx(Ptr<SpectrumSignalParameters> params) override;
 
     /**
-     * \brief Set receive spectrum model.
-     * \param model the spectrum model
+     * @brief Set receive spectrum model.
+     * @param model the spectrum model
      */
     void SetRxSpectrumModel(Ptr<const SpectrumModel> model);
 
     /**
-     * \brief Set cell ID.
-     * \param cellId the cell ID
+     * @brief Set cell ID.
+     * @param cellId the cell ID
      */
     void SetCellId(uint16_t cellId);
 

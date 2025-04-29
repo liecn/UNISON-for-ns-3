@@ -13,15 +13,15 @@
  * Trace Phy state changes, and Mac DataIndication and DataConfirm events
  * to stdout
  */
-#include <ns3/constant-position-mobility-model.h>
-#include <ns3/core-module.h>
-#include <ns3/log.h>
-#include <ns3/lr-wpan-module.h>
-#include <ns3/packet.h>
-#include <ns3/propagation-delay-model.h>
-#include <ns3/propagation-loss-model.h>
-#include <ns3/simulator.h>
-#include <ns3/single-model-spectrum-channel.h>
+#include "ns3/constant-position-mobility-model.h"
+#include "ns3/core-module.h"
+#include "ns3/log.h"
+#include "ns3/lr-wpan-module.h"
+#include "ns3/packet.h"
+#include "ns3/propagation-delay-model.h"
+#include "ns3/propagation-loss-model.h"
+#include "ns3/simulator.h"
+#include "ns3/single-model-spectrum-channel.h"
 
 #include <iostream>
 
@@ -30,8 +30,8 @@ using namespace ns3::lrwpan;
 
 /**
  * Function called when a Data indication is invoked
- * \param params MCPS data indication parameters
- * \param p packet
+ * @param params MCPS data indication parameters
+ * @param p packet
  */
 static void
 DataIndication(McpsDataIndicationParams params, Ptr<Packet> p)
@@ -41,7 +41,7 @@ DataIndication(McpsDataIndicationParams params, Ptr<Packet> p)
 
 /**
  * Function called when a Data confirm is invoked
- * \param params MCPS data confirm parameters
+ * @param params MCPS data confirm parameters
  */
 static void
 DataConfirm(McpsDataConfirmParams params)
@@ -51,10 +51,10 @@ DataConfirm(McpsDataConfirmParams params)
 
 /**
  * Function called when a the PHY state changes
- * \param context context
- * \param now time at which the function is called
- * \param oldState old PHY state
- * \param newState new PHY state
+ * @param context context
+ * @param now time at which the function is called
+ * @param oldState old PHY state
+ * @param newState new PHY state
  */
 static void
 StateChangeNotification(std::string context,
@@ -196,7 +196,7 @@ main(int argc, char* argv[])
     params.m_txOptions = TX_OPTION_ACK;
     //  dev0->GetMac ()->McpsDataRequest (params, p0);
     Simulator::ScheduleWithContext(1,
-                                   Seconds(0.0),
+                                   Seconds(0),
                                    &LrWpanMac::McpsDataRequest,
                                    dev0->GetMac(),
                                    params,
@@ -213,7 +213,7 @@ main(int argc, char* argv[])
         params.m_dstExtAddr = Mac64Address("00:00:00:00:00:00:00:01");
     }
     Simulator::ScheduleWithContext(2,
-                                   Seconds(2.0),
+                                   Seconds(2),
                                    &LrWpanMac::McpsDataRequest,
                                    dev1->GetMac(),
                                    params,

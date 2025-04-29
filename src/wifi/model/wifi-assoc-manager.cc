@@ -294,8 +294,6 @@ WifiAssocManager::CanSetupMultiLink(OptMleConstRef& mle, OptRnrConstRef& rnr)
     {
         auto ehtConfig = m_mac->GetEhtConfiguration();
         NS_ASSERT(ehtConfig);
-        EnumValue<WifiTidToLinkMappingNegSupport> negSupport;
-        ehtConfig->GetAttributeFailSafe("TidToLinkMappingNegSupport", negSupport);
 
         // A non-AP MLD that performs multi-link (re)setup on at least two links with an AP MLD
         // that sets the TID-To-Link Mapping Negotiation Support subfield of the MLD Capabilities
@@ -304,7 +302,7 @@ WifiAssocManager::CanSetupMultiLink(OptMleConstRef& mle, OptRnrConstRef& rnr)
         // MLD Capabilities field of the Basic Multi-Link element it transmits to at least 1.
         // (Sec. 35.3.7.1.1 of 802.11be D3.1)
         if (mldCapabilities->tidToLinkMappingSupport > 0 &&
-            negSupport.Get() == WifiTidToLinkMappingNegSupport::NOT_SUPPORTED)
+            ehtConfig->m_tidLinkMappingSupport == WifiTidToLinkMappingNegSupport::NOT_SUPPORTED)
         {
             NS_LOG_DEBUG("AP MLD supports TID-to-Link Mapping negotiation, while we don't");
             return false;
@@ -330,7 +328,7 @@ WifiAssocManager::GetNextAffiliatedAp(const ReducedNeighborReport& rnr, std::siz
 
         std::size_t tbttInfoFieldIndex = 0;
         while (tbttInfoFieldIndex < rnr.GetNTbttInformationFields(nbrApInfoId) &&
-               rnr.GetMldId(nbrApInfoId, tbttInfoFieldIndex) != 0)
+               rnr.GetMldParameters(nbrApInfoId, tbttInfoFieldIndex).apMldId != 0)
         {
             tbttInfoFieldIndex++;
         }

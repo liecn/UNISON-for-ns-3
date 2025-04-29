@@ -58,9 +58,9 @@ NS_LOG_COMPONENT_DEFINE("WifiSleep");
 /**
  * Remaining energy trace sink
  *
- * \tparam node The node ID this trace belongs to.
- * \param oldValue Old value.
- * \param newValue New value.
+ * @tparam node The node ID this trace belongs to.
+ * @param oldValue Old value.
+ * @param newValue New value.
  */
 template <int node>
 void
@@ -77,11 +77,11 @@ RemainingEnergyTrace(double oldValue, double newValue)
 /**
  * PHY state trace sink
  *
- * \tparam node The node ID this trace belongs to.
- * \param context The context
- * \param start Start time for the current state
- * \param duration Duratio of the current state
- * \param state State
+ * @tparam node The node ID this trace belongs to.
+ * @param context The context
+ * @param start Start time for the current state
+ * @param duration Duratio of the current state
+ * @param state State
  */
 template <int node>
 void
@@ -245,7 +245,7 @@ main(int argc, char* argv[])
     Config::Connect("/NodeList/0/DeviceList/*/Phy/State/State", MakeCallback(&PhyStateTrace<0>));
     Config::Connect("/NodeList/1/DeviceList/*/Phy/State/State", MakeCallback(&PhyStateTrace<1>));
 
-    Simulator::Stop(duration + Seconds(1.0));
+    Simulator::Stop(duration + Seconds(1));
 
     Simulator::Run();
     Simulator::Destroy();

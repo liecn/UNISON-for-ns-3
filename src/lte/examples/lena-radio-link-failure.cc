@@ -25,15 +25,15 @@ NS_LOG_COMPONENT_DEFINE("LenaRadioLinkFailure");
 
 // Global values to check the simulation
 // behavior during and after the simulation.
-uint16_t counterN310FirsteNB = 0;        //!< Counter of N310 indications.
-Time t310StartTimeFirstEnb = Seconds(0); //!< Time of first N310 indication.
-uint32_t ByteCounter = 0;                //!< Byte counter.
-uint32_t oldByteCounter = 0;             //!< Old Byte counter,
+uint16_t counterN310FirsteNB = 0; //!< Counter of N310 indications.
+Time t310StartTimeFirstEnb;       //!< Time of first N310 indication.
+uint32_t ByteCounter = 0;         //!< Byte counter.
+uint32_t oldByteCounter = 0;      //!< Old Byte counter,
 
 /**
  * Print the position of a UE with given IMSI.
  *
- * \param imsi The IMSI.
+ * @param imsi The IMSI.
  */
 void
 PrintUePosition(uint64_t imsi)
@@ -61,10 +61,10 @@ PrintUePosition(uint64_t imsi)
 /**
  * UE Notify connection established.
  *
- * \param context The context.
- * \param imsi The IMSI.
- * \param cellid The Cell ID.
- * \param rnti The RNTI.
+ * @param context The context.
+ * @param imsi The IMSI.
+ * @param cellid The Cell ID.
+ * @param rnti The RNTI.
  */
 void
 NotifyConnectionEstablishedUe(std::string context, uint64_t imsi, uint16_t cellid, uint16_t rnti)
@@ -76,10 +76,10 @@ NotifyConnectionEstablishedUe(std::string context, uint64_t imsi, uint16_t celli
 /**
  * eNB Notify connection established.
  *
- * \param context The context.
- * \param imsi The IMSI.
- * \param cellId The Cell ID.
- * \param rnti The RNTI.
+ * @param context The context.
+ * @param imsi The IMSI.
+ * @param cellId The Cell ID.
+ * @param rnti The RNTI.
  */
 void
 NotifyConnectionEstablishedEnb(std::string context, uint64_t imsi, uint16_t cellId, uint16_t rnti)
@@ -100,41 +100,14 @@ NotifyConnectionEstablishedEnb(std::string context, uint64_t imsi, uint16_t cell
     }
 }
 
-/// Map each of UE RRC states to its string representation.
-static const std::string g_ueRrcStateName[LteUeRrc::NUM_STATES] = {
-    "IDLE_START",
-    "IDLE_CELL_SEARCH",
-    "IDLE_WAIT_MIB_SIB1",
-    "IDLE_WAIT_MIB",
-    "IDLE_WAIT_SIB1",
-    "IDLE_CAMPED_NORMALLY",
-    "IDLE_WAIT_SIB2",
-    "IDLE_RANDOM_ACCESS",
-    "IDLE_CONNECTING",
-    "CONNECTED_NORMALLY",
-    "CONNECTED_HANDOVER",
-    "CONNECTED_PHY_PROBLEM",
-    "CONNECTED_REESTABLISHING",
-};
-
-/**
- * \param s The UE RRC state.
- * \return The string representation of the given state.
- */
-static const std::string&
-ToString(LteUeRrc::State s)
-{
-    return g_ueRrcStateName[s];
-}
-
 /**
  * UE state transition tracer.
  *
- * \param imsi The IMSI.
- * \param cellId The Cell ID.
- * \param rnti The RNTI.
- * \param oldState The old state.
- * \param newState The new state.
+ * @param imsi The IMSI.
+ * @param cellId The Cell ID.
+ * @param rnti The RNTI.
+ * @param oldState The old state.
+ * @param newState The new state.
  */
 void
 UeStateTransition(uint64_t imsi,
@@ -144,17 +117,17 @@ UeStateTransition(uint64_t imsi,
                   LteUeRrc::State newState)
 {
     std::cout << Simulator::Now().As(Time::S) << " UE with IMSI " << imsi << " RNTI " << rnti
-              << " connected to cell " << cellId << " transitions from " << ToString(oldState)
-              << " to " << ToString(newState) << std::endl;
+              << " connected to cell " << cellId << " transitions from " << oldState << " to "
+              << newState << std::endl;
 }
 
 /**
  * eNB RRC timeout tracer.
  *
- * \param imsi The IMSI.
- * \param rnti The RNTI.
- * \param cellId The Cell ID.
- * \param cause The reason for timeout.
+ * @param imsi The IMSI.
+ * @param rnti The RNTI.
+ * @param cellId The Cell ID.
+ * @param cause The reason for timeout.
  */
 void
 EnbRrcTimeout(uint64_t imsi, uint16_t rnti, uint16_t cellId, std::string cause)
@@ -166,9 +139,9 @@ EnbRrcTimeout(uint64_t imsi, uint16_t rnti, uint16_t cellId, std::string cause)
 /**
  * Notification of connection release at eNB.
  *
- * \param imsi The IMSI.
- * \param cellId The Cell ID.
- * \param rnti The RNTI.
+ * @param imsi The IMSI.
+ * @param cellId The Cell ID.
+ * @param rnti The RNTI.
  */
 void
 NotifyConnectionReleaseAtEnodeB(uint64_t imsi, uint16_t cellId, uint16_t rnti)
@@ -180,12 +153,12 @@ NotifyConnectionReleaseAtEnodeB(uint64_t imsi, uint16_t cellId, uint16_t rnti)
 /**
  * PHY sync detection tracer.
  *
- * \param n310 310 data.
- * \param imsi The IMSI.
- * \param rnti The RNTI.
- * \param cellId The Cell ID.
- * \param type The type.
- * \param count The count.
+ * @param n310 310 data.
+ * @param imsi The IMSI.
+ * @param rnti The RNTI.
+ * @param cellId The Cell ID.
+ * @param type The type.
+ * @param count The count.
  */
 void
 PhySyncDetection(uint16_t n310,
@@ -213,10 +186,10 @@ PhySyncDetection(uint16_t n310,
 /**
  * Radio link failure tracer.
  *
- * \param t310 310 data.
- * \param imsi The IMSI.
- * \param cellId The Cell ID.
- * \param rnti The RNTI.
+ * @param t310 310 data.
+ * @param imsi The IMSI.
+ * @param cellId The Cell ID.
+ * @param rnti The RNTI.
  */
 void
 RadioLinkFailure(Time t310, uint64_t imsi, uint16_t cellId, uint16_t rnti)
@@ -237,9 +210,9 @@ RadioLinkFailure(Time t310, uint64_t imsi, uint16_t cellId, uint16_t rnti)
 /**
  * UE Random access error notification.
  *
- * \param imsi The IMSI.
- * \param cellId The Cell ID.
- * \param rnti The RNTI.
+ * @param imsi The IMSI.
+ * @param cellId The Cell ID.
+ * @param rnti The RNTI.
  */
 void
 NotifyRandomAccessErrorUe(uint64_t imsi, uint16_t cellId, uint16_t rnti)
@@ -251,10 +224,10 @@ NotifyRandomAccessErrorUe(uint64_t imsi, uint16_t cellId, uint16_t rnti)
 /**
  * UE Connection timeout notification.
  *
- * \param imsi The IMSI.
- * \param cellId The Cell ID.
- * \param rnti The RNTI.
- * \param connEstFailCount Connection failure count.
+ * @param imsi The IMSI.
+ * @param cellId The Cell ID.
+ * @param rnti The RNTI.
+ * @param connEstFailCount Connection failure count.
  */
 void
 NotifyConnectionTimeoutUe(uint64_t imsi, uint16_t cellId, uint16_t rnti, uint8_t connEstFailCount)
@@ -267,10 +240,10 @@ NotifyConnectionTimeoutUe(uint64_t imsi, uint16_t cellId, uint16_t rnti, uint8_t
 /**
  * UE RA response timeout notification.
  *
- * \param imsi The IMSI.
- * \param contention Contention flag.
- * \param preambleTxCounter Preamble Tx counter.
- * \param maxPreambleTxLimit Max preamble Ts limit.
+ * @param imsi The IMSI.
+ * @param contention Contention flag.
+ * @param preambleTxCounter Preamble Tx counter.
+ * @param maxPreambleTxLimit Max preamble Ts limit.
  */
 void
 NotifyRaResponseTimeoutUe(uint64_t imsi,
@@ -287,7 +260,7 @@ NotifyRaResponseTimeoutUe(uint64_t imsi,
 /**
  * Receive a packet.
  *
- * \param packet The packet.
+ * @param packet The packet.
  */
 void
 ReceivePacket(Ptr<const Packet> packet, const Address&)
@@ -298,9 +271,9 @@ ReceivePacket(Ptr<const Packet> packet, const Address&)
 /**
  * Write the throughput to file.
  *
- * \param firstWrite True if first time writing.
- * \param binSize Bin size.
- * \param fileName Output filename.
+ * @param firstWrite True if first time writing.
+ * @param binSize Bin size.
+ * @param fileName Output filename.
  */
 void
 Throughput(bool firstWrite, Time binSize, std::string fileName)

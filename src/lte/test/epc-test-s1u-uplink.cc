@@ -21,7 +21,11 @@
 #include "ns3/inet-socket-address.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
+#include "ns3/ipv4-interface.h"
+#include "ns3/ipv4-static-routing-helper.h"
+#include "ns3/ipv4-static-routing.h"
 #include "ns3/log.h"
+#include "ns3/mac48-address.h"
 #include "ns3/packet-sink-helper.h"
 #include "ns3/packet-sink.h"
 #include "ns3/point-to-point-epc-helper.h"
@@ -30,17 +34,13 @@
 #include "ns3/simulator.h"
 #include "ns3/test.h"
 #include "ns3/uinteger.h"
-#include <ns3/ipv4-interface.h>
-#include <ns3/ipv4-static-routing-helper.h>
-#include <ns3/ipv4-static-routing.h>
-#include <ns3/mac48-address.h>
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("EpcTestS1uUplink");
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  *
  * A Udp client. Sends UDP packet carrying sequence number and time
  * stamp but also including the EpsBearerTag. This tag is normally
@@ -54,8 +54,8 @@ class EpsBearerTagUdpClient : public Application
 {
   public:
     /**
-     * \brief Get the type ID.
-     * \return the object TypeId
+     * @brief Get the type ID.
+     * @return the object TypeId
      */
     static TypeId GetTypeId();
 
@@ -63,17 +63,17 @@ class EpsBearerTagUdpClient : public Application
     /**
      * Constructor
      *
-     * \param rnti the RNTI
-     * \param bid the BID
+     * @param rnti the RNTI
+     * @param bid the BID
      */
     EpsBearerTagUdpClient(uint16_t rnti, uint8_t bid);
 
     ~EpsBearerTagUdpClient() override;
 
     /**
-     * \brief set the remote address and port
-     * \param ip remote IP address
-     * \param port remote port
+     * @brief set the remote address and port
+     * @param ip remote IP address
+     * @param port remote port
      */
     void SetRemote(Ipv4Address ip, uint16_t port);
 
@@ -85,8 +85,8 @@ class EpsBearerTagUdpClient : public Application
     void StopApplication() override;
 
     /**
-     * \brief Schedule transmit function
-     * \param dt the delta time
+     * @brief Schedule transmit function
+     * @param dt the delta time
      */
     void ScheduleTransmit(Time dt);
     /// Send function
@@ -121,7 +121,7 @@ EpsBearerTagUdpClient::GetTypeId()
                 MakeUintegerChecker<uint32_t>())
             .AddAttribute("Interval",
                           "The time to wait between packets",
-                          TimeValue(Seconds(1.0)),
+                          TimeValue(Seconds(1)),
                           MakeTimeAccessor(&EpsBearerTagUdpClient::m_interval),
                           MakeTimeChecker())
             .AddAttribute("RemoteAddress",
@@ -196,7 +196,7 @@ EpsBearerTagUdpClient::StartApplication()
     }
 
     m_socket->SetRecvCallback(MakeNullCallback<void, Ptr<Socket>>());
-    m_sendEvent = Simulator::Schedule(Seconds(0.0), &EpsBearerTagUdpClient::Send, this);
+    m_sendEvent = Simulator::Schedule(Seconds(0), &EpsBearerTagUdpClient::Send, this);
 }
 
 void
@@ -237,19 +237,19 @@ EpsBearerTagUdpClient::Send()
 }
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  *
- * \brief Custom test structure to hold information of data transmitted in the uplink per UE
+ * @brief Custom test structure to hold information of data transmitted in the uplink per UE
  */
 struct UeUlTestData
 {
     /**
      * Constructor
      *
-     * \param n number of packets
-     * \param s packet size
-     * \param r the RNTI
-     * \param l the BID
+     * @param n number of packets
+     * @param s packet size
+     * @param r the RNTI
+     * @param l the BID
      */
     UeUlTestData(uint32_t n, uint32_t s, uint16_t r, uint8_t l);
 
@@ -271,9 +271,9 @@ UeUlTestData::UeUlTestData(uint32_t n, uint32_t s, uint16_t r, uint8_t l)
 }
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  *
- * \brief Custom structure containing information about data sent in the uplink
+ * @brief Custom structure containing information about data sent in the uplink
  * of eNodeB. Includes the information of the data sent in the uplink per UE.
  */
 struct EnbUlTestData
@@ -282,9 +282,9 @@ struct EnbUlTestData
 };
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  *
- * \brief EpcS1uUlTestCase class
+ * @brief EpcS1uUlTestCase class
  */
 class EpcS1uUlTestCase : public TestCase
 {
@@ -292,8 +292,8 @@ class EpcS1uUlTestCase : public TestCase
     /**
      * Constructor
      *
-     * \param name the reference name
-     * \param v the list of UE lists
+     * @param name the reference name
+     * @param v the list of UE lists
      */
     EpcS1uUlTestCase(std::string name, std::vector<EnbUlTestData> v);
     ~EpcS1uUlTestCase() override;
@@ -435,8 +435,8 @@ EpcS1uUlTestCase::DoRun()
                 "ns3::UdpSocketFactory",
                 InetSocketAddress(Ipv4Address::GetAny(), udpSinkPort));
             ApplicationContainer sinkApp = packetSinkHelper.Install(remoteHost);
-            sinkApp.Start(Seconds(1.0));
-            sinkApp.Stop(Seconds(10.0));
+            sinkApp.Start(Seconds(1));
+            sinkApp.Stop(Seconds(10));
             enbit->ues[u].serverApp = sinkApp.Get(0)->GetObject<PacketSink>();
 
             Time interPacketInterval = Seconds(0.01);
@@ -451,8 +451,8 @@ EpcS1uUlTestCase::DoRun()
             ue->AddApplication(client);
             ApplicationContainer clientApp;
             clientApp.Add(client);
-            clientApp.Start(Seconds(2.0));
-            clientApp.Stop(Seconds(10.0));
+            clientApp.Start(Seconds(2));
+            clientApp.Stop(Seconds(10));
             enbit->ues[u].clientApp = client;
 
             uint64_t imsi = ++imsiCounter;

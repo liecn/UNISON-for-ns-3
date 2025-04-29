@@ -28,10 +28,10 @@
 using namespace ns3;
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief Test for issue 211 (https://gitlab.com/nsnam/ns-3-dev/-/issues/211)
+ * @brief Test for issue 211 (https://gitlab.com/nsnam/ns-3-dev/-/issues/211)
  *
  * This test aims to check that the transmission of data frames (under a
  * Block Ack agreement) resumes after a period in which the connectivity
@@ -48,7 +48,7 @@ class Issue211Test : public TestCase
 {
   public:
     /**
-     * \brief Constructor
+     * @brief Constructor
      */
     Issue211Test();
     ~Issue211Test() override;
@@ -58,7 +58,7 @@ class Issue211Test : public TestCase
   private:
     /**
      * Compute the average throughput since the last check-point
-     * \param server the UDP server
+     * @param server the UDP server
      */
     void CalcThroughput(Ptr<UdpServer> server);
 
@@ -71,7 +71,7 @@ class Issue211Test : public TestCase
 Issue211Test::Issue211Test()
     : TestCase("Test case for resuming data transmission when the recipient moves back"),
       m_lastRxBytes(0),
-      m_lastCheckPointTime(Seconds(0)),
+      m_lastCheckPointTime(),
       m_payloadSize(2000)
 {
 }
@@ -94,9 +94,9 @@ Issue211Test::CalcThroughput(Ptr<UdpServer> server)
 void
 Issue211Test::DoRun()
 {
-    Time simulationTime(Seconds(6.0));
-    Time moveAwayTime(Seconds(2.0));
-    Time moveBackTime(Seconds(4.0));
+    Time simulationTime(Seconds(6));
+    Time moveAwayTime(Seconds(2));
+    Time moveBackTime(Seconds(4));
 
     RngSeedManager::SetSeed(1);
     RngSeedManager::SetRun(40);
@@ -169,12 +169,12 @@ Issue211Test::DoRun()
     apNodeInterface = address.Assign(apDevices.Get(0));
 
     ApplicationContainer serverApp;
-    Time warmup(Seconds(1.0)); // to account for association
+    Time warmup(Seconds(1)); // to account for association
 
     uint16_t port = 9;
     UdpServerHelper server(port);
     serverApp = server.Install(wifiStaNode.Get(0));
-    serverApp.Start(Seconds(0.0));
+    serverApp.Start(Seconds(0));
     serverApp.Stop(warmup + simulationTime);
 
     UdpClientHelper client(staNodeInterface.GetAddress(0), port);
@@ -235,10 +235,10 @@ Issue211Test::DoRun()
 }
 
 /**
- * \ingroup wifi-test
- * \ingroup tests
+ * @ingroup wifi-test
+ * @ingroup tests
  *
- * \brief Block Ack Test Suite
+ * @brief Block Ack Test Suite
  */
 class Issue211TestSuite : public TestSuite
 {

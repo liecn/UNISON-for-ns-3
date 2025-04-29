@@ -9,9 +9,9 @@
 #include "rr-multi-user-scheduler.h"
 
 #include "he-configuration.h"
-#include "he-frame-exchange-manager.h"
 #include "he-phy.h"
 
+#include "ns3/eht-frame-exchange-manager.h"
 #include "ns3/log.h"
 #include "ns3/wifi-acknowledgment.h"
 #include "ns3/wifi-mac-queue.h"
@@ -192,7 +192,7 @@ RrMultiUserScheduler::GetTxVectorForUlMu(std::function<bool(const MasterInfo&)> 
     txVector.SetPreambleType(WIFI_PREAMBLE_HE_TB);
     txVector.SetChannelWidth(m_allowedWidth);
     txVector.SetGuardInterval(heConfiguration->GetGuardInterval());
-    txVector.SetBssColor(heConfiguration->GetBssColor());
+    txVector.SetBssColor(heConfiguration->m_bssColor);
 
     // iterate over the associated stations until an enough number of stations is identified
     auto staIt = m_staListUl.begin();
@@ -363,6 +363,21 @@ RrMultiUserScheduler::TrySendingBsrpTf()
         m_apMac->GetWifiRemoteStationManager(m_linkId)->GetRtsTxVector(m_triggerMacHdr.GetAddr1(),
                                                                        m_allowedWidth);
 
+    // If this BSRP TF is an ICF, we need to add padding and adjust the TXVECTOR
+    if (auto ehtFem =
+            DynamicCast<EhtFrameExchangeManager>(m_apMac->GetFrameExchangeManager(m_linkId)))
+    {
+        auto prevPaddingSize = m_trigger.GetPaddingSize();
+        ehtFem->SetIcfPaddingAndTxVector(m_trigger, m_txParams.m_txVector);
+        // serialize again if padding has been added
+        if (m_trigger.GetPaddingSize() != prevPaddingSize)
+        {
+            auto packet = Create<Packet>();
+            packet->AddHeader(m_trigger);
+            item = Create<WifiMpdu>(packet, item->GetHeader());
+        }
+    }
+
     if (!GetHeFem(m_linkId)->TryAddMpdu(item, m_txParams, m_availableTime))
     {
         // sending the BSRP Trigger Frame is not possible, hence return NO_TX. In
@@ -373,7 +388,7 @@ RrMultiUserScheduler::TrySendingBsrpTf()
     }
 
     // Compute the time taken by each station to transmit 8 QoS Null frames
-    Time qosNullTxDuration = Seconds(0);
+    Time qosNullTxDuration;
     for (const auto& userInfo : m_trigger)
     {
         Time duration = WifiPhy::CalculateTxDuration(GetMaxSizeOfQosNullAmpdu(m_trigger),
@@ -383,6 +398,9 @@ RrMultiUserScheduler::TrySendingBsrpTf()
         qosNullTxDuration = Max(qosNullTxDuration, duration);
     }
 
+    NS_ASSERT(m_txParams.m_txDuration.has_value());
+    m_triggerTxDuration = m_txParams.m_txDuration.value();
+
     if (m_availableTime != Time::Min())
     {
         // TryAddMpdu only considers the time to transmit the Trigger Frame
@@ -390,7 +408,6 @@ RrMultiUserScheduler::TrySendingBsrpTf()
         NS_ASSERT(m_txParams.m_acknowledgment &&
                   m_txParams.m_acknowledgment->acknowledgmentTime.has_value() &&
                   m_txParams.m_acknowledgment->acknowledgmentTime->IsZero());
-        NS_ASSERT(m_txParams.m_txDuration.has_value());
 
         if (*m_txParams.m_protection->protectionTime + *m_txParams.m_txDuration // BSRP TF tx time
                 + m_apMac->GetWifiPhy(m_linkId)->GetSifs() + qosNullTxDuration >
@@ -503,13 +520,15 @@ RrMultiUserScheduler::TrySendingBasicTf()
         return NO_TX;
     }
 
+    NS_ASSERT(m_txParams.m_txDuration.has_value());
+    m_triggerTxDuration = m_txParams.m_txDuration.value();
+
     if (m_availableTime != Time::Min())
     {
         // TryAddMpdu only considers the time to transmit the Trigger Frame
         NS_ASSERT(m_txParams.m_protection && m_txParams.m_protection->protectionTime.has_value());
         NS_ASSERT(m_txParams.m_acknowledgment &&
                   m_txParams.m_acknowledgment->acknowledgmentTime.has_value());
-        NS_ASSERT(m_txParams.m_txDuration.has_value());
 
         maxDuration = Min(maxDuration,
                           m_availableTime - *m_txParams.m_protection->protectionTime -
@@ -523,7 +542,7 @@ RrMultiUserScheduler::TrySendingBasicTf()
     }
 
     // Compute the time taken by each station to transmit a frame of maxBufferSize size
-    Time bufferTxTime = Seconds(0);
+    Time bufferTxTime;
     for (const auto& userInfo : m_trigger)
     {
         Time duration = WifiPhy::CalculateTxDuration(maxBufferSize,
@@ -542,7 +561,7 @@ RrMultiUserScheduler::TrySendingBasicTf()
     {
         // maxDuration may be a too short time. If it does not allow any station to
         // transmit at least m_ulPsduSize bytes, give up the UL MU transmission for now
-        Time minDuration = Seconds(0);
+        Time minDuration;
         for (const auto& userInfo : m_trigger)
         {
             Time duration =
@@ -580,6 +599,78 @@ RrMultiUserScheduler::TrySendingBasicTf()
     UpdateCredits(m_staListUl, maxDuration, txVector);
 
     return UL_MU_TX;
+}
+
+void
+RrMultiUserScheduler::UpdateTriggerFrameAfterProtection(uint8_t linkId,
+                                                        CtrlTriggerHeader& trigger,
+                                                        WifiTxParameters& txParams) const
+{
+    NS_LOG_FUNCTION(this << linkId << &txParams);
+
+    // remove unprotected EMLSR clients, unless this is a BSRP TF (which acts as ICF)
+    if (trigger.IsBsrp())
+    {
+        NS_LOG_INFO("BSRP TF is an ICF for unprotected EMLSR clients");
+        return;
+    }
+
+    NS_LOG_INFO("Checking unprotected EMLSR clients");
+    RemoveRecipientsFromTf(linkId, trigger, txParams, m_isUnprotectedEmlsrClient);
+}
+
+void
+RrMultiUserScheduler::UpdateDlMuAfterProtection(uint8_t linkId,
+                                                WifiPsduMap& psduMap,
+                                                WifiTxParameters& txParams) const
+{
+    NS_LOG_FUNCTION(this << linkId << &txParams);
+
+    NS_LOG_INFO("Checking unprotected EMLSR clients");
+    RemoveRecipientsFromDlMu(linkId, psduMap, txParams, m_isUnprotectedEmlsrClient);
+}
+
+Time
+RrMultiUserScheduler::GetExtraTimeForBsrpTfDurationId(uint8_t linkId) const
+{
+    auto phy = m_apMac->GetWifiPhy(linkId);
+    BlockAckType baType(BlockAckType::MULTI_STA);
+    uint16_t aid{0};
+    Mac48Address staAddress;
+
+    // we assume that a Basic Trigger Frame is sent after a BSRP Trigger Frame. In order to
+    // compute the TX duration of the Multi-STA BlockAck, we need to find the bitmap length
+    // for each STA solicited by the Trigger Frame
+    for (const auto& userInfo : m_trigger)
+    {
+        aid = userInfo.GetAid12();
+        auto it = m_apMac->GetStaList(linkId).find(aid);
+        NS_ASSERT(it != m_apMac->GetStaList(linkId).cend());
+        staAddress = it->second;
+
+        // find a TID for which a BA agreement exists with the given originator
+        uint8_t tid = 0;
+        while (tid < 8 && !m_apMac->GetBaAgreementEstablishedAsRecipient(staAddress, tid))
+        {
+            ++tid;
+        }
+        NS_ASSERT_MSG(tid < 8, "No Block Ack agreement established with originator " << staAddress);
+
+        baType.m_bitmapLen.push_back(
+            m_apMac->GetBaTypeAsRecipient(staAddress, tid).m_bitmapLen.at(0));
+    }
+
+    NS_ASSERT_MSG(aid != 0, "No User Info field in the Trigger Frame");
+
+    auto multiStaBaTxVector =
+        GetWifiRemoteStationManager(linkId)->GetBlockAckTxVector(staAddress,
+                                                                 m_trigger.GetHeTbTxVector(aid));
+
+    auto multiStaBaDuration = WifiPhy::CalculateTxDuration(GetBlockAckSize(baType),
+                                                           multiStaBaTxVector,
+                                                           phy->GetPhyBand());
+
+    return m_triggerTxDuration + m_defaultTbPpduDuration + multiStaBaDuration + 3 * phy->GetSifs();
 }
 
 void
@@ -701,7 +792,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu()
     m_txParams.m_txVector.SetPreambleType(WIFI_PREAMBLE_HE_MU);
     m_txParams.m_txVector.SetChannelWidth(m_allowedWidth);
     m_txParams.m_txVector.SetGuardInterval(heConfiguration->GetGuardInterval());
-    m_txParams.m_txVector.SetBssColor(heConfiguration->GetBssColor());
+    m_txParams.m_txVector.SetBssColor(heConfiguration->m_bssColor);
 
     // The TXOP limit can be exceeded by the TXOP holder if it does not transmit more
     // than one Data or Management frame in the TXOP and the frame is not in an A-MPDU
@@ -714,7 +805,7 @@ RrMultiUserScheduler::TrySendingDlMuPpdu()
     m_candidates.clear();
 
     std::vector<uint8_t> ruAllocations;
-    const std::size_t numRuAllocs = m_txParams.m_txVector.GetChannelWidth() / 20;
+    const auto numRuAllocs = Count20MHzSubchannels(m_txParams.m_txVector.GetChannelWidth());
     ruAllocations.resize(numRuAllocs);
     NS_ASSERT((m_candidates.size() % numRuAllocs) == 0);
 

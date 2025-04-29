@@ -8,6 +8,7 @@
  */
 
 #include "ns3/applications-module.h"
+#include "ns3/buildings-helper.h"
 #include "ns3/core-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/log.h"
@@ -17,7 +18,6 @@
 #include "ns3/point-to-point-epc-helper.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/spectrum-module.h"
-#include <ns3/buildings-helper.h>
 
 using namespace ns3;
 
@@ -280,7 +280,7 @@ main(int argc, char* argv[])
 
             UdpClientHelper dlClientHelper(ueIpIfaces.GetAddress(u), dlPort);
             dlClientHelper.SetAttribute("MaxPackets", UintegerValue(1000000));
-            dlClientHelper.SetAttribute("Interval", TimeValue(MilliSeconds(1.0)));
+            dlClientHelper.SetAttribute("Interval", TimeValue(MilliSeconds(1)));
             clientApps.Add(dlClientHelper.Install(remoteHost));
             PacketSinkHelper dlPacketSinkHelper("ns3::UdpSocketFactory",
                                                 InetSocketAddress(Ipv4Address::GetAny(), dlPort));
@@ -288,7 +288,7 @@ main(int argc, char* argv[])
 
             UdpClientHelper ulClientHelper(remoteHostAddr, ulPort);
             ulClientHelper.SetAttribute("MaxPackets", UintegerValue(1000000));
-            ulClientHelper.SetAttribute("Interval", TimeValue(MilliSeconds(1.0)));
+            ulClientHelper.SetAttribute("Interval", TimeValue(MilliSeconds(1)));
             clientApps.Add(ulClientHelper.Install(ue));
             PacketSinkHelper ulPacketSinkHelper("ns3::UdpSocketFactory",
                                                 InetSocketAddress(Ipv4Address::GetAny(), ulPort));

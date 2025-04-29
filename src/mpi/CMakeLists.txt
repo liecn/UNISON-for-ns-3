@@ -25,7 +25,7 @@ if(${ENABLE_MTP})
       model/parallel-communication-interface.h
     LIBRARIES_TO_LINK ${libnetwork}
                       ${libmtp}
-                      ${MPI_CXX_LIBRARIES}
+                      MPI::MPI_CXX
     TEST_SOURCES ${example_as_test_suite}
   )
 else()
@@ -46,7 +46,7 @@ else()
       model/mpi-receiver.h
       model/parallel-communication-interface.h
     LIBRARIES_TO_LINK ${libnetwork}
-                      ${MPI_CXX_LIBRARIES}
+                      MPI::MPI_CXX
     TEST_SOURCES ${example_as_test_suite}
   )
 endif()

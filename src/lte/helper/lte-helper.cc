@@ -18,44 +18,44 @@
 #include "phy-stats-calculator.h"
 #include "phy-tx-stats-calculator.h"
 
-#include <ns3/abort.h>
-#include <ns3/buildings-propagation-loss-model.h>
-#include <ns3/epc-enb-application.h>
-#include <ns3/epc-enb-s1-sap.h>
-#include <ns3/epc-ue-nas.h>
-#include <ns3/epc-x2.h>
-#include <ns3/ff-mac-scheduler.h>
-#include <ns3/friis-spectrum-propagation-loss.h>
-#include <ns3/isotropic-antenna-model.h>
-#include <ns3/log.h>
-#include <ns3/lte-anr.h>
-#include <ns3/lte-chunk-processor.h>
-#include <ns3/lte-common.h>
-#include <ns3/lte-enb-component-carrier-manager.h>
-#include <ns3/lte-enb-mac.h>
-#include <ns3/lte-enb-net-device.h>
-#include <ns3/lte-enb-phy.h>
-#include <ns3/lte-enb-rrc.h>
-#include <ns3/lte-ffr-algorithm.h>
-#include <ns3/lte-handover-algorithm.h>
-#include <ns3/lte-rlc-am.h>
-#include <ns3/lte-rlc-um.h>
-#include <ns3/lte-rlc.h>
-#include <ns3/lte-rrc-protocol-ideal.h>
-#include <ns3/lte-rrc-protocol-real.h>
-#include <ns3/lte-spectrum-phy.h>
-#include <ns3/lte-spectrum-value-helper.h>
-#include <ns3/lte-ue-component-carrier-manager.h>
-#include <ns3/lte-ue-mac.h>
-#include <ns3/lte-ue-net-device.h>
-#include <ns3/lte-ue-phy.h>
-#include <ns3/lte-ue-rrc.h>
-#include <ns3/multi-model-spectrum-channel.h>
-#include <ns3/object-factory.h>
-#include <ns3/object-map.h>
-#include <ns3/pointer.h>
-#include <ns3/string.h>
-#include <ns3/trace-fading-loss-model.h>
+#include "ns3/abort.h"
+#include "ns3/buildings-propagation-loss-model.h"
+#include "ns3/epc-enb-application.h"
+#include "ns3/epc-enb-s1-sap.h"
+#include "ns3/epc-ue-nas.h"
+#include "ns3/epc-x2.h"
+#include "ns3/ff-mac-scheduler.h"
+#include "ns3/friis-spectrum-propagation-loss.h"
+#include "ns3/isotropic-antenna-model.h"
+#include "ns3/log.h"
+#include "ns3/lte-anr.h"
+#include "ns3/lte-chunk-processor.h"
+#include "ns3/lte-common.h"
+#include "ns3/lte-enb-component-carrier-manager.h"
+#include "ns3/lte-enb-mac.h"
+#include "ns3/lte-enb-net-device.h"
+#include "ns3/lte-enb-phy.h"
+#include "ns3/lte-enb-rrc.h"
+#include "ns3/lte-ffr-algorithm.h"
+#include "ns3/lte-handover-algorithm.h"
+#include "ns3/lte-rlc-am.h"
+#include "ns3/lte-rlc-um.h"
+#include "ns3/lte-rlc.h"
+#include "ns3/lte-rrc-protocol-ideal.h"
+#include "ns3/lte-rrc-protocol-real.h"
+#include "ns3/lte-spectrum-phy.h"
+#include "ns3/lte-spectrum-value-helper.h"
+#include "ns3/lte-ue-component-carrier-manager.h"
+#include "ns3/lte-ue-mac.h"
+#include "ns3/lte-ue-net-device.h"
+#include "ns3/lte-ue-phy.h"
+#include "ns3/lte-ue-rrc.h"
+#include "ns3/multi-model-spectrum-channel.h"
+#include "ns3/object-factory.h"
+#include "ns3/object-map.h"
+#include "ns3/pointer.h"
+#include "ns3/string.h"
+#include "ns3/trace-fading-loss-model.h"
 
 #include <iostream>
 
@@ -1166,7 +1166,7 @@ LteHelper::ActivateDedicatedEpsBearer(Ptr<NetDevice> ueDevice, EpsBearer bearer,
 }
 
 /**
- * \ingroup lte
+ * @ingroup lte
  *
  * DrbActivatior allows user to activate bearers for UEs
  * when EPC is not used. Activation function is hooked to
@@ -1180,8 +1180,8 @@ class DrbActivator : public SimpleRefCount<DrbActivator>
     /**
      * DrbActivator Constructor
      *
-     * \param ueDevice the UeNetDevice for which bearer will be activated
-     * \param bearer the bearer configuration
+     * @param ueDevice the UeNetDevice for which bearer will be activated
+     * @param bearer the bearer configuration
      */
     DrbActivator(Ptr<NetDevice> ueDevice, EpsBearer bearer);
 
@@ -1189,11 +1189,11 @@ class DrbActivator : public SimpleRefCount<DrbActivator>
      * Function hooked to the Enb RRC Connection Established trace source
      * Fired upon successful RRC connection establishment.
      *
-     * \param a DrbActivator object
-     * \param context
-     * \param imsi
-     * \param cellId
-     * \param rnti
+     * @param a DrbActivator object
+     * @param context
+     * @param imsi
+     * @param cellId
+     * @param rnti
      */
     static void ActivateCallback(Ptr<DrbActivator> a,
                                  std::string context,
@@ -1207,9 +1207,9 @@ class DrbActivator : public SimpleRefCount<DrbActivator>
      * in RRC connected state. If all requirements are met, it performs
      * bearer activation.
      *
-     * \param imsi
-     * \param cellId
-     * \param rnti
+     * @param imsi
+     * @param cellId
+     * @param rnti
      */
     void ActivateDrb(uint64_t imsi, uint16_t cellId, uint16_t rnti);
 

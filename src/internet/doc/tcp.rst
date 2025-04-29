@@ -124,8 +124,8 @@ Using the helper functions defined in ``src/applications/helper`` and
   Address sinkLocalAddress(InetSocketAddress(Ipv4Address::GetAny(), port));
   PacketSinkHelper sinkHelper("ns3::TcpSocketFactory", sinkLocalAddress);
   ApplicationContainer sinkApp = sinkHelper.Install(serverNode);
-  sinkApp.Start(Seconds(1.0));
-  sinkApp.Stop(Seconds(10.0));
+  sinkApp.Start(Seconds(1));
+  sinkApp.Stop(Seconds(10));
 
 Similarly, the below snippet configures OnOffApplication traffic source to use
 TCP::
@@ -1005,7 +1005,7 @@ The following unit tests have been written to validate the implementation of DCT
 
 * ECT flags should be set for SYN, SYN+ACK, ACK and data packets for DCTCP traffic
 * ECT flags should not be set for SYN, SYN+ACK and pure ACK packets, but should be set on data packets for ECN enabled traditional TCP flows
-* ECE should be set only when CE flags are received at receiver and even if sender doesn’t send CWR, receiver should not send ECE if it doesn’t receive packets with CE flags
+* ECE should be set only when CE flags are received at receiver and even if sender doesn't send CWR, receiver should not send ECE if it doesn't receive packets with CE flags
 
 An example program, ``examples/tcp/tcp-validation.cc``, can be used to
 experiment with DCTCP for long-running flows with different bottleneck
@@ -1855,7 +1855,7 @@ the method ConfigureEnvironment:
       TcpGeneralTest::ConfigureEnvironment();
       SetAppPktCount(20);
       SetMTU(500);
-      SetTransmitStart(Seconds(2.0));
+      SetTransmitStart(Seconds(2));
       SetPropagationDelay(MilliSeconds(50));
   }
 
@@ -1901,7 +1901,7 @@ following code):
        Ptr<TcpSocketMsgBase> socket = TcpGeneralTest::CreateReceiverSocket(node);
 
        socket->SetAttribute("RcvBufSize", UintegerValue(0));
-       Simulator::Schedule(Seconds(10.0),
+       Simulator::Schedule(Seconds(10),
                          &TcpZeroWindowTest::IncreaseBufSize, this);
 
        return socket;

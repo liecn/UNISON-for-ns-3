@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
+import textwrap
 
 ns3_path = os.path.dirname(os.path.realpath(os.path.abspath(__file__)))
 append_to_ns3_path = functools.partial(os.path.join, ns3_path)
@@ -89,8 +90,11 @@ def add_argument_to_subparsers(
 
 
 def parse_args(argv):
+    py39args = {"exit_on_error": False}
+    if sys.version_info < (3, 9):
+        py39args = {}
     parser = argparse.ArgumentParser(
-        description="ns-3 wrapper for the CMake build system", add_help=False
+        description="ns-3 wrapper for the CMake build system", add_help=False, **py39args
     )
 
     sub_parser = parser.add_subparsers()
@@ -435,18 +439,28 @@ def parse_args(argv):
     parser_show = sub_parser.add_parser(
         "show", help='Try "./ns3 show --help" for more show options'
     )
-    parser_show.add_argument(
-        "show",
-        help=(
-            "Print the current ns-3 build profile type, configuration or version, "
-            "or a list of buildable/runnable targets"
-        ),
-        choices=["profile", "version", "config", "targets", "all"],
-        action="store",
-        type=str,
-        nargs="?",
-        default="all",
-    )
+    parser_show_sub = parser_show.add_subparsers(dest="show")
+
+    # Add subcommands for the "docs" command
+    # Since 'typeid' has a required arg, need to handle these
+    # with subparsers not simple "choices=[...]"
+    show_choices = ["profile", "version", "config", "targets", "typeid", "all"]
+
+    for choice in show_choices:
+        if choice == "typeid":
+            parser_typeid = parser_show_sub.add_parser(
+                "typeid",
+                help="Show the introspected documentation for a TypeId",
+            )
+            parser_typeid.add_argument(
+                "tid",
+                help='Show the introspected documentation for TypeId "tid"',
+                type=str,
+            )
+        else:
+            parser_show_sub.add_parser(choice)
+
+    parser_show.set_defaults(show="all")
 
     add_argument_to_subparsers(
         [
@@ -498,7 +512,17 @@ def parse_args(argv):
         runnable_args = []
 
     # Parse known arguments and separate from unknown arguments
-    args, unknown_args = parser.parse_known_args(ns3_args)
+    try:
+        args, unknown_args = parser.parse_known_args(ns3_args)
+    except argparse.ArgumentError as e:
+        error_message = e.message
+        custom_exits = ["invalid choice:"]
+        for custom_exit in custom_exits:
+            if custom_exit in e.message:
+                error_message = f"Exiting due to {e.message[e.message.index(custom_exit):]}"
+        # Format error message to better fit the terminal width
+        print("\n".join(textwrap.wrap(error_message, width=os.get_terminal_size().columns)))
+        exit(1)
 
     # If run doesn't have a target, print the help message of the run parser
     if "run" in args and args.run == "":
@@ -602,6 +626,7 @@ def check_lock_data(output_directory):
         "ENABLE_SUDO": False,
         "ENABLE_TESTS": False,
         "BUILD_VERSION_STRING": None,
+        "FETCH_NETANIM_VISUALIZER": False,
     }
     if output_directory and os.path.exists(lock_file):
         exec(open(lock_file).read(), globals(), build_info)
@@ -747,7 +772,12 @@ def search_cmake_cache(build_profile):
 
     if not current_cmake_generator:
         # Search for available generators
-        cmake_generator_map = {"ninja": "Ninja", "make": "Unix Makefiles", "xcodebuild": "Xcode"}
+        cmake_generator_map = {
+            "msbuild": "Visual Studio 17 2022",
+            "ninja": "Ninja",
+            "make": "Unix Makefiles",
+            "xcodebuild": "Xcode",
+        }
         available_generators = []
         for generator in cmake_generator_map.keys():
             if shutil.which(generator):
@@ -926,6 +956,8 @@ def configure_cmake(
     # Try to set specified generator (will probably fail if there is an old cache)
     if args.G:
         cmake_args.extend(["-G", args.G])
+        if "Visual Studio" in args.G:
+            cmake_args.extend(["-A", "x64", "-T", "ClangCL"])
 
     if args.trace_cmake_perf:
         cmake_performance_trace = os.path.join(
@@ -977,6 +1009,9 @@ def get_program_shortcuts(build_profile, ns3_version):
     # We can now build a map to simplify things for users (at this point we could remove versioning prefix/suffix)
     ns3_program_map = {}
     longest_shortcut_map = {}
+
+    if programs_dict["FETCH_NETANIM_VISUALIZER"]:
+        ns3_program_map["netanim"] = [programs_dict["out_dir"] + "/bin/netanim"]
 
     for program in programs_dict["ns3_runnable_programs"]:
         if "pch_exec" in program:
@@ -1059,6 +1094,7 @@ def get_program_shortcuts(build_profile, ns3_version):
 
 
 def parse_version(version_str):
+    version_str = version_str.split("-")[0]
     version = version_str.split(".")
     version = tuple(map(int, version))
     return version
@@ -1222,11 +1258,21 @@ def get_target_to_build(program_path, ns3_version, build_profile):
     build_profile_suffix = "" if build_profile in ["release"] else "-" + build_profile
     program_name = ""
 
+    special_run_to_build_targets = {
+        "netanim": "netanim_visualizer",
+    }
+
     try:
         program_name = "".join(
             *re.findall("(.*)ns%s-(.*)%s" % (ns3_version, build_profile_suffix), program_path)
         )
     except TypeError:
+        # This is not your typical ns-3 executable.
+        # Maybe some imported target that had a conflicting name, like netanim
+        program_name = os.path.basename(program_path)
+        if program_name in special_run_to_build_targets:
+            return special_run_to_build_targets[program_name]
+        # Or maybe it is an error indeed
         print("Target to build does not exist: %s" % program_path)
         exit(1)
 
@@ -1756,6 +1802,16 @@ def main():
 
     if args.show == "version":
         show_build_version(build_version_string)
+
+    if args.show == "typeid":
+        sys.argv = [
+            "ns3",
+            "run",
+            "print-introspected-doxygen",
+            "--",
+            f"--TypeId={args.tid}",
+        ]
+        args = parse_args(sys.argv[1:])
 
     # Check if running something or reconfiguring ns-3
     run_only = False

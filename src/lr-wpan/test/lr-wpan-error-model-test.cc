@@ -5,21 +5,21 @@
  *
  * Author: Tom Henderson <thomas.r.henderson@boeing.com>
  */
+#include "ns3/callback.h"
+#include "ns3/constant-position-mobility-model.h"
+#include "ns3/log.h"
+#include "ns3/lr-wpan-error-model.h"
+#include "ns3/lr-wpan-mac.h"
+#include "ns3/lr-wpan-net-device.h"
+#include "ns3/mac16-address.h"
+#include "ns3/net-device.h"
+#include "ns3/node.h"
+#include "ns3/packet.h"
+#include "ns3/propagation-loss-model.h"
 #include "ns3/rng-seed-manager.h"
-#include <ns3/callback.h>
-#include <ns3/constant-position-mobility-model.h>
-#include <ns3/log.h>
-#include <ns3/lr-wpan-error-model.h>
-#include <ns3/lr-wpan-mac.h>
-#include <ns3/lr-wpan-net-device.h>
-#include <ns3/mac16-address.h>
-#include <ns3/net-device.h>
-#include <ns3/node.h>
-#include <ns3/packet.h>
-#include <ns3/propagation-loss-model.h>
-#include <ns3/simulator.h>
-#include <ns3/single-model-spectrum-channel.h>
-#include <ns3/test.h>
+#include "ns3/simulator.h"
+#include "ns3/single-model-spectrum-channel.h"
+#include "ns3/test.h"
 
 using namespace ns3;
 using namespace ns3::lrwpan;
@@ -27,10 +27,10 @@ using namespace ns3::lrwpan;
 NS_LOG_COMPONENT_DEFINE("lr-wpan-error-model-test");
 
 /**
- * \ingroup lr-wpan-test
- * \ingroup tests
+ * @ingroup lr-wpan-test
+ * @ingroup tests
  *
- * \brief LrWpan Error Vs Distance Test
+ * @brief LrWpan Error Vs Distance Test
  */
 class LrWpanErrorDistanceTestCase : public TestCase
 {
@@ -39,8 +39,8 @@ class LrWpanErrorDistanceTestCase : public TestCase
     ~LrWpanErrorDistanceTestCase() override;
 
     /**
-     * \brief Get the number of received packets.
-     * \returns The number of received packets.
+     * @brief Get the number of received packets.
+     * @returns The number of received packets.
      */
     uint32_t GetReceived() const
     {
@@ -51,19 +51,19 @@ class LrWpanErrorDistanceTestCase : public TestCase
     void DoRun() override;
 
     /**
-     * \brief Function to be called when a packet is received.
-     * \param params MCPS params.
-     * \param p The packet.
+     * @brief Function to be called when a packet is received.
+     * @param params MCPS params.
+     * @param p The packet.
      */
     void Callback(McpsDataIndicationParams params, Ptr<Packet> p);
     uint32_t m_received; //!< The number of received packets.
 };
 
 /**
- * \ingroup lr-wpan-test
- * \ingroup tests
+ * @ingroup lr-wpan-test
+ * @ingroup tests
  *
- * \brief LrWpan Error model Test
+ * @brief LrWpan Error model Test
  */
 class LrWpanErrorModelTestCase : public TestCase
 {
@@ -185,10 +185,10 @@ LrWpanErrorModelTestCase::DoRun()
 }
 
 /**
- * \ingroup lr-wpan-test
- * \ingroup tests
+ * @ingroup lr-wpan-test
+ * @ingroup tests
  *
- * \brief LrWpan Error model TestSuite
+ * @brief LrWpan Error model TestSuite
  */
 class LrWpanErrorModelTestSuite : public TestSuite
 {

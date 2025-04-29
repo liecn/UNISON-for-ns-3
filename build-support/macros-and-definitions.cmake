@@ -212,7 +212,7 @@ macro(process_options)
 
   # Set warning level and warning as errors
   if(${NS3_WARNINGS})
-    if(DEFINED MSVC)
+    if(${MSVC})
       add_compile_options(/W3) # /W4 = -Wall + -Wextra
       if(${NS3_WARNINGS_AS_ERRORS})
         add_compile_options(/WX)
@@ -259,7 +259,8 @@ macro(process_options)
 
   if(${NS3_CLANG_TIDY})
     find_program(
-      CLANG_TIDY NAMES clang-tidy clang-tidy-14 clang-tidy-15 clang-tidy-16
+      CLANG_TIDY NAMES clang-tidy clang-tidy-15 clang-tidy-16 clang-tidy-17
+                       clang-tidy-18 clang-tidy-19
     )
     if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
       message(FATAL_ERROR "Clang-tidy was not found")
@@ -540,7 +541,9 @@ macro(process_options)
     if(${SQLite3_FOUND})
       set(ENABLE_SQLITE True)
       add_definitions(-DHAVE_SQLITE3)
-      include_directories(${SQLite3_INCLUDE_DIRS})
+      if(NOT ${NS3_FORCE_LOCAL_DEPENDENCIES})
+        include_directories(${SQLite3_INCLUDE_DIRS})
+      endif()
     endif()
   endif()
 
@@ -554,7 +557,9 @@ macro(process_options)
       set(ENABLE_EIGEN True)
       add_definitions(-DHAVE_EIGEN3)
       add_definitions(-DEIGEN_MPL2_ONLY)
-      include_directories(${EIGEN3_INCLUDE_DIR})
+      if(NOT ${NS3_FORCE_LOCAL_DEPENDENCIES})
+        include_directories(${EIGEN3_INCLUDE_DIR})
+      endif()
     else()
       set(ENABLE_EIGEN_REASON "Eigen was not found")
     endif()
@@ -582,7 +587,9 @@ macro(process_options)
               "GTK3 found with incompatible version ${GTK3_VERSION}"
           )
         else()
-          include_directories(${GTK3_INCLUDE_DIRS} ${HarfBuzz_INCLUDE_DIRS})
+          if(NOT ${NS3_FORCE_LOCAL_DEPENDENCIES})
+            include_directories(${GTK3_INCLUDE_DIRS} ${HarfBuzz_INCLUDE_DIRS})
+          endif()
         endif()
       endif()
 
@@ -609,7 +616,9 @@ macro(process_options)
       set(LIBXML2_FOUND_REASON "LibXML2 was not found")
     else()
       add_definitions(-DHAVE_LIBXML2)
-      include_directories(${LIBXML2_INCLUDE_DIR})
+      if(NOT ${NS3_FORCE_LOCAL_DEPENDENCIES})
+        include_directories(${LIBXML2_INCLUDE_DIR})
+      endif()
     endif()
   endif()
 
@@ -656,7 +665,9 @@ macro(process_options)
           set(CMAKE_INSTALL_RPATH "${DEVELOPER_DIR}" CACHE STRING "")
         endif()
       endif()
-      include_directories(${Python3_INCLUDE_DIRS})
+      if(NOT ${NS3_FORCE_LOCAL_DEPENDENCIES})
+        include_directories(${Python3_INCLUDE_DIRS})
+      endif()
     else()
       message(${HIGHLIGHTED_STATUS}
               "Python: development libraries were not found"
@@ -691,6 +702,12 @@ macro(process_options)
         set(ENABLE_PYTHON_BINDINGS_REASON
             "missing dependency: ${missing_packages}"
         )
+      elseif(${NS3_MPI})
+        message(
+          ${HIGHLIGHTED_STATUS}
+          "Bindings: python bindings disabled due to an incompatibility with the MPI module"
+        )
+        set(ENABLE_PYTHON_BINDINGS_REASON "incompatible module enabled: mpi")
       else()
         set(ENABLE_PYTHON_BINDINGS ON)
       endif()
@@ -816,12 +833,6 @@ macro(process_options)
     endif()
   endif()
 
-  # Process config-store-config
-  configure_file(
-    build-support/config-store-config-template.h
-    ${CMAKE_HEADER_OUTPUT_DIRECTORY}/config-store-config.h
-  )
-
   set(ENABLE_MPI FALSE)
   if(${NS3_MPI})
     find_package(MPI QUIET)
@@ -829,8 +840,7 @@ macro(process_options)
       message(FATAL_ERROR "MPI was not found.")
     else()
       message(STATUS "MPI was found.")
-      add_definitions(-DNS3_MPI)
-      include_directories(${MPI_CXX_INCLUDE_DIRS})
+      target_compile_definitions(MPI::MPI_CXX INTERFACE NS3_MPI)
       set(ENABLE_MPI TRUE)
     endif()
   endif()
@@ -841,10 +851,16 @@ macro(process_options)
     set(ENABLE_MTP TRUE)
   endif()
 
+  # Use upstream boost package config with CMake 3.30 and above
+  if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+  endif()
   mark_as_advanced(Boost_INCLUDE_DIR)
   find_package(Boost)
   if(${Boost_FOUND})
-    include_directories(${Boost_INCLUDE_DIRS})
+    if(NOT ${NS3_FORCE_LOCAL_DEPENDENCIES})
+      include_directories(${Boost_INCLUDE_DIRS})
+    endif()
     set(CMAKE_REQUIRED_INCLUDES ${Boost_INCLUDE_DIRS})
   endif()
 
@@ -856,7 +872,9 @@ macro(process_options)
     else()
       message(STATUS "GSL was found.")
       add_definitions(-DHAVE_GSL)
-      include_directories(${GSL_INCLUDE_DIRS})
+      if(NOT ${NS3_FORCE_LOCAL_DEPENDENCIES})
+        include_directories(${GSL_INCLUDE_DIRS})
+      endif()
     endif()
   endif()
 
@@ -1125,7 +1143,7 @@ macro(process_options)
   check_function_exists("getenv" "HAVE_GETENV")
 
   configure_file(
-    build-support/core-config-template.h
+    ${PROJECT_SOURCE_DIR}/build-support/core-config-template.h
     ${CMAKE_HEADER_OUTPUT_DIRECTORY}/core-config.h
   )
 
@@ -1326,19 +1344,14 @@ macro(process_options)
 
   # Netanim depends on ns-3 core, so we built it later
   if(${NS3_NETANIM})
-    include(FetchContent)
-    FetchContent_Declare(
-      netanim GIT_REPOSITORY https://gitlab.com/nsnam/netanim.git
-      GIT_TAG netanim-3.109
+    include(ExternalProject)
+    ExternalProject_Add(
+      netanim_visualizer
+      GIT_REPOSITORY https://gitlab.com/nsnam/netanim.git
+      GIT_TAG netanim-3.110
+      BUILD_IN_SOURCE TRUE
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_OUTPUT_DIRECTORY}
     )
-    FetchContent_Populate(netanim)
-    file(COPY build-support/3rd-party/netanim-cmakelists.cmake
-         DESTINATION ${netanim_SOURCE_DIR}
-    )
-    file(RENAME ${netanim_SOURCE_DIR}/netanim-cmakelists.cmake
-         ${netanim_SOURCE_DIR}/CMakeLists.txt
-    )
-    add_subdirectory(${netanim_SOURCE_DIR} ${netanim_BINARY_DIR})
   endif()
 
   if(${NS3_FETCH_OPTIONAL_COMPONENTS})

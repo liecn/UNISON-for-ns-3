@@ -25,13 +25,13 @@
 #include <utility>
 
 /**
- * \file
- * \ingroup logging
+ * @file
+ * @ingroup logging
  * ns3::LogComponent and related implementations.
  */
 
 /**
- * \ingroup logging
+ * @ingroup logging
  * Unnamed namespace for log.cc
  */
 namespace
@@ -93,19 +93,19 @@ namespace ns3
 {
 
 /**
- * \ingroup logging
+ * @ingroup logging
  * The Log TimePrinter.
  * This is private to the logging implementation.
  */
 static TimePrinter g_logTimePrinter = nullptr;
 /**
- * \ingroup logging
+ * @ingroup logging
  * The Log NodePrinter.
  */
 static NodePrinter g_logNodePrinter = nullptr;
 
 /**
- * \ingroup logging
+ * @ingroup logging
  * Handler for the undocumented \c print-list token in NS_LOG
  * which triggers printing of the list of log components, then exits.
  *
@@ -416,12 +416,12 @@ LogComponentPrintList()
 }
 
 /**
- * \ingroup logging
+ * @ingroup logging
  * Check if a log component exists.
  * This is private to the logging implementation.
  *
- * \param [in] componentName The putative log component name.
- * \returns \c true if \c componentName exists.
+ * @param [in] componentName The putative log component name.
+ * @returns \c true if \c componentName exists.
  */
 static bool
 ComponentExists(std::string componentName)
@@ -432,7 +432,7 @@ ComponentExists(std::string componentName)
 }
 
 /**
- * \ingroup logging
+ * @ingroup logging
  * Parse the \c NS_LOG environment variable.
  * This is private to the logging implementation.
  */
@@ -453,28 +453,30 @@ CheckEnvironmentVariables()
                 << "\" in env variable NS_LOG, see above for a list of valid components");
         }
 
-        // We have a valid component or wildcard, check the flags
-        if (!value.empty())
+        // No valid component or wildcard
+        if (value.empty())
         {
-            // Check the flags present in value
-            StringVector flags = SplitString(value, "|");
-            for (const auto& flag : flags)
+            continue;
+        }
+
+        // We have a valid component or wildcard, check the flags present in value
+        StringVector flags = SplitString(value, "|");
+        for (const auto& flag : flags)
+        {
+            // Handle wild cards
+            if (flag == "*" || flag == "**")
             {
-                // Handle wild cards
-                if (flag == "*" || flag == "**")
-                {
-                    continue;
-                }
-                bool ok = LOG_LABEL_LEVELS.find(flag) != LOG_LABEL_LEVELS.end();
-                if (!ok)
-                {
-                    NS_FATAL_ERROR("Invalid log level \""
-                                   << flag << "\" in env variable NS_LOG for component name "
-                                   << component);
-                }
-            } // for flag
-        }     // !value.empty
-    }         // for component
+                continue;
+            }
+            bool ok = LOG_LABEL_LEVELS.find(flag) != LOG_LABEL_LEVELS.end();
+            if (!ok)
+            {
+                NS_FATAL_ERROR("Invalid log level \""
+                               << flag << "\" in env variable NS_LOG for component name "
+                               << component);
+            }
+        } // for flag
+    }     // for component
 }
 
 void
@@ -482,7 +484,7 @@ LogSetTimePrinter(TimePrinter printer)
 {
     g_logTimePrinter = printer;
     /**
-     * \internal
+     * @internal
      * This is the only place where we are more or less sure that all log variables
      * are registered. See \bugid{1082} for details.
      */

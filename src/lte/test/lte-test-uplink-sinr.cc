@@ -13,12 +13,12 @@
 #include "lte-test-ue-phy.h"
 
 #include "ns3/log.h"
+#include "ns3/lte-chunk-processor.h"
+#include "ns3/lte-helper.h"
 #include "ns3/lte-phy-tag.h"
 #include "ns3/lte-spectrum-signal-parameters.h"
 #include "ns3/simulator.h"
 #include "ns3/spectrum-test.h"
-#include <ns3/lte-chunk-processor.h>
-#include <ns3/lte-helper.h>
 
 using namespace ns3;
 
@@ -112,7 +112,7 @@ LteUplinkSinrTestSuite::LteUplinkSinrTestSuite()
 }
 
 /**
- * \ingroup lte-test
+ * @ingroup lte-test
  * Static variable for test initialization
  */
 static LteUplinkSinrTestSuite lteUplinkSinrTestSuite;
@@ -298,7 +298,7 @@ LteUplinkDataSinrTestCase::DoRun()
     ip4->cellId = pbCellId[5];
     Simulator::Schedule(ti4, &LteSpectrumPhy::StartRx, ulPhy, ip4);
 
-    Simulator::Stop(Seconds(5.0));
+    Simulator::Stop(Seconds(5));
     Simulator::Run();
 
     NS_LOG_INFO("Data Frame - Theoretical SINR: " << *m_expectedSinr);
@@ -474,7 +474,7 @@ LteUplinkSrsSinrTestCase::DoRun()
     ip4->cellId = pbCellId[5];
     Simulator::Schedule(ti4, &LteSpectrumPhy::StartRx, ulPhy, ip4);
 
-    Simulator::Stop(Seconds(5.0));
+    Simulator::Stop(Seconds(5));
     Simulator::Run();
 
     NS_ASSERT_MSG(m_actualSinr, "no actual SINR reported");

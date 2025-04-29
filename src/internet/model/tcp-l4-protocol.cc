@@ -56,9 +56,6 @@ NS_OBJECT_ENSURE_REGISTERED(TcpL4Protocol);
         std::clog << " [node " << m_node->GetId() << "] ";                                         \
     }
 
-/* see http://www.iana.org/assignments/protocol-numbers */
-const uint8_t TcpL4Protocol::PROT_NUMBER = 6;
-
 TypeId
 TcpL4Protocol::GetTypeId()
 {
@@ -587,7 +584,7 @@ TcpL4Protocol::SendPacketV4(Ptr<Packet> packet,
     // XXX outgoingHeader cannot be logged
 
     TcpHeader outgoingHeader = outgoing;
-    /** \todo UrgentPointer */
+    /** @todo UrgentPointer */
     /* outgoingHeader.SetUrgentPointer (0); */
     if (Node::ChecksumEnabled())
     {
@@ -646,7 +643,7 @@ TcpL4Protocol::SendPacketV6(Ptr<Packet> packet,
                            oif));
     }
     TcpHeader outgoingHeader = outgoing;
-    /** \todo UrgentPointer */
+    /** @todo UrgentPointer */
     /* outgoingHeader.SetUrgentPointer (0); */
     if (Node::ChecksumEnabled())
     {

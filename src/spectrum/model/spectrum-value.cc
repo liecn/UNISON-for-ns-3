@@ -9,8 +9,8 @@
 
 #include "spectrum-value.h"
 
-#include <ns3/log.h>
-#include <ns3/math.h>
+#include "ns3/log.h"
+#include "ns3/math.h"
 
 namespace ns3
 {
@@ -374,10 +374,10 @@ SpectrumValue::Copy() const
 }
 
 /**
- * \brief Output stream operator
- * \param os output stream
- * \param pvf the SpectrumValue to print
- * \return an output stream
+ * @brief Output stream operator
+ * @param os output stream
+ * @param pvf the SpectrumValue to print
+ * @return an output stream
  */
 std::ostream&
 operator<<(std::ostream& os, const SpectrumValue& pvf)

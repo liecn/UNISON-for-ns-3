@@ -13,7 +13,6 @@
 #include "ns3/abort.h"
 #include "ns3/attribute-construction-list.h"
 #include "ns3/boolean.h"
-#include "ns3/config-store-config.h"
 #include "ns3/enum.h"
 #include "ns3/log.h"
 #include "ns3/simulator.h"
@@ -26,7 +25,6 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <unistd.h>
 
 namespace ns3
 {
@@ -69,7 +67,7 @@ ConfigStore::GetTypeId()
                 BooleanValue(true),
                 MakeBooleanAccessor(&ConfigStore::SetSaveDeprecated),
                 MakeBooleanChecker(),
-                TypeId::OBSOLETE,
+                TypeId::SupportLevel::OBSOLETE,
                 "OBSOLETE since ns-3.43 as it is no longer needed; deprecated attributes are saved "
                 "only if their value differs from their respective original initial value");
     return tid;

@@ -14,12 +14,12 @@
 #include "lte-control-messages.h"
 #include "lte-radio-bearer-tag.h"
 
-#include <ns3/log.h>
-#include <ns3/packet-burst.h>
-#include <ns3/packet.h>
-#include <ns3/pointer.h>
-#include <ns3/random-variable-stream.h>
-#include <ns3/simulator.h>
+#include "ns3/log.h"
+#include "ns3/packet-burst.h"
+#include "ns3/packet.h"
+#include "ns3/pointer.h"
+#include "ns3/random-variable-stream.h"
+#include "ns3/simulator.h"
 
 namespace ns3
 {
@@ -39,7 +39,7 @@ class UeMemberLteUeCmacSapProvider : public LteUeCmacSapProvider
     /**
      * Constructor
      *
-     * \param mac the UE MAC
+     * @param mac the UE MAC
      */
     UeMemberLteUeCmacSapProvider(LteUeMac* mac);
 
@@ -130,7 +130,7 @@ class UeMemberLteMacSapProvider : public LteMacSapProvider
     /**
      * Constructor
      *
-     * \param mac the UE MAC
+     * @param mac the UE MAC
      */
     UeMemberLteMacSapProvider(LteUeMac* mac);
 
@@ -168,7 +168,7 @@ class UeMemberLteUePhySapUser : public LteUePhySapUser
     /**
      * Constructor
      *
-     * \param mac the UE MAC
+     * @param mac the UE MAC
      */
     UeMemberLteUePhySapUser(LteUeMac* mac);
 
@@ -227,7 +227,7 @@ LteUeMac::GetTypeId()
 
 LteUeMac::LteUeMac()
     : m_bsrPeriodicity(MilliSeconds(1)), // ideal behavior
-      m_bsrLast(MilliSeconds(0)),
+      m_bsrLast(),
       m_freshUlBsr(false),
       m_harqProcessId(0),
       m_rnti(0),
@@ -854,7 +854,7 @@ LteUeMac::DoReceiveLteControlMessage(Ptr<LteControlMessage> msg)
                     if (it->rapId == m_raPreambleId) // RAR is for me
                     {
                         RecvRaResponse(it->rarPayload);
-                        /// \todo RRC generates the RecvRaResponse messaged
+                        /// @todo RRC generates the RecvRaResponse messaged
                         /// for avoiding holes in transmission at PHY layer
                         /// (which produce erroneous UL CQI evaluation)
                     }
