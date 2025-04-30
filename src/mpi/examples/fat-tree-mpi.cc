@@ -554,10 +554,10 @@ main(int argc, char* argv[])
     uint32_t nAgg = conf::k / 2;  // number of aggregation switch in a pod
     uint32_t nEdge = conf::k / 2; // number of edge switch in a pod
     uint32_t nHost = conf::k / 2; // number of hosts under a switch
-    NodeContainer core[nGroup];
-    NodeContainer agg[nPod];
-    NodeContainer edge[nPod];
-    NodeContainer host[nPod][nEdge];
+    NodeContainer core = new NodeContainer[nGroup];
+    NodeContainer agg = new NodeContainer[nPod];
+    NodeContainer edge = new NodeContainer[nPod];
+    NodeContainer host = new NodeContainer[nPod * nEdge];
 
     // create nodes
     for (uint32_t i = 0; i < nGroup; i++)
@@ -577,10 +577,10 @@ main(int argc, char* argv[])
     {
         for (uint32_t j = 0; j < nEdge; j++)
         {
-            host[i][j].Create(nHost, i % conf::system);
+            host[i * nEdge + j].Create(nHost, i % conf::system);
             for (uint32_t k = 0; k < nHost; k++)
             {
-                hosts[hostId++] = host[i][j].Get(k);
+                hosts[hostId++] = host[i * nEdge + j].Get(k);
             }
         }
     }
@@ -600,7 +600,7 @@ main(int argc, char* argv[])
             addr.SetBase(subnet.c_str(), "255.255.255.0");
             for (uint32_t k = 0; k < nHost; k++)
             {
-                Ptr<Node> node = host[i][j].Get(k);
+                Ptr<Node> node = host[i * nEdge + j].Get(k);
                 NetDeviceContainer ndc = p2p.Install(NodeContainer(node, edge[i].Get(j)));
                 red.Install(ndc.Get(1));
                 addrs[node] = addr.Assign(ndc).GetAddress(0);
