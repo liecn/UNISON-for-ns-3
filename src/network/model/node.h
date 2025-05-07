@@ -26,6 +26,9 @@
 #include "ns3/ptr.h"
 
 #include <vector>
+/* Modification */
+#include "ns3/custom-header.h"
+/* Modification */
 
 namespace ns3
 {
@@ -135,6 +138,9 @@ class Node : public Object
      * \param index the index of the requested Application
      * \returns the requested Application.
      */
+    /* Modification */
+    void DeleteApplication (Ptr<Application> application);
+    /* Modification */
     Ptr<Application> GetApplication(uint32_t index) const;
 
     /**
@@ -219,6 +225,14 @@ class Node : public Object
      */
     static bool ChecksumEnabled();
 
+    /* Modification */
+  //yibo
+  uint32_t GetNodeType();
+  
+  // vamsi
+  void SetNodeType(uint32_t type){m_node_type=type;}
+  /* Modification */
+
   protected:
     /**
      * The dispose method. Subclasses must override this method
@@ -228,7 +242,12 @@ class Node : public Object
     void DoDispose() override;
     void DoInitialize() override;
 
-  private:
+  // private:
+    /* Modification */
+  //yibo
+  uint32_t m_node_type=0;
+// private:
+/* Modification */
     /**
      * \brief Notifies all the DeviceAdditionListener about the new device added.
      * \param device the added device to notify.
@@ -310,6 +329,12 @@ class Node : public Object
     std::vector<Ptr<Application>> m_applications;         //!< Applications associated to this node
     ProtocolHandlerList m_handlers;                       //!< Protocol handlers in the node
     DeviceAdditionListenerList m_deviceAdditionListeners; //!< Device addition listeners in the node
+    /* Modification */
+  // Yuliang
+public:
+  virtual bool SwitchReceiveFromDevice(Ptr<NetDevice> device, Ptr<Packet> packet, CustomHeader &ch);
+  virtual void SwitchNotifyDequeue(uint32_t ifIndex, uint32_t qIndex, Ptr<Packet> p);
+/* Modification */
 };
 
 } // namespace ns3

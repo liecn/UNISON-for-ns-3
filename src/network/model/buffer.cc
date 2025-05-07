@@ -269,7 +269,8 @@ Buffer::operator=(const Buffer& o)
     if (m_data != o.m_data)
     {
         // not assignment to self.
-        if (m_data->m_count-- == 1)
+        m_data->m_count--;
+        if (m_data->m_count == 0)
         {
             Recycle(m_data);
         }
@@ -291,7 +292,8 @@ Buffer::~Buffer()
     NS_LOG_FUNCTION(this);
     NS_ASSERT(CheckInternalState());
     g_recommendedStart = std::max(g_recommendedStart, m_maxZeroAreaStart);
-    if (m_data->m_count-- == 1)
+    m_data->m_count--;
+    if (m_data->m_count == 0)
     {
         Recycle(m_data);
     }
@@ -334,7 +336,8 @@ Buffer::AddAtStart(uint32_t start)
         uint32_t newSize = GetInternalSize() + start;
         Buffer::Data* newData = Buffer::Create(newSize);
         memcpy(newData->m_data + start, m_data->m_data + m_start, GetInternalSize());
-        if (m_data->m_count-- == 1)
+        m_data->m_count--;
+        if (m_data->m_count == 0)
         {
             Buffer::Recycle(m_data);
         }
@@ -379,7 +382,8 @@ Buffer::AddAtEnd(uint32_t end)
         uint32_t newSize = GetInternalSize() + end;
         Buffer::Data* newData = Buffer::Create(newSize);
         memcpy(newData->m_data, m_data->m_data + m_start, GetInternalSize());
-        if (m_data->m_count-- == 1)
+        m_data->m_count--;
+        if (m_data->m_count == 0)
         {
             Buffer::Recycle(m_data);
         }
@@ -1223,5 +1227,11 @@ Buffer::Iterator::GetWriteErrorMessage() const
     }
     return str;
 }
+
+/* Modification */
+uint8_t* Buffer::GetBuffer() const{
+  return m_data->m_data + m_start;
+}
+/* Modification */
 
 } // namespace ns3
