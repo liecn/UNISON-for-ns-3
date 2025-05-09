@@ -518,7 +518,7 @@ void PrintProgress(Time interval)
 
 int main(int argc, char *argv[])
 {
-    MtpInterface::Enable(64);
+    MtpInterface::Enable();
     clock_t begint, endt, setup_start, topo_start, topo_end, routes_start, routes_end;
     begint = setup_start = clock();
     bool powertcp = false;
@@ -1416,6 +1416,7 @@ int main(int argc, char *argv[])
     std::cout << "Running Simulation.\n";
     fflush(stdout);
     NS_LOG_INFO("Run Simulation.");
+    clock_t sim_start = clock();
     Simulator::Schedule(MilliSeconds(log_time_interval), &PrintProgress, MilliSeconds(log_time_interval));
     Simulator::Stop(Seconds(simulator_stop_time));
     Simulator::Run();
@@ -1427,13 +1428,15 @@ int main(int argc, char *argv[])
     double setup_time = (double)(topo_start - setup_start) / CLOCKS_PER_SEC;
     double topo_time = (double)(topo_end - topo_start) / CLOCKS_PER_SEC;
     double route_time = (double)(routes_end - routes_start) / CLOCKS_PER_SEC;
-    double sim_time = (double)(endt - routes_end) / CLOCKS_PER_SEC;
+    double post_routing_setup_time = (double)(sim_start - routes_end) / CLOCKS_PER_SEC;
+    double sim_time = (double)(endt - sim_start) / CLOCKS_PER_SEC;
     double total_time = (double)(endt - begint) / CLOCKS_PER_SEC;
     
     std::cout << "Performance summary:" << std::endl
               << "  Setup time: " << setup_time << "s" << std::endl
               << "  Topology creation: " << topo_time << "s" << std::endl
               << "  Route calculation: " << route_time << "s" << std::endl
+              << "  Post-routing setup: " << post_routing_setup_time << "s" << std::endl
               << "  Simulation time: " << sim_time << "s" << std::endl
               << "  Total run time: " << total_time << "s" << std::endl
               << "  Flows completed: " << g_total_flows_completed << "/" << flow_num << std::endl;
