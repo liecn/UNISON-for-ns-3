@@ -1385,4 +1385,22 @@ void RdmaHw::UpdateRateHpPint(Ptr<RdmaQueuePair> qp, Ptr<Packet> p, CustomHeader
 	}
 }
 
+void RdmaHw::ReserveTable(size_t size) {
+	// Reserve space in the routing table to avoid rehashing during setup
+	m_rtTable.reserve(size);
+}
+
+void RdmaHw::AddTableEntries(const std::vector<Ipv4Address>& dstAddrs, const std::vector<uint32_t>& interfaces) {
+	// Ensure vectors have same size
+	NS_ASSERT(dstAddrs.size() == interfaces.size());
+	
+	// Process all entries in batch
+	for (size_t i = 0; i < dstAddrs.size(); i++) {
+		uint32_t dip = dstAddrs[i].Get();
+		if (m_rtTable.find(dip) == m_rtTable.end())
+			m_rtTable[dip] = std::vector<int>();
+		m_rtTable[dip].push_back(interfaces[i]);
+	}
+}
+
 }

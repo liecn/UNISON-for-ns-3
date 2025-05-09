@@ -83,6 +83,10 @@ public:
 	void ClearTable();
 	void RedistributeQp();
 
+	// New batch processing methods for optimization
+	void ReserveTable(size_t size);
+	void AddTableEntries(const std::vector<Ipv4Address>& dstAddrs, const std::vector<uint32_t>& interfaces);
+
 	Ptr<Packet> GetNxtPacket(Ptr<RdmaQueuePair> qp); // get next packet to send, inc snd_nxt
 	void PktSent(Ptr<RdmaQueuePair> qp, Ptr<Packet> pkt, Time interframeGap);
 	void UpdateNextAvail(Ptr<RdmaQueuePair> qp, Time interframeGap, uint32_t pkt_size);

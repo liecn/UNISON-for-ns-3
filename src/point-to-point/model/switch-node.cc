@@ -391,4 +391,24 @@ int SwitchNode::log2apprx(int x, int b, int m, int l) {
 	return int(log2(x) * (1 << logres_shift(b, l)));
 }
 
+void
+SwitchNode::ReserveTable(size_t size) {
+    // Reserve space in the routing table to avoid rehashing during setup
+    m_rtTable.reserve(size);
+}
+
+void
+SwitchNode::AddTableEntries(const std::vector<Ipv4Address>& dstAddrs, const std::vector<uint32_t>& interfaces) {
+    // Ensure vectors have same size
+    NS_ASSERT(dstAddrs.size() == interfaces.size());
+    
+    // Process all entries in batch
+    for (size_t i = 0; i < dstAddrs.size(); i++) {
+        uint32_t dip = dstAddrs[i].Get();
+        if (m_rtTable.find(dip) == m_rtTable.end())
+            m_rtTable[dip] = std::vector<int>();
+        m_rtTable[dip].push_back(interfaces[i]);
+    }
+}
+
 } /* namespace ns3 */
