@@ -523,10 +523,11 @@ int main(int argc, char *argv[])
     bool powertcp = false;
     bool thetapowertcp = false;
 
-    // Enable UNISON with automatic thread selection - using max hardware threads
+    // Enable UNISON with optimized settings
     uint32_t maxThreads = std::thread::hardware_concurrency();
-    // Create same number of systems as threads for best performance
-    MtpInterface::Enable(maxThreads, maxThreads);  
+    // For dual-EPYC system, 16 systems is likely optimal (8 per NUMA node)
+    uint32_t systemCount = 16;
+    MtpInterface::Enable(maxThreads, systemCount);
     GlobalValue::Bind("SimulatorImplementationType", StringValue("ns3::MultithreadedSimulatorImpl"));
     
     // Log UNISON configuration
@@ -534,6 +535,7 @@ int main(int argc, char *argv[])
     std::cout << "------------------------" << std::endl;
     std::cout << "Systems configured: " << MtpInterface::GetSize() << " systems" << std::endl;
     std::cout << "Hardware concurrency available: " << maxThreads << " threads" << std::endl;
+    std::cout << "Threads per system: " << ((float)maxThreads/systemCount) << std::endl;
     std::cout << "------------------------\n" << std::endl;
 
     uint32_t bufferalgIngress = DT;
@@ -1027,31 +1029,41 @@ int main(int argc, char *argv[])
     // Start topology creation timing
     topo_start = clock();
 
-    // Node creation with UNISON system assignment
+    // Node creation with optimized UNISON system assignment
     std::vector<uint32_t> node_type(node_num, 0);
     for (uint32_t i = 0; i < switch_num; i++) {
         uint32_t sid;
         topof >> sid;
         node_type[sid] = 1;
     }
-
-    // Get total number of systems from UNISON
-    uint32_t total_systems = MtpInterface::GetSize();
-    uint32_t servers_start = 1;  // Systems start at 1 (0 is special)
-    uint32_t switches_start = total_systems / 2 + 1;
+    
+    // Pre-calculate rough topology distribution for better load balancing
+    uint32_t servers_per_system = (node_num - switch_num + systemCount/2 - 1) / (systemCount/2);
+    uint32_t switches_per_system = (switch_num + systemCount/2 - 1) / (systemCount/2);
+    
+    uint32_t server_count = 0;
+    uint32_t switch_count = 0;
     
     for (uint32_t i = 0; i < node_num; i++) {
         if (node_type[i] == 0) {
+            // Server nodes: distribute evenly across first half of systems
             Ptr<Node> server = CreateObject<Node>();
-            // Distribute servers across first half of systems
-            server->SetSystemId(servers_start + (i % (total_systems / 2)));  
+            uint32_t system_id = 1 + (server_count / servers_per_system);
+            // Don't exceed first half of systems
+            system_id = std::min(system_id, systemCount/2);
+            server->SetSystemId(system_id);
             n.Add(server);
+            server_count++;
         } else {
+            // Switch nodes: distribute evenly across second half of systems
             Ptr<SwitchNode> sw = CreateObject<SwitchNode>();
-            // Distribute switches across second half of systems
-            sw->SetSystemId(switches_start + (i % (total_systems / 2)));  
+            uint32_t system_id = 1 + (systemCount/2) + (switch_count / switches_per_system);
+            // Don't exceed total system count
+            system_id = std::min(system_id, systemCount);
+            sw->SetSystemId(system_id);
             sw->SetAttribute("EcnEnabled", BooleanValue(enable_qcn));
             n.Add(sw);
+            switch_count++;
         }
     }
 
