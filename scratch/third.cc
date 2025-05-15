@@ -518,11 +518,23 @@ void PrintProgress(Time interval)
 
 int main(int argc, char *argv[])
 {
-    MtpInterface::Enable();
     clock_t begint, endt, setup_start, topo_start, topo_end, routes_start, routes_end;
     begint = setup_start = clock();
     bool powertcp = false;
     bool thetapowertcp = false;
+
+    // Enable UNISON with automatic thread selection - using max hardware threads
+    uint32_t maxThreads = std::thread::hardware_concurrency();
+    // Create same number of systems as threads for best performance
+    MtpInterface::Enable(maxThreads, maxThreads);  
+    GlobalValue::Bind("SimulatorImplementationType", StringValue("ns3::MultithreadedSimulatorImpl"));
+    
+    // Log UNISON configuration
+    std::cout << "\nUNISON Configuration:" << std::endl;
+    std::cout << "------------------------" << std::endl;
+    std::cout << "Systems configured: " << MtpInterface::GetSize() << " systems" << std::endl;
+    std::cout << "Hardware concurrency available: " << maxThreads << " threads" << std::endl;
+    std::cout << "------------------------\n" << std::endl;
 
     uint32_t bufferalgIngress = DT;
     uint32_t bufferalgEgress = DT;
@@ -1015,23 +1027,31 @@ int main(int argc, char *argv[])
     // Start topology creation timing
     topo_start = clock();
 
-    // n.Create(node_num);
+    // Node creation with UNISON system assignment
     std::vector<uint32_t> node_type(node_num, 0);
-    for (uint32_t i = 0; i < switch_num; i++)
-    {
+    for (uint32_t i = 0; i < switch_num; i++) {
         uint32_t sid;
         topof >> sid;
         node_type[sid] = 1;
     }
-    for (uint32_t i = 0; i < node_num; i++)
-    {
-        if (node_type[i] == 0)
-            n.Add(CreateObject<Node>());
-        else
-        {
+
+    // Get total number of systems from UNISON
+    uint32_t total_systems = MtpInterface::GetSize();
+    uint32_t servers_start = 1;  // Systems start at 1 (0 is special)
+    uint32_t switches_start = total_systems / 2 + 1;
+    
+    for (uint32_t i = 0; i < node_num; i++) {
+        if (node_type[i] == 0) {
+            Ptr<Node> server = CreateObject<Node>();
+            // Distribute servers across first half of systems
+            server->SetSystemId(servers_start + (i % (total_systems / 2)));  
+            n.Add(server);
+        } else {
             Ptr<SwitchNode> sw = CreateObject<SwitchNode>();
-            n.Add(sw);
+            // Distribute switches across second half of systems
+            sw->SetSystemId(switches_start + (i % (total_systems / 2)));  
             sw->SetAttribute("EcnEnabled", BooleanValue(enable_qcn));
+            n.Add(sw);
         }
     }
 
@@ -1265,9 +1285,7 @@ int main(int argc, char *argv[])
             rdma->TraceConnectWithoutContext("QpDelivered", MakeBoundCallback(qp_delivered, fct_output));
         }
     }
-#endif
-
-    // set ACK priority on hosts
+#endif    // set ACK priority on hosts
     if (ack_high_prio) {
         RdmaEgressQueue::ack_q_idx = 0;
         for (uint32_t i = 0; i < node_num; i++){
@@ -1443,3 +1461,4 @@ int main(int argc, char *argv[])
     
     return 0;
 }
+
