@@ -200,82 +200,48 @@ NS_OBJECT_ENSURE_REGISTERED(QbbNetDevice);
 TypeId
 QbbNetDevice::GetTypeId(void)
 {
-	// Simplified TypeId when RDMA is disabled
-	if (g_disableRdmaProcessing) {
-		static TypeId tid = TypeId("ns3::QbbNetDevice")
-			.SetParent<PointToPointNetDevice>()
-			.AddConstructor<QbbNetDevice>()
-			.AddAttribute("QbbEnabled",
-				"Enable the generation of PAUSE packet.",
-				BooleanValue(true),
-				MakeBooleanAccessor(&QbbNetDevice::m_qbbEnabled),
-				MakeBooleanChecker())
-			.AddAttribute("QcnEnabled",
-				"Enable the generation of PAUSE packet.",
-				BooleanValue(false),
-				MakeBooleanAccessor(&QbbNetDevice::m_qcnEnabled),
-				MakeBooleanChecker())
-			.AddAttribute("PauseTime",
-				"Number of microseconds to pause upon congestion",
-				UintegerValue(5),
-				MakeUintegerAccessor(&QbbNetDevice::m_pausetime),
-				MakeUintegerChecker<uint32_t>())
-			.AddAttribute ("TxBeQueue",
-				"A queue to use as the transmit queue in the device.",
-				PointerValue (),
-				MakePointerAccessor (&QbbNetDevice::m_queue),
-				MakePointerChecker<Queue<Packet>>())
-			.AddTraceSource ("QbbEnqueue", "Enqueue a packet in the QbbNetDevice.",
-				MakeTraceSourceAccessor (&QbbNetDevice::m_traceEnqueue), "ns3::Packet::TracedCallback")
-			.AddTraceSource ("QbbDequeue", "Dequeue a packet in the QbbNetDevice.",
-				MakeTraceSourceAccessor (&QbbNetDevice::m_traceDequeue), "ns3::Packet::TracedCallback")
-			.AddTraceSource ("QbbDrop", "Drop a packet in the QbbNetDevice.",
-				MakeTraceSourceAccessor (&QbbNetDevice::m_traceDrop), "ns3::Packet::TracedCallback")
-			.AddTraceSource ("QbbPfc", "get a PFC packet. 0: resume, 1: pause",
-				MakeTraceSourceAccessor (&QbbNetDevice::m_tracePfc), "ns3::Packet::TracedCallback");
-		return tid;
-	}
-
-	// Standard TypeId with RDMA attributes
 	static TypeId tid = TypeId("ns3::QbbNetDevice")
-	                    .SetParent<PointToPointNetDevice>()
-	                    .AddConstructor<QbbNetDevice>()
-	                    .AddAttribute("QbbEnabled",
-	                                  "Enable the generation of PAUSE packet.",
-	                                  BooleanValue(true),
-	                                  MakeBooleanAccessor(&QbbNetDevice::m_qbbEnabled),
-	                                  MakeBooleanChecker())
-	                    .AddAttribute("QcnEnabled",
-	                                  "Enable the generation of PAUSE packet.",
-	                                  BooleanValue(false),
-	                                  MakeBooleanAccessor(&QbbNetDevice::m_qcnEnabled),
-	                                  MakeBooleanChecker())
-	                    .AddAttribute("PauseTime",
-	                                  "Number of microseconds to pause upon congestion",
-	                                  UintegerValue(5),
-	                                  MakeUintegerAccessor(&QbbNetDevice::m_pausetime),
-	                                  MakeUintegerChecker<uint32_t>())
-	                    .AddAttribute ("TxBeQueue",
-	                                   "A queue to use as the transmit queue in the device.",
-	                                   PointerValue (),
-	                                   MakePointerAccessor (&QbbNetDevice::m_queue),
-	                                   MakePointerChecker<Queue<Packet>>())
-	                    .AddAttribute ("RdmaEgressQueue",
-	                                   "A queue to use as the transmit queue in the device.",
-	                                   PointerValue (),
-	                                   MakePointerAccessor (&QbbNetDevice::m_rdmaEQ),
-	                                   MakePointerChecker<Object> ())
-	                    .AddTraceSource ("QbbEnqueue", "Enqueue a packet in the QbbNetDevice.",
-	                                     MakeTraceSourceAccessor (&QbbNetDevice::m_traceEnqueue), "ns3::Packet::TracedCallback")
-	                    .AddTraceSource ("QbbDequeue", "Dequeue a packet in the QbbNetDevice.",
-	                                     MakeTraceSourceAccessor (&QbbNetDevice::m_traceDequeue), "ns3::Packet::TracedCallback")
-	                    .AddTraceSource ("QbbDrop", "Drop a packet in the QbbNetDevice.",
-	                                     MakeTraceSourceAccessor (&QbbNetDevice::m_traceDrop), "ns3::Packet::TracedCallback")
-	                    .AddTraceSource ("RdmaQpDequeue", "A qp dequeue a packet.",
-	                                     MakeTraceSourceAccessor (&QbbNetDevice::m_traceQpDequeue), "ns3::Packet::TracedCallback")
-	                    .AddTraceSource ("QbbPfc", "get a PFC packet. 0: resume, 1: pause",
-	                                     MakeTraceSourceAccessor (&QbbNetDevice::m_tracePfc), "ns3::Packet::TracedCallback")
-	                    ;
+		.SetParent<PointToPointNetDevice>()
+		.AddConstructor<QbbNetDevice>()
+		.AddAttribute("QbbEnabled",
+			"Enable the generation of PAUSE packet.",
+			BooleanValue(true),
+			MakeBooleanAccessor(&QbbNetDevice::m_qbbEnabled),
+			MakeBooleanChecker())
+		.AddAttribute("QcnEnabled",
+			"Enable the generation of PAUSE packet.",
+			BooleanValue(false),
+			MakeBooleanAccessor(&QbbNetDevice::m_qcnEnabled),
+			MakeBooleanChecker())
+		.AddAttribute("PauseTime",
+			"Number of microseconds to pause upon congestion",
+			UintegerValue(5),
+			MakeUintegerAccessor(&QbbNetDevice::m_pausetime),
+			MakeUintegerChecker<uint32_t>())
+		.AddAttribute("TxBeQueue",
+			"A queue to use as the transmit queue in the device.",
+			PointerValue(),
+			MakePointerAccessor(&QbbNetDevice::m_queue),
+			MakePointerChecker<Queue<Packet>>())
+		.AddTraceSource("QbbEnqueue", "Enqueue a packet in the QbbNetDevice.",
+			MakeTraceSourceAccessor(&QbbNetDevice::m_traceEnqueue), "ns3::Packet::TracedCallback")
+		.AddTraceSource("QbbDequeue", "Dequeue a packet in the QbbNetDevice.",
+			MakeTraceSourceAccessor(&QbbNetDevice::m_traceDequeue), "ns3::Packet::TracedCallback")
+		.AddTraceSource("QbbDrop", "Drop a packet in the QbbNetDevice.",
+			MakeTraceSourceAccessor(&QbbNetDevice::m_traceDrop), "ns3::Packet::TracedCallback")
+		.AddTraceSource("QbbPfc", "get a PFC packet. 0: resume, 1: pause",
+			MakeTraceSourceAccessor(&QbbNetDevice::m_tracePfc), "ns3::Packet::TracedCallback");
+
+	// Add RDMA-specific attributes only when RDMA is enabled
+	if (!g_disableRdmaProcessing) {
+		tid.AddAttribute("RdmaEgressQueue",
+				"A queue to use as the transmit queue in the device.",
+				PointerValue(),
+				MakePointerAccessor(&QbbNetDevice::m_rdmaEQ),
+				MakePointerChecker<Object>())
+			.AddTraceSource("RdmaQpDequeue", "A qp dequeue a packet.",
+				MakeTraceSourceAccessor(&QbbNetDevice::m_traceQpDequeue), "ns3::Packet::TracedCallback");
+	}
 
 	return tid;
 }

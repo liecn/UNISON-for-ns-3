@@ -280,10 +280,8 @@ CheckT2QueueSize(Ptr<QueueDisc> queue)
 int
 main(int argc, char* argv[])
 {
-    // Disable RDMA processing first, before any initialization happens
-    SetRdmaProcessingEnabled(false);
     
-    MtpInterface::Enable (4);
+    MtpInterface::Enable ();
     std::string outputFilePath = ".";
     std::string tcpTypeId = "TcpDctcp";
     Time flowStartupWindow = Seconds(1);

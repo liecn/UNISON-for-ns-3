@@ -523,10 +523,14 @@ int main(int argc, char *argv[])
     bool powertcp = false;
     bool thetapowertcp = false;
 
+    // Configure RDMA - explicitly enable it for this simulation
+    ConfigureRdma(true);
+
     // Enable UNISON with optimized settings
     uint32_t maxThreads = std::thread::hardware_concurrency();
     // For dual-EPYC system, 16 systems is likely optimal (8 per NUMA node)
     uint32_t systemCount = 16;
+    // Enable MTP with optimized settings for RDMA workloads
     MtpInterface::Enable(maxThreads, systemCount);
     GlobalValue::Bind("SimulatorImplementationType", StringValue("ns3::MultithreadedSimulatorImpl"));
     
