@@ -59,7 +59,8 @@
 //  At time 16s, stop the second flow.
 
 // - Tracing of queues and packet receptions to file "dynamic-global-routing.tr"
-
+__attribute__((visibility("default")))
+bool g_disableRdmaProcessing = true;
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
 #include "ns3/csma-module.h"

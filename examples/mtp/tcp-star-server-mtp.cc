@@ -37,7 +37,8 @@
 //       ./ns3 run "tcp-star-server --ns3::OnOffApplication::PacketSize=500"
 // See the ns-3 tutorial for more info on the command line:
 // https://www.nsnam.org/docs/tutorial/html/index.html
-
+__attribute__((visibility("default")))
+bool g_disableRdmaProcessing = true;
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
 #include "ns3/internet-module.h"

@@ -51,7 +51,8 @@
 //
 // The congestion window and queue occupancy traces output by this program show
 // periodic drops every 10 seconds when BBR algorithm is in PROBE_RTT phase.
-
+__attribute__((visibility("default")))
+bool g_disableRdmaProcessing = true;
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
 #include "ns3/flow-monitor-module.h"

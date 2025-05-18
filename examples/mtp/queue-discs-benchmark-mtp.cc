@@ -52,7 +52,8 @@
 //
 // If you use an AQM as queue disc on the bottleneck netdevices, you can observe that the ping Rtt
 // decrease. A further decrease can be observed when you enable BQL.
-
+__attribute__((visibility("default")))
+bool g_disableRdmaProcessing = true;
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
 #include "ns3/flow-monitor-module.h"

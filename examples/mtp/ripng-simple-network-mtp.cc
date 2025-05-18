@@ -48,7 +48,8 @@
 // 3) nothing, when the Echo Request has been received by the destination but
 //    the Echo Reply is unable to reach the sender.
 // Examining the .pcap files with Wireshark can confirm this effect.
-
+__attribute__((visibility("default")))
+bool g_disableRdmaProcessing = true;
 #include "ns3/core-module.h"
 #include "ns3/internet-apps-module.h"
 #include "ns3/internet-module.h"

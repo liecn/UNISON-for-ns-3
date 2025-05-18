@@ -77,7 +77,8 @@
 // was enabled. In future, one could try and incorporate models such as
 // TCP Prague and ACK-filtering, which may show a stronger performance
 // impact for TCP pacing.
-
+__attribute__((visibility("default")))
+bool g_disableRdmaProcessing = true;
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
 #include "ns3/flow-monitor-module.h"

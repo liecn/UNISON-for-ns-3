@@ -20,7 +20,8 @@
  *   Demonstrates dissemination of multicast packets across a mesh
  *   network to all nodes over multiple hops.
  */
-
+__attribute__((visibility("default")))
+bool g_disableRdmaProcessing = true;
 #include "ns3/boolean.h"
 #include "ns3/config.h"
 #include "ns3/data-rate.h"

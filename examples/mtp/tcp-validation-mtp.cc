@@ -143,7 +143,8 @@
 //    - cwnd decreases to 173 segments at 5.7939 seconds
 //    - cwnd reaches another local maxima around 14.3477 seconds of 236 segments
 //    - cwnd reaches a second maximum around 18.064 seconds of 234 segments
-
+__attribute__((visibility("default")))
+bool g_disableRdmaProcessing = true;
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
 #include "ns3/internet-apps-module.h"
