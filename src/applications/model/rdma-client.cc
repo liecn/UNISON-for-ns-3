@@ -49,7 +49,6 @@ NS_OBJECT_ENSURE_REGISTERED (RdmaClient);
 TypeId
 RdmaClient::GetTypeId (void)
 {
-  // If RDMA is globally disabled, don't register anything
   if (g_disableRdmaProcessing) {
     static TypeId tid = TypeId("ns3::RdmaClient")
       .SetParent<Application>();
@@ -158,11 +157,6 @@ void RdmaClient::DoDispose (void)
 void RdmaClient::StartApplication (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
-  
-  // Skip all RDMA initialization if disabled
-  if (g_disableRdmaProcessing)
-    return;
-    
   // get RDMA driver and add up queue pair
   Ptr<Node> node = GetNode();
   Ptr<RdmaDriver> rdma = node->GetObject<RdmaDriver>();

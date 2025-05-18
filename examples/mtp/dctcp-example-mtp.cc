@@ -89,7 +89,8 @@
 // the default results show that DCTCP is able to achieve high link
 // utilization and low queueing delay and fairness across competing flows
 // sharing the same path.
-
+__attribute__((visibility("default")))
+bool g_disableRdmaProcessing = true;
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
 #include "ns3/internet-module.h"
@@ -280,8 +281,7 @@ CheckT2QueueSize(Ptr<QueueDisc> queue)
 int
 main(int argc, char* argv[])
 {
-    
-    MtpInterface::Enable ();
+    MtpInterface::Enable (4);
     std::string outputFilePath = ".";
     std::string tcpTypeId = "TcpDctcp";
     Time flowStartupWindow = Seconds(1);
