@@ -231,18 +231,6 @@ QbbNetDevice::GetTypeId(void)
 			MakeTraceSourceAccessor(&QbbNetDevice::m_traceDrop), "ns3::Packet::TracedCallback")
 		.AddTraceSource("QbbPfc", "get a PFC packet. 0: resume, 1: pause",
 			MakeTraceSourceAccessor(&QbbNetDevice::m_tracePfc), "ns3::Packet::TracedCallback");
-
-	// Add RDMA-specific attributes only when RDMA is enabled
-	if (!g_disableRdmaProcessing) {
-		tid.AddAttribute("RdmaEgressQueue",
-				"A queue to use as the transmit queue in the device.",
-				PointerValue(),
-				MakePointerAccessor(&QbbNetDevice::m_rdmaEQ),
-				MakePointerChecker<Object>())
-			.AddTraceSource("RdmaQpDequeue", "A qp dequeue a packet.",
-				MakeTraceSourceAccessor(&QbbNetDevice::m_traceQpDequeue), "ns3::Packet::TracedCallback");
-	}
-
 	return tid;
 }
 
@@ -251,18 +239,13 @@ QbbNetDevice::QbbNetDevice()
 	NS_LOG_FUNCTION(this);
 	m_ecn_source = new std::vector<ECNAccount>;
 	
-	// Only create RDMA components if RDMA processing is enabled
-	if (!g_disableRdmaProcessing) {
-		m_rdmaEQ = CreateObject<RdmaEgressQueue>();
-		m_rdmaEQ->qb_dev = this;
-	}
+	m_rdmaEQ = CreateObject<RdmaEgressQueue>();
+	m_rdmaEQ->qb_dev = this;
 
 	for (uint32_t i = 0; i < qCnt; i++) {
 		m_paused[i] = false;
 		dummy_paused[i] = false;
-		if (!g_disableRdmaProcessing && m_rdmaEQ) {
-			m_rdmaEQ->dummy_paused[i] = dummy_paused[i];
-		}
+		m_rdmaEQ->dummy_paused[i] = dummy_paused[i];
 	}
 	hostDequeueIndex = 0;
 }
@@ -333,40 +316,6 @@ QbbNetDevice::DequeueAndTransmit(void)
 	if (!m_linkUp) return; // if link is down, return
 	if (m_txMachineState == BUSY) return;	// Quit if channel busy
 	
-	// Fast path for disabled RDMA - only handle regular packets
-	if (g_disableRdmaProcessing || m_node->GetNodeType() != 0) {
-		Ptr<Packet> p = m_queue->DequeueRR(m_paused);
-		if (p != 0) {
-			m_snifferTrace(p);
-			m_promiscSnifferTrace(p);
-			
-			if (m_node->GetNodeType() > 0) { // switch
-				Ipv4Header h;
-				Ptr<Packet> packet = p->Copy();
-				uint16_t protocol = 0;
-				ProcessHeader(packet, protocol);
-				packet->RemoveHeader(h);
-				InterfaceTag t;
-				uint32_t qIndex = m_queue->GetLastQueue();
-				if (qIndex == 0) { //this is a pause or cnp, send it immediately!
-					m_node->SwitchNotifyDequeue(m_ifIndex, qIndex, p);
-					p->RemovePacketTag(t);
-				} else {
-					m_node->SwitchNotifyDequeue(m_ifIndex, qIndex, p);
-					p->RemovePacketTag(t);
-				}
-			}
-			
-			m_traceDequeue(p, m_queue->GetLastQueue());
-			TransmitStart(p);
-			numTxBytes += p->GetSize();
-			totalBytesSent += p->GetSize();
-			return;
-		}
-		return;
-	}
-	
-	// RDMA enabled path - original code
 	Ptr<Packet> p;
 	if (m_node->GetNodeType() == 0) {
 		int qIndex = m_rdmaEQ->GetNextQindex(m_paused);
@@ -583,10 +532,7 @@ QbbNetDevice::Receive (Ptr<Packet> packet)
 				m_rxCallback (this, packet, prot, GetRemote ());
 			}
 			else {
-				// Skip RDMA processing if disabled
-				if (!g_disableRdmaProcessing && !m_rdmaReceiveCb.IsNull()) {
-					ret = m_rdmaReceiveCb(packet, ch);
-				}
+				ret = m_rdmaReceiveCb(packet, ch);
 			}
 			// TODO we may based on the ret do something
 		}
@@ -626,9 +572,7 @@ bool QbbNetDevice::Send(Ptr<Packet> packet, const Address &dest, uint16_t protoc
 	AddHeader (packet, protocolNumber);
 	m_macTxTrace (packet);
 	
-	// Use queue index 0 if RDMA is disabled
-	uint32_t qIndex = (g_disableRdmaProcessing || m_rdmaEQ == 0) ? 0 : m_rdmaEQ->tcpip_q_idx;
-	m_queue->Enqueue (packet, qIndex);
+	m_queue->Enqueue (packet, m_rdmaEQ->tcpip_q_idx);
 	DequeueAndTransmit();
 	return true;
 }
@@ -681,25 +625,13 @@ bool QbbNetDevice::IsQbb(void) const {
 }
 
 void QbbNetDevice::NewQp(Ptr<RdmaQueuePair> qp) {
-	// Skip if RDMA processing is disabled
-	if (g_disableRdmaProcessing)
-		return;
-		
 	qp->m_nextAvail = Simulator::Now();
 	DequeueAndTransmit();
 }
 void QbbNetDevice::ReassignedQp(Ptr<RdmaQueuePair> qp) {
-	// Skip if RDMA processing is disabled
-	if (g_disableRdmaProcessing)
-		return;
-		
 	DequeueAndTransmit();
 }
 void QbbNetDevice::TriggerTransmit(void) {
-	// Skip if RDMA processing is disabled
-	if (g_disableRdmaProcessing)
-		return;
-		
 	DequeueAndTransmit();
 }
 
@@ -717,10 +649,6 @@ Ptr<RdmaEgressQueue> QbbNetDevice::GetRdmaQueue() {
 }
 
 void QbbNetDevice::RdmaEnqueueHighPrioQ(Ptr<Packet> p) {
-	// Skip if RDMA processing is disabled
-	if (g_disableRdmaProcessing || m_rdmaEQ == 0)
-		return;
-		
 	m_traceEnqueue(p, 0);
 	m_rdmaEQ->EnqueueHighPrioQ(p);
 }
@@ -728,14 +656,11 @@ void QbbNetDevice::RdmaEnqueueHighPrioQ(Ptr<Packet> p) {
 void QbbNetDevice::TakeDown() {
 	// TODO: delete packets in the queue, set link down
 	if (m_node->GetNodeType() == 0) {
-		// Skip RDMA cleanup if RDMA processing is disabled
-		if (!g_disableRdmaProcessing && m_rdmaEQ != 0) {
-			// clean the high prio queue
-			m_rdmaEQ->CleanHighPrio(m_traceDrop);
-			// notify driver/RdmaHw that this link is down
-			if (!m_rdmaLinkDownCb.IsNull())
-				m_rdmaLinkDownCb(this);
-		}
+		// clean the high prio queue
+		m_rdmaEQ->CleanHighPrio(m_traceDrop);
+		// notify driver/RdmaHw that this link is down
+		if (!m_rdmaLinkDownCb.IsNull())
+			m_rdmaLinkDownCb(this);
 	} else { // switch
 		// clean the queue
 		for (uint32_t i = 0; i < qCnt; i++)

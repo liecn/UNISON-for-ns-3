@@ -29,10 +29,8 @@
 #include "ns3/ipv4-header.h"
 #include "ns3/udp-header.h"
 #include "ns3/rdma-queue-pair.h"
-#include "ns3/rdma.h"
 #include <vector>
 #include<map>
-// #include <ns3/rdma.h>
 // #define ENABLE_QP 1
 
 namespace ns3 {
