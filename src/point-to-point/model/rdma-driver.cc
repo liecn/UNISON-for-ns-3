@@ -1,4 +1,5 @@
 #include "rdma-driver.h"
+#include "ns3/rdma.h"
 
 namespace ns3 {
 
@@ -7,6 +8,13 @@ namespace ns3 {
  **********************/
 TypeId RdmaDriver::GetTypeId (void)
 {
+	// If RDMA is globally disabled, return a minimal TypeId
+	if (g_disableRdmaProcessing) {
+		static TypeId tid = TypeId ("ns3::RdmaDriver")
+			.SetParent<Object>();
+		return tid;
+	}
+
 	static TypeId tid = TypeId ("ns3::RdmaDriver")
 		.SetParent<Object> ()
 		.AddTraceSource ("QpComplete", "A qp completes.",
@@ -21,6 +29,10 @@ RdmaDriver::RdmaDriver(){
 }
 
 void RdmaDriver::Init(void){
+	// Skip initialization if RDMA processing is disabled
+	if (g_disableRdmaProcessing)
+		return;
+
 	Ptr<Ipv4> ipv4 = m_node->GetObject<Ipv4> ();
 	#if 0
 	m_rdma->m_nic.resize(ipv4->GetNInterfaces());
@@ -64,10 +76,18 @@ void RdmaDriver::SetRdmaHw(Ptr<RdmaHw> rdma){
 }
 
 void RdmaDriver::AddQueuePair(uint64_t size, uint16_t pg, Ipv4Address sip, Ipv4Address dip, uint16_t sport, uint16_t dport, uint32_t win, uint64_t baseRtt, Callback<void> notifyAppFinish,Time stopTime){
+	// Skip if RDMA processing is disabled
+	if (g_disableRdmaProcessing)
+		return;
+		
 	m_rdma->AddQueuePair(size, pg, sip, dip, sport, dport, win, baseRtt, notifyAppFinish,stopTime);
 }
 
 void RdmaDriver::AddQueuePair(uint32_t flowId, uint64_t size, uint16_t pg, Ipv4Address sip, Ipv4Address dip, uint16_t sport, uint16_t dport, uint32_t win, uint64_t baseRtt, Callback<void> notifyAppFinish){
+	// Skip if RDMA processing is disabled
+	if (g_disableRdmaProcessing)
+		return;
+		
 	m_rdma->AddQueuePair(flowId, size, pg, sip, dip, sport, dport, win, baseRtt, notifyAppFinish);
 }
 

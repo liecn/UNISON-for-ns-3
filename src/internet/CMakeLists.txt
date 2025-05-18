@@ -79,6 +79,7 @@ set(source_files
     model/ipv6.cc
     model/loopback-net-device.cc
     model/ndisc-cache.cc
+    model/rdma.cc
     model/rip-header.cc
     model/rip.cc
     model/ripng-header.cc

@@ -97,6 +97,7 @@
 #include "ns3/network-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/traffic-control-module.h"
+#include "ns3/rdma.h"
 
 #include <iomanip>
 #include <iostream>
@@ -279,6 +280,9 @@ CheckT2QueueSize(Ptr<QueueDisc> queue)
 int
 main(int argc, char* argv[])
 {
+    // Disable RDMA processing first, before any initialization happens
+    SetRdmaProcessingEnabled(false);
+    
     MtpInterface::Enable (4);
     std::string outputFilePath = ".";
     std::string tcpTypeId = "TcpDctcp";

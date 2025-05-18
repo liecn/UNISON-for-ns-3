@@ -9,6 +9,7 @@
 #include "ns3/data-rate.h"
 #include "ns3/pointer.h"
 #include "ns3/flow-size-tag.h"
+#include "ns3/rdma.h"
 #include "rdma-hw.h"
 #include "ppp-header.h"
 #include "qbb-header.h"
@@ -20,6 +21,13 @@ namespace ns3 {
 
 TypeId RdmaHw::GetTypeId (void)
 {
+	if (g_disableRdmaProcessing) {
+		std::cout << "RdmaHw is disabled" << std::endl;
+		static TypeId tid = TypeId ("ns3::RdmaHw")
+	                    .SetParent<Object> ();
+		return tid;
+	}
+
 	static TypeId tid = TypeId ("ns3::RdmaHw")
 	                    .SetParent<Object> ()
 	                    .AddAttribute("MinRate",
@@ -189,12 +197,24 @@ TypeId RdmaHw::GetTypeId (void)
 }
 
 RdmaHw::RdmaHw() {
+	// Only initialize if not disabled
+	if (g_disableRdmaProcessing) {
+		return;
+	}
 }
 
 void RdmaHw::SetNode(Ptr<Node> node) {
+	if (g_disableRdmaProcessing) {
+		return;
+	}
 	m_node = node;
 }
 void RdmaHw::Setup(QpCompleteCallback cb) {
+	// Skip all processing if RDMA is globally disabled
+	if (g_disableRdmaProcessing) {
+		return;
+	}
+	
 	for (uint32_t i = 0; i < m_nic.size(); i++) {
 		Ptr<QbbNetDevice> dev = m_nic[i].dev;
 		if (dev == NULL)
@@ -250,6 +270,11 @@ Ptr<RdmaQueuePair> RdmaHw::GetQp(uint32_t dip, uint16_t sport, uint16_t pg) {
 	return NULL;
 }
 void RdmaHw::AddQueuePair(uint64_t size, uint16_t pg, Ipv4Address sip, Ipv4Address dip, uint16_t sport, uint16_t dport, uint32_t win, uint64_t baseRtt, Callback<void> notifyAppFinish, Time stopTime) {
+	// Skip if RDMA processing is disabled
+	if (g_disableRdmaProcessing) {
+		return;
+	}
+	
 	// create qp
 	Ptr<RdmaQueuePair> qp = CreateObject<RdmaQueuePair>(pg, sip, dip, sport, dport);
 	qp->SetSize(size);
