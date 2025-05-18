@@ -43,13 +43,18 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RdmaClient");
+NS_OBJECT_ENSURE_REGISTERED (RdmaClient);
 
-// Static variable to track whether the TypeId has already been registered
-static bool typeIdRegistered = false;
 
 TypeId
 RdmaClient::GetTypeId (void)
 {
+  // If RDMA is globally disabled, don't register anything
+  if (g_disableRdmaProcessing) {
+    static TypeId tid = TypeId("ns3::RdmaClient")
+      .SetParent<Application>();
+    return tid;
+  }
   // Create a static TypeId variable that will persist
   static TypeId tid = TypeId ("ns3::RdmaClient")
     .SetParent<Application> ()
@@ -102,22 +107,8 @@ RdmaClient::GetTypeId (void)
 				                      MakeTimeAccessor (&RdmaClient::stopTime),
 				                      MakeTimeChecker ());
 
-  // Only register once
-  static bool registered = false;
-  if (!registered)
-  {
-    // If RDMA is not disabled, register the type
-    if (!g_disableRdmaProcessing)
-    {
-      registered = true;
-    }
-  }
-  
   return tid;
 }
-
-// Register the object implementation with NS-3 registry
-NS_OBJECT_ENSURE_REGISTERED (RdmaClient);
 
 RdmaClient::RdmaClient ()
 {
