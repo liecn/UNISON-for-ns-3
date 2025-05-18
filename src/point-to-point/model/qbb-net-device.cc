@@ -476,11 +476,13 @@ QbbNetDevice::EtherToPpp (uint16_t proto)
 void
 QbbNetDevice::Receive (Ptr<Packet> packet)
 {
-	NS_LOG_FUNCTION (this << packet);
-	uint16_t protocol = 0;
+	NS_LOG_FUNCTION(this << packet);
+	if (!m_linkUp) {
+		m_traceDrop(packet, 0);
+		return;
+	}
 
-	Ptr<Packet> p = packet->Copy();
-	if (m_receiveErrorModel && m_receiveErrorModel->IsCorrupt(p))
+	if (m_receiveErrorModel && m_receiveErrorModel->IsCorrupt(packet))
 	{
 		// 
 		// If we have an error model and it indicates that it is time to lose a
@@ -659,8 +661,7 @@ void QbbNetDevice::TakeDown() {
 		// clean the high prio queue
 		m_rdmaEQ->CleanHighPrio(m_traceDrop);
 		// notify driver/RdmaHw that this link is down
-		if (!m_rdmaLinkDownCb.IsNull())
-			m_rdmaLinkDownCb(this);
+		m_rdmaLinkDownCb(this);
 	} else { // switch
 		// clean the queue
 		for (uint32_t i = 0; i < qCnt; i++)

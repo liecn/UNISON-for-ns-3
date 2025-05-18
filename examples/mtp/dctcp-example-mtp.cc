@@ -98,7 +98,6 @@ bool g_disableRdmaProcessing = true;
 #include "ns3/network-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/traffic-control-module.h"
-#include "ns3/rdma.h"
 
 #include <iomanip>
 #include <iostream>
