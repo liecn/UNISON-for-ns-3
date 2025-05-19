@@ -518,17 +518,15 @@ void PrintProgress(Time interval)
 
 int main(int argc, char *argv[])
 {
+    // Enable MTP with optimized settings
+    uint32_t threadCount = std::thread::hardware_concurrency();
+    MtpInterface::Enable(threadCount);
+    OptimizeRdmaForMtp(threadCount);
+    
     clock_t begint, endt, setup_start, topo_start, topo_end, routes_start, routes_end;
     begint = setup_start = clock();
     bool powertcp = false;
     bool thetapowertcp = false;
-
-    MtpInterface::Enable();
-    
-    std::cout << "\nUNISON Configuration:" << std::endl;
-    std::cout << "------------------------" << std::endl;
-    std::cout << "Systems configured: " << MtpInterface::GetSize() << " systems" << std::endl;
-    std::cout << "------------------------\n" << std::endl;
 
     uint32_t bufferalgIngress = DT;
     uint32_t bufferalgEgress = DT;
