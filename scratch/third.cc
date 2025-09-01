@@ -1381,9 +1381,13 @@ int main(int argc, char *argv[])
         sim_setting.win = fwin;
         sim_setting.Serialize(trace_output);
     }
-
+    time_t t1 = time(NULL);
+    std::cout << "Populating routing tables" << std::endl;
+    std::cout << "Time: " << t1 << std::endl;
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
-
+    time_t t2 = time(NULL);
+    std::cout << "Populating routing tables took " << t2 - t1 << " seconds" << std::endl;
+    
     // maintain port number for each host
     for (uint32_t i = 0; i < node_num; i++){
         if (n.Get(i)->GetNodeType() == 0)
